@@ -1,36 +1,186 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SocialMat - AI-Powered Content Creation Platform
 
-## Getting Started
+SocialMat is a comprehensive AI-powered platform designed specifically for short-form content creators, especially those focusing on Instagram. The platform automates video editing tasks including subtitle generation, animations, sound effects, and provides content ideation and caption generation.
 
-First, run the development server:
+## ✨ Features
 
+### 🎬 AI Video Processing
+- **Auto Subtitles**: AI-powered subtitle generation with customizable styling
+- **Smart Animations**: Dynamic transitions and effects for engaging content
+- **Sound Enhancement**: Background music and sound effect integration
+- **Video Filters**: Professional-grade color correction and enhancement
+
+### 🎯 Content Generation
+- **Video Ideas**: AI-generated content ideas based on trending topics
+- **Smart Captions**: Viral-ready captions with hashtags and CTAs
+- **Multiple Tones**: Support for casual, professional, funny, inspirational styles
+- **Category Filtering**: Ideas tailored to lifestyle, educational, trending, and entertainment content
+
+### 📊 Analytics Dashboard
+- Project tracking and management
+- Estimated view potential
+- Time saved analytics
+- Completion progress monitoring
+
+### 🖼️ Video Gallery
+- Organized view of completed projects
+- Quick access to edit processed videos
+- Project metadata and settings overview
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd socialmat.app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS
+- **Video Processing**: FFmpeg (planned integration)
+- **AI Integration**: OpenAI API (configured)
+- **State Management**: React Context + Hooks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   │   ├── generate-ideas/
+│   │   ├── generate-captions/
+│   │   └── process-video/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/            # React components
+│   ├── Dashboard.tsx      # Main dashboard
+│   ├── VideoUploader.tsx  # Video upload interface
+│   ├── VideoEditor.tsx    # Video editing controls
+│   ├── ContentGenerator.tsx # Content idea generation
+│   ├── VideoGallery.tsx   # Completed videos gallery
+│   ├── Analytics.tsx      # Analytics dashboard
+│   └── NotificationProvider.tsx # Toast notifications
+├── types/                 # TypeScript type definitions
+│   └── index.ts
+└── lib/                   # Utility functions
+    └── utils.ts
+```
 
-## Deploy on Vercel
+## 🎨 Key Components
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### VideoUploader
+Handles video file uploads with drag-and-drop support and real-time processing feedback.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### VideoEditor
+Provides comprehensive editing controls for:
+- Subtitle customization
+- Animation settings
+- Sound effect management
+- Video filters and color correction
+
+### ContentGenerator
+AI-powered content generation featuring:
+- Video idea suggestions
+- Caption generation with multiple tones
+- Hashtag optimization
+- Call-to-action recommendations
+
+### VideoGallery
+Showcases completed projects with:
+- Visual project previews
+- Metadata display
+- Quick editing access
+- Processing status indicators
+
+## 🌟 Features in Detail
+
+### AI Subtitle Generation
+- Automatic speech-to-text conversion
+- Multiple styling options (modern, classic, bold, minimal)
+- Customizable positioning and animations
+- Real-time preview
+
+### Smart Content Ideas
+- Trend-based suggestions
+- Difficulty ratings
+- View potential estimates
+- Category-specific ideas (lifestyle, educational, trending, entertainment)
+
+### Caption AI
+- Tone-aware generation (casual, professional, funny, inspirational)
+- Hashtag optimization
+- Emoji suggestions
+- Call-to-action integration
+
+## 🔧 Configuration
+
+### Environment Variables
+Create a `.env.local` file with:
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### Video Processing
+The application is configured to support various video formats:
+- MP4, MOV, AVI, MKV, WebM
+
+## 📈 Performance
+
+- **Fast Upload**: Optimized file handling with progress tracking
+- **Efficient Processing**: Chunked video processing for better performance
+- **Real-time Updates**: Live progress indicators and notifications
+- **Responsive Design**: Mobile-first approach for content creators on-the-go
+
+## 🚧 Roadmap
+
+- [ ] Real FFmpeg integration for video processing
+- [ ] Advanced AI model integration for better content suggestions
+- [ ] Social media platform integrations
+- [ ] Batch processing capabilities
+- [ ] Advanced analytics and insights
+- [ ] Collaboration features
+- [ ] Mobile app development
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 💡 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Join our Discord community
+- Email: support@socialmat.app
+
+---
+
+**Built for content creators, by content creators** 🎬✨
