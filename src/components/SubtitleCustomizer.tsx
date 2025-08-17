@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SubtitleStyle } from "@/lib/videoSubtitleProcessor";
-import { VideoProject } from "@/types";
 import { SubtitleSettingsManager, SubtitleSettings } from "@/lib/subtitleSettings";
 
 export interface SubtitleCustomizerProps {
   onStyleChange?: (style: SubtitleStyle) => void;
-  currentProject?: VideoProject | null;
 }
 
 export function SubtitleCustomizer({ onStyleChange }: SubtitleCustomizerProps) {

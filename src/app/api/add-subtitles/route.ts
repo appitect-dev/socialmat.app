@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { VideoSubtitleProcessor } from '@/lib/videoSubtitleProcessor';
 import { SpeechToTextService } from '@/lib/speechToText';
-import { VideoProcessor } from '@/lib/videoProcessor';
 import path from 'path';
 import fs from 'fs';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegStatic from 'ffmpeg-static';
 
 export async function POST(request: Request) {
   try {
@@ -35,8 +36,15 @@ export async function POST(request: Request) {
     console.log('🎵 Extracting audio for transcription...');
     
     // Initialize services
-    const videoProcessor = new VideoProcessor();
     const speechService = new SpeechToTextService();
+    
+    // Set ffmpeg path
+    if (!ffmpegStatic) {
+      throw new Error('FFmpeg static binary not found');
+    }
+    
+    console.log('FFmpeg path:', ffmpegStatic);
+    ffmpeg.setFfmpegPath(ffmpegStatic);
     
     // Extract audio from video for transcription
     const tempDir = path.join(process.cwd(), 'temp', 'transcription');
@@ -44,7 +52,23 @@ export async function POST(request: Request) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
     
-    const audioPath = await videoProcessor.extractAudio(fullVideoPath);
+    const audioPath = path.join(tempDir, `audio_${Date.now()}.mp3`);
+    
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(fullVideoPath)
+        .output(audioPath)
+        .audioCodec('mp3')
+        .on('end', () => {
+          console.log('Audio extraction completed');
+          resolve();
+        })
+        .on('error', (err) => {
+          console.error('Audio extraction failed:', err);
+          reject(err);
+        })
+        .run();
+    });
+    
     const audioBuffer = fs.readFileSync(audioPath);
     
     console.log('📝 Transcribing with OpenAI Whisper...');

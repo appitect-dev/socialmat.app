@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SpeechToTextService } from "@/lib/speechToText";
-import { VideoProcessor } from "@/lib/videoProcessor";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegStatic from "ffmpeg-static";
 import fs from "fs";
 import path from "path";
 
@@ -22,9 +23,16 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Initialize services
-    const videoProcessor = new VideoProcessor();
+    // Initialize speech service
     const speechService = new SpeechToTextService();
+
+    // Set up FFmpeg
+    if (!ffmpegStatic) {
+      throw new Error('FFmpeg static binary not found');
+    }
+    
+    console.log('FFmpeg path:', ffmpegStatic);
+    ffmpeg.setFfmpegPath(ffmpegStatic);
 
     // Save input file temporarily
     const tempDir = path.join(process.cwd(), 'temp', 'transcription-test');
@@ -39,7 +47,23 @@ export async function POST(request: NextRequest) {
 
     // Extract audio for transcription
     console.log("🎵 Extracting audio...");
-    const audioPath = await videoProcessor.extractAudio(inputPath);
+    const audioPath = path.join(tempDir, `audio_${Date.now()}.mp3`);
+    
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(inputPath)
+        .output(audioPath)
+        .audioCodec('mp3')
+        .on('end', () => {
+          console.log('Audio extraction completed');
+          resolve();
+        })
+        .on('error', (err) => {
+          console.error('Audio extraction failed:', err);
+          reject(err);
+        })
+        .run();
+    });
+
     const audioBuffer = fs.readFileSync(audioPath);
 
     console.log("📝 Starting transcription with OpenAI...");
@@ -68,8 +92,12 @@ export async function POST(request: NextRequest) {
     fs.writeFileSync(srtFilePath, srtContent, 'utf8');
 
     // Cleanup temporary files
-    videoProcessor.cleanup(inputPath);
-    videoProcessor.cleanup(audioPath);
+    try {
+      fs.unlinkSync(inputPath);
+      fs.unlinkSync(audioPath);
+    } catch (cleanupError) {
+      console.log('Cleanup warning:', cleanupError);
+    }
 
     console.log("💾 Files saved:");
     console.log("📄 Text file:", textFilePath);
