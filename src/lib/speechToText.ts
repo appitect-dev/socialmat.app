@@ -30,12 +30,13 @@ export class SpeechToTextService {
     });
   }
 
-  async transcribeVideo(videoPath: string, options: SpeechToTextOptions = {}): Promise<SubtitleSegment[]> {
+  async transcribeVideo(videoPath: string, options: SpeechToTextOptions = {}, wordsPerChunk: number = 4): Promise<SubtitleSegment[]> {
     try {
       // Check if we have an API key
       if (!process.env.OPENAI_API_KEY) {
         console.warn('OpenAI API key not found, using mock subtitles');
-        return this.getMockSubtitles();
+        const mockSegments = this.getMockSubtitles();
+        return this.splitSegmentsByWords(mockSegments, wordsPerChunk);
       }
 
       // Read the video file
@@ -57,26 +58,31 @@ export class SpeechToTextService {
 
       // Convert OpenAI segments to our format
       if ('segments' in transcription && transcription.segments) {
-        return transcription.segments.map(segment => ({
+        const openaiSegments = transcription.segments.map(segment => ({
           start: segment.start,
           end: segment.end,
           text: segment.text.trim()
         }));
+        
+        // Split segments by words per chunk
+        return this.splitSegmentsByWords(openaiSegments, wordsPerChunk);
       }
 
       return [];
     } catch (error) {
       console.error('Error transcribing video:', error);
-      return this.getMockSubtitles();
+      const mockSegments = this.getMockSubtitles();
+      return this.splitSegmentsByWords(mockSegments, wordsPerChunk);
     }
   }
 
-  async transcribeAudio(audioBuffer: Buffer, filename: string = 'audio.mp3', options: SpeechToTextOptions = {}): Promise<SubtitleSegment[]> {
+  async transcribeAudio(audioBuffer: Buffer, filename: string = 'audio.wav', options: SpeechToTextOptions = {}, wordsPerChunk: number = 4): Promise<SubtitleSegment[]> {
     try {
       // Check if we have an API key
       if (!process.env.OPENAI_API_KEY) {
         console.warn('OpenAI API key not found, using mock subtitles');
-        return this.generateDynamicMockSubtitles();
+        const mockSegments = this.generateDynamicMockSubtitles();
+        return this.splitSegmentsByWords(mockSegments, wordsPerChunk);
       }
 
       // Create a File object from the buffer
@@ -95,18 +101,64 @@ export class SpeechToTextService {
 
       // Convert OpenAI segments to our format
       if ('segments' in transcription && transcription.segments) {
-        return transcription.segments.map(segment => ({
+        const openaiSegments = transcription.segments.map(segment => ({
           start: segment.start,
           end: segment.end,
           text: segment.text.trim()
         }));
+        
+        // Split segments by words per chunk
+        return this.splitSegmentsByWords(openaiSegments, wordsPerChunk);
       }
 
       return [];
     } catch (error) {
       console.error('Error transcribing audio:', error);
-      return this.generateDynamicMockSubtitles();
+      const mockSegments = this.generateDynamicMockSubtitles();
+      return this.splitSegmentsByWords(mockSegments, wordsPerChunk);
     }
+  }
+
+  /**
+   * Split long segments into smaller chunks based on word count
+   */
+  private splitSegmentsByWords(segments: SubtitleSegment[], wordsPerChunk: number): SubtitleSegment[] {
+    const result: SubtitleSegment[] = [];
+
+    for (const segment of segments) {
+      const words = segment.text.split(/\s+/).filter(word => word.length > 0);
+      
+      // If segment has fewer words than requested, keep it as is
+      if (words.length <= wordsPerChunk) {
+        result.push(segment);
+        continue;
+      }
+
+      // Split into chunks
+      const segmentDuration = segment.end - segment.start;
+      const chunks: string[] = [];
+      
+      for (let i = 0; i < words.length; i += wordsPerChunk) {
+        const chunk = words.slice(i, i + wordsPerChunk).join(' ');
+        chunks.push(chunk);
+      }
+
+      // Distribute time evenly across chunks
+      const chunkDuration = segmentDuration / chunks.length;
+      
+      chunks.forEach((chunk, index) => {
+        const start = segment.start + (index * chunkDuration);
+        const end = segment.start + ((index + 1) * chunkDuration);
+        
+        result.push({
+          start: Math.round(start * 100) / 100, // Round to 2 decimal places
+          end: Math.round(end * 100) / 100,
+          text: chunk
+        });
+      });
+    }
+
+    return result;
   }
 
   private getMockSubtitles(): SubtitleSegment[] {

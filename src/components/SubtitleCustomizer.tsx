@@ -46,13 +46,17 @@ export function SubtitleCustomizer({ onStyleChange }: SubtitleCustomizerProps) {
 
   // Handle video time updates
   const handleTimeUpdate = useCallback((currentTime: number) => {
+    console.log(`🎥 Video time update: ${currentTime.toFixed(2)}s`);
     setVideoCurrentTime(currentTime);
+    
     const currentSub = getCurrentSubtitle(currentTime);
+    console.log(`🔍 Looking for subtitle at time ${currentTime.toFixed(2)}s:`, currentSub);
+    
     const newIndex = currentSub ? subtitleSegments.findIndex(seg => seg === currentSub) : -1;
     setCurrentSubtitleIndex(newIndex);
     
     // Always log for debugging
-    console.log('Video time:', currentTime.toFixed(2), 'Segments:', subtitleSegments.length, 'Current sub:', currentSub?.text || 'NONE');
+    console.log(`📝 Current subtitle: "${currentSub?.text || 'NONE'}" (${currentSub?.start}-${currentSub?.end})`);
   }, [subtitleSegments, getCurrentSubtitle]);
 
   // Backup timer to poll video time (in case onTimeUpdate doesn't fire)
@@ -101,9 +105,13 @@ export function SubtitleCustomizer({ onStyleChange }: SubtitleCustomizerProps) {
       }
       
       // Get transcription only (no subtitle processing yet)
+      const transcriptionFormData = new FormData();
+      transcriptionFormData.append('video', file);
+      transcriptionFormData.append('wordsPerChunk', settings.wordsPerChunk.toString());
+      
       const transcriptionResponse = await fetch('/api/test-transcription', {
         method: 'POST',
-        body: formData
+        body: transcriptionFormData
       });      if (!transcriptionResponse.ok) {
         const errorData = await transcriptionResponse.json();
         throw new Error(errorData.error || 'Failed to transcribe video');

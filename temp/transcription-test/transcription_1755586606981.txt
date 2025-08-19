@@ -1,0 +1,2 @@
+[1] 0.00s - 10.00s
+Čau, já jsem Adam a tohle je test přepisu hlasů na text na naší nový aplikaci SocialMath.

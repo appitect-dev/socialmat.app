@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SpeechToTextService } from "@/lib/speechToText";
 import ffmpeg from "fluent-ffmpeg";
-import ffmpegStatic from "ffmpeg-static";
 import fs from "fs";
 import path from "path";
 
@@ -9,6 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("video") as File;
+    const wordsPerChunk = parseInt(formData.get("wordsPerChunk") as string) || 4;
 
     if (!file) {
       return NextResponse.json(
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Testing OpenAI transcription for:", file.name);
+    console.log(`Testing OpenAI transcription for: ${file.name} with ${wordsPerChunk} words per chunk`);
 
     // Convert File to Buffer
     const arrayBuffer = await file.arrayBuffer();
@@ -26,13 +26,16 @@ export async function POST(request: NextRequest) {
     // Initialize speech service
     const speechService = new SpeechToTextService();
 
-    // Set up FFmpeg
-    if (!ffmpegStatic) {
+    // Set up FFmpeg with dynamic import
+    const ffmpegStatic = await import('ffmpeg-static');
+    const ffmpegPath = ffmpegStatic.default;
+    
+    if (!ffmpegPath) {
       throw new Error('FFmpeg static binary not found');
     }
     
-    console.log('FFmpeg path:', ffmpegStatic);
-    ffmpeg.setFfmpegPath(ffmpegStatic);
+    console.log('FFmpeg path:', ffmpegPath);
+    ffmpeg.setFfmpegPath(ffmpegPath);
 
     // Save input file temporarily
     const tempDir = path.join(process.cwd(), 'temp', 'transcription-test');
@@ -47,12 +50,14 @@ export async function POST(request: NextRequest) {
 
     // Extract audio for transcription
     console.log("🎵 Extracting audio...");
-    const audioPath = path.join(tempDir, `audio_${Date.now()}.mp3`);
+    const audioPath = path.join(tempDir, `audio_${Date.now()}.wav`);
     
     await new Promise<void>((resolve, reject) => {
       ffmpeg(inputPath)
         .output(audioPath)
-        .audioCodec('mp3')
+        .audioCodec('pcm_s16le')
+        .audioChannels(1)
+        .audioFrequency(16000)
         .on('end', () => {
           console.log('Audio extraction completed');
           resolve();
@@ -68,10 +73,12 @@ export async function POST(request: NextRequest) {
 
     console.log("📝 Starting transcription with OpenAI...");
     
-    // Test transcription
+    // Test transcription with custom words per chunk
     const subtitleSegments = await speechService.transcribeAudio(
       audioBuffer,
-      `audio_${Date.now()}.mp3`
+      `audio_${Date.now()}.mp3`,
+      {},
+      wordsPerChunk
     );
 
     console.log("✅ Transcription complete! Segments:", subtitleSegments.length);

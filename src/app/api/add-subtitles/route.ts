@@ -4,7 +4,6 @@ import { SpeechToTextService } from '@/lib/speechToText';
 import path from 'path';
 import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegStatic from 'ffmpeg-static';
 
 export async function POST(request: Request) {
   try {
@@ -38,13 +37,16 @@ export async function POST(request: Request) {
     // Initialize services
     const speechService = new SpeechToTextService();
     
-    // Set ffmpeg path
-    if (!ffmpegStatic) {
+    // Set ffmpeg path with dynamic import
+    const ffmpegStatic = await import('ffmpeg-static');
+    const ffmpegPath = ffmpegStatic.default;
+    
+    if (!ffmpegPath) {
       throw new Error('FFmpeg static binary not found');
     }
     
-    console.log('FFmpeg path:', ffmpegStatic);
-    ffmpeg.setFfmpegPath(ffmpegStatic);
+    console.log('FFmpeg path:', ffmpegPath);
+    ffmpeg.setFfmpegPath(ffmpegPath);
     
     // Extract audio from video for transcription
     const tempDir = path.join(process.cwd(), 'temp', 'transcription');
@@ -52,12 +54,14 @@ export async function POST(request: Request) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
     
-    const audioPath = path.join(tempDir, `audio_${Date.now()}.mp3`);
+    const audioPath = path.join(tempDir, `audio_${Date.now()}.wav`);
     
     await new Promise<void>((resolve, reject) => {
       ffmpeg(fullVideoPath)
         .output(audioPath)
-        .audioCodec('mp3')
+        .audioCodec('pcm_s16le')
+        .audioChannels(1)
+        .audioFrequency(16000)
         .on('end', () => {
           console.log('Audio extraction completed');
           resolve();
