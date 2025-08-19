@@ -4,12 +4,13 @@ import path from 'path'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = decodeURIComponent(params.filename)
+    const { filename } = await params
+    const decodedFilename = decodeURIComponent(filename)
     const tempDir = path.join(process.cwd(), 'temp', 'videos')
-    const filePath = path.join(tempDir, filename)
+    const filePath = path.join(tempDir, decodedFilename)
 
     // Security check - ensure file is within temp directory
     const resolvedPath = path.resolve(filePath)
