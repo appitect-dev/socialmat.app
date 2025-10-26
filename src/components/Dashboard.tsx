@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { SubtitleCustomizer } from "./SubtitleCustomizer";
 
 export function Dashboard() {
   return (
@@ -15,8 +14,6 @@ export function Dashboard() {
             Add AI-powered subtitles to your videos instantly
           </p>
         </div>
-        
-        <SubtitleCustomizer />
       </div>
     </div>
   );
