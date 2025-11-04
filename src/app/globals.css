@@ -78,12 +78,22 @@ body {
 
 /* Subtitle preview animation */
 @keyframes subtitlePulse {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Live preview indicator pulse */
 @keyframes livePulse {
-  0%, 100% { background-color: rgba(147, 51, 234, 0.1); }
-  50% { background-color: rgba(147, 51, 234, 0.2); }
+  0%,
+  100% {
+    background-color: rgba(147, 51, 234, 0.1);
+  }
+  50% {
+    background-color: rgba(147, 51, 234, 0.2);
+  }
 }

@@ -5,10 +5,7 @@ import { useDropzone } from "react-dropzone";
 
 // Props pro VideoUploader komponentu
 interface VideoUploaderProps {
-  onVideoUploaded?: (videoData: {
-    file: File;
-    url: string;
-  }) => void;
+  onVideoUploaded?: (videoData: { file: File; url: string }) => void;
 }
 
 export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
@@ -176,11 +173,7 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
             </div>
 
             {/* Video přehrávač */}
-            <video
-              src={videoPreviewUrl}
-              controls
-              className="w-full rounded-lg"
-            >
+            <video src={videoPreviewUrl} controls className="w-full rounded-lg">
               Váš prohlížeč nepodporuje video tag.
             </video>
           </div>
