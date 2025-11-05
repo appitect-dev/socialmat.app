@@ -263,10 +263,9 @@ export default function LandingPage() {
       {/* Navigation with GSAP animations */}
       <nav
         ref={navRef}
-        className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-full py-3 px-8 flex items-center justify-center gap-10 shadow-lg transition-all duration-300 hover:shadow-xl w-auto"
+        className="fixed z-50 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-full py-3 px-6 sm:px-8 flex items-center justify-center gap-4 sm:gap-10 shadow-lg transition-all duration-300 hover:shadow-xl w-auto max-w-[90vw]"
         style={{
           opacity: 0,
-          position: "fixed",
           top: "20px",
           left: "50%",
           transform: "translateX(-50%)",
@@ -296,12 +295,12 @@ export default function LandingPage() {
         >
           Contact
         </button>
-        <button
-          onClick={() => scrollToSection("waitlist")}
-          className="bg-black text-white py-2 px-5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg border-none cursor-pointer"
+        <a
+          href="/dashboard"
+          className="bg-black text-white py-2 px-6 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg border-none cursor-pointer no-underline whitespace-nowrap"
         >
-          Join Waitlist
-        </button>
+          Přihlásit se
+        </a>
       </nav>
 
       {/* Hero Section with GSAP scroll animations */}

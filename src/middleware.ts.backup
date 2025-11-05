@@ -1,0 +1,86 @@
+/**
+ * NEXT.JS MIDDLEWARE
+ *
+ * Běží před každým requestem - používá se pro:
+ * 1. Ochranu routes (redirect nepřihlášených uživatelů)
+ * 2. Refresh sessions
+ *
+ * https://nextjs.org/docs/app/building-your-application/routing/middleware
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { decrypt, updateSession } from './lib/session';
+
+// Definuj které routes jsou chráněné
+const protectedRoutes = ['/dashboard'];
+const publicRoutes = ['/', '/login', '/signup'];
+
+export default async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+
+  // Skip middleware pro POST requesty úplně (Server Actions)
+  if (req.method === 'POST') {
+    return NextResponse.next();
+  }
+
+  // Zkontroluj jestli je route chráněná
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    path.startsWith(route)
+  );
+  const isPublicRoute = publicRoutes.includes(path);
+
+  // Získej session z cookie
+  const cookie = req.cookies.get('session')?.value;
+  const session = cookie ? await decrypt(cookie) : null;
+
+  // Pokud jde o chráněnou route a uživatel není přihlášený
+  if (isProtectedRoute && !session?.userId) {
+    return NextResponse.redirect(new URL('/login', req.nextUrl));
+  }
+
+  // Pokud jde o public route (login/signup) a uživatel JE přihlášený
+  // Přesměruj ho na dashboard
+  if (
+    isPublicRoute &&
+    session?.userId &&
+    !path.startsWith('/dashboard')
+  ) {
+    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+  }
+
+  // Refresh session (prodlouží platnost)
+  return await updateSessionMiddleware(req);
+}
+
+/**
+ * Helper funkce pro refresh session v middleware
+ */
+async function updateSessionMiddleware(req: NextRequest) {
+  const res = NextResponse.next();
+
+  const cookie = req.cookies.get('session')?.value;
+  if (!cookie) return res;
+
+  const session = await decrypt(cookie);
+  if (!session) return res;
+
+  // Prodlouž platnost session
+  await updateSession();
+
+  return res;
+}
+
+// Konfigurace - na které routes se má middleware aplikovat
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     * - api routes
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};

@@ -77,9 +77,9 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
           }
           return 100;
         }
-        return prev + 10;
+        return prev + 4;
       });
-    }, 200);
+    }, 100);
   };
 
   // Funkce pro reset/smazání nahraného videa
