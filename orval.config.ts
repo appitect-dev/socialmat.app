@@ -5,7 +5,12 @@ export default {
       target: "./src/lib/api.ts",
       client: "fetch",
       httpClient: "fetch",
-      clean: true,
+      override: {
+        mutator: {
+          path: "./src/lib/fetcher.ts",
+          name: "apiFetch",
+        },
+      },
     },
   },
 };
