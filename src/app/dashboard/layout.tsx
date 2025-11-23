@@ -16,9 +16,12 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const displayName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+
   return (
     <>
-      <Navbar userName={user.name} userEmail={user.email} />
+      <Navbar userName={displayName} userEmail={user.email} />
       {children}
     </>
   );

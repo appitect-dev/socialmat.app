@@ -20,7 +20,8 @@ const LoginSchema = z.object({
 });
 
 const SignupSchema = z.object({
-  name: z.string().min(2, 'Jméno musí mít alespoň 2 znaky'),
+  firstName: z.string().min(2, 'Jméno musí mít alespoň 2 znaky'),
+  lastName: z.string().min(2, 'Příjmení musí mít alespoň 2 znaky'),
   email: z.string().email({ message: 'Neplatný email' }).min(1, 'Email je povinný'),
   password: z.string().min(6, 'Heslo musí mít alespoň 6 znaků'),
   confirmPassword: z.string(),
@@ -77,7 +78,7 @@ export async function login(prevState: ActionResult | null, formData: FormData):
   }
 
   // 4. Vytvoř session
-  await createSession(user.id, user.email, user.name);
+  await createSession(user.id, user.email, `${user.firstName} ${user.lastName}`);
 
   // 5. Revalidate a přesměruj
   // redirect() throwuje error interně - to je normální chování Next.js
@@ -92,7 +93,8 @@ export async function login(prevState: ActionResult | null, formData: FormData):
 export async function signup(prevState: ActionResult | null, formData: FormData): Promise<ActionResult> {
   // 1. Validace vstupů
   const validatedFields = SignupSchema.safeParse({
-    name: formData.get('name'),
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
     email: formData.get('email'),
     password: formData.get('password'),
     confirmPassword: formData.get('confirmPassword'),
@@ -105,7 +107,7 @@ export async function signup(prevState: ActionResult | null, formData: FormData)
     };
   }
 
-  const { name, email, password } = validatedFields.data;
+  const { firstName, lastName, email, password } = validatedFields.data;
 
   // 2. Zkontroluj, jestli uživatel už existuje
   const existingUser = await getUserByEmail(email);
@@ -117,10 +119,10 @@ export async function signup(prevState: ActionResult | null, formData: FormData)
   }
 
   // 3. Vytvoř nového uživatele
-  const newUser = await createUser(email, password, name);
+  const newUser = await createUser(email, password, firstName, lastName);
 
   // 4. Vytvoř session
-  await createSession(newUser.id, newUser.email, newUser.name);
+  await createSession(newUser.id, newUser.email, `${newUser.firstName} ${newUser.lastName}`);
 
   // 5. Revalidate a přesměruj
   revalidatePath('/dashboard');

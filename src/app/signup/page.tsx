@@ -37,25 +37,48 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* Name */}
+            {/* First Name */}
             <div>
               <label
-                htmlFor="name"
+                htmlFor="firstName"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
                 Jméno
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
+                id="firstName"
+                name="firstName"
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder:text-gray-400"
-                placeholder="Jan Novák"
+                placeholder="Jan"
               />
-              {state?.errors?.name && (
+              {state?.errors?.firstName && (
                 <p className="mt-1 text-sm text-red-600">
-                  {state.errors.name[0]}
+                  {state.errors.firstName[0]}
+                </p>
+              )}
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Příjmení
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="Novák"
+              />
+              {state?.errors?.lastName && (
+                <p className="mt-1 text-sm text-red-600">
+                  {state.errors.lastName[0]}
                 </p>
               )}
             </div>
