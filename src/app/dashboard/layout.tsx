@@ -1,5 +1,5 @@
+import { cookies } from "next/headers";
 import { Navbar } from "@/components/Navbar";
-import { getUser } from "@/lib/dal";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -7,8 +7,24 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Získej aktuálního přihlášeného uživatele
-  const user = await getUser();
+  const cookieStore = await cookies();
+  const rawSession = cookieStore.get("session")?.value;
+  let user:
+    | { email?: string; firstName?: string; lastName?: string }
+    | null = null;
+
+  if (rawSession) {
+    try {
+      const parsed = JSON.parse(rawSession);
+      user = {
+        email: parsed.email,
+        firstName: parsed.firstName,
+        lastName: parsed.lastName,
+      };
+    } catch (e) {
+      user = null;
+    }
+  }
 
   // Pokud uživatel není přihlášený, přesměruj na login
   // (double check - middleware už by měl zachytit, ale pro jistotu)

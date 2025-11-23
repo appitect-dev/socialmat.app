@@ -5,8 +5,8 @@ import {
   createProject,
   uploadVideo,
   getProjectStatus,
-  getSubtitles,
-  convertToSRT,
+  getProjectSubtitles,
+  type SubtitleDTO,
 } from "@/lib/api";
 
 // Props pro SubtitleGenerator komponentu
@@ -36,29 +36,40 @@ export function SubtitleGenerator({
 
     try {
       // Krok 1: Vytvoření projektu
-      const project = await createProject(
-        videoFile.name,
-        `Video nahráno: ${new Date().toLocaleString("cs-CZ")}`
-      );
+      const project = await createProject({
+        name: videoFile.name,
+        description: `Video nahráno: ${new Date().toLocaleString("cs-CZ")}`,
+      });
+
+      const projectId = project.data?.id;
+      if (!projectId) {
+        throw new Error("Nepodařilo se vytvořit projekt");
+      }
 
       // Krok 2: Nahrání videa
-      await uploadVideo(project.id, videoFile);
+      await uploadVideo(projectId, { file: videoFile });
 
       // Krok 3: Čekání na zpracování (polling)
-      let status = await getProjectStatus(project.id);
-      while (status.status === "UPLOADING" || status.status === "PROCESSING") {
+      let statusResponse = await getProjectStatus(projectId);
+      let status =
+        (statusResponse.data as { status?: string })?.status ?? "";
+
+      while (status === "UPLOADING" || status === "PROCESSING") {
         // Čekáme 3 sekundy před dalším kontrolováním
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        status = await getProjectStatus(project.id);
+        statusResponse = await getProjectStatus(projectId);
+        status =
+          (statusResponse.data as { status?: string })?.status ?? "";
       }
 
       // Kontrola, zda zpracování proběhlo úspěšně
-      if (status.status === "FAILED") {
+      if (status === "ERROR" || status === "FAILED") {
         throw new Error("Zpracování videa selhalo");
       }
 
       // Krok 4: Získání titulků
-      const subtitles = await getSubtitles(project.id);
+      const subtitlesResponse = await getProjectSubtitles(projectId);
+      const subtitles = subtitlesResponse.data ?? [];
 
       if (!subtitles || subtitles.length === 0) {
         throw new Error("Nebyly vygenerovány žádné titulky");
@@ -99,6 +110,24 @@ export function SubtitleGenerator({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  const formatTimestamp = (ms: number) => {
+    const date = new Date(ms);
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+    const milliseconds = String(date.getUTCMilliseconds()).padStart(3, "0");
+    return `${hours}:${minutes}:${seconds},${milliseconds}`;
+  };
+
+  const convertToSRT = (subtitles: SubtitleDTO[]) =>
+    subtitles
+      .map((subtitle, index) => {
+        const start = formatTimestamp((subtitle.startTime ?? 0) * 1000);
+        const end = formatTimestamp((subtitle.endTime ?? 0) * 1000);
+        return `${index + 1}\n${start} --> ${end}\n${subtitle.text ?? ""}\n`;
+      })
+      .join("\n");
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

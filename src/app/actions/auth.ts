@@ -7,11 +7,11 @@
 
 'use server';
 
-import { z } from 'zod';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { getUserByEmail, createUser, verifyPassword } from '@/lib/users';
-import { createSession, deleteSession } from '@/lib/session';
+import { z } from 'zod';
+import { login as apiLogin, register as apiRegister, type AuthResponseDTO } from '@/lib/api';
 
 // Validační schémata pomocí Zod
 const LoginSchema = z.object({
@@ -37,6 +37,25 @@ type ActionResult = {
   errors?: Record<string, string[]>;
 };
 
+const SESSION_COOKIE = 'session';
+const ONE_WEEK_SECONDS = 60 * 60 * 24 * 7;
+
+async function setSessionCookie(auth: AuthResponseDTO) {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, JSON.stringify(auth), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: ONE_WEEK_SECONDS,
+  });
+}
+
+async function clearSessionCookie() {
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE);
+}
+
 /**
  * LOGIN ACTION
  * Přihlásí uživatele a vytvoří session
@@ -57,28 +76,17 @@ export async function login(prevState: ActionResult | null, formData: FormData):
 
   const { email, password } = validatedFields.data;
 
-  // 2. Najdi uživatele v databázi
-  const user = await getUserByEmail(email);
-
-  if (!user) {
+  // 2. Zavolej reálné API
+  const response = await apiLogin({ email, password });
+  if (response.status !== 200 || !response.data?.token) {
     return {
       success: false,
       message: 'Neplatný email nebo heslo',
     };
   }
 
-  // 3. Ověř heslo
-  const isPasswordValid = await verifyPassword(user, password);
-
-  if (!isPasswordValid) {
-    return {
-      success: false,
-      message: 'Neplatný email nebo heslo',
-    };
-  }
-
-  // 4. Vytvoř session
-  await createSession(user.id, user.email, `${user.firstName} ${user.lastName}`);
+  // 3. Ulož session/tokeny
+  await setSessionCookie(response.data);
 
   // 5. Revalidate a přesměruj
   // redirect() throwuje error interně - to je normální chování Next.js
@@ -109,20 +117,17 @@ export async function signup(prevState: ActionResult | null, formData: FormData)
 
   const { firstName, lastName, email, password } = validatedFields.data;
 
-  // 2. Zkontroluj, jestli uživatel už existuje
-  const existingUser = await getUserByEmail(email);
-  if (existingUser) {
+  // 2. Zavolej reálné API
+  const response = await apiRegister({ email, password, firstName, lastName });
+  if (response.status !== 200 || !response.data?.token) {
     return {
       success: false,
-      message: 'Uživatel s tímto emailem už existuje',
+      message: 'Registrace selhala, zkuste to znovu',
     };
   }
 
-  // 3. Vytvoř nového uživatele
-  const newUser = await createUser(email, password, firstName, lastName);
-
-  // 4. Vytvoř session
-  await createSession(newUser.id, newUser.email, `${newUser.firstName} ${newUser.lastName}`);
+  // 3. Ulož session/tokeny
+  await setSessionCookie(response.data);
 
   // 5. Revalidate a přesměruj
   revalidatePath('/dashboard');
@@ -134,6 +139,6 @@ export async function signup(prevState: ActionResult | null, formData: FormData)
  * Odhlásí uživatele a smaže session
  */
 export async function logout() {
-  await deleteSession();
+  await clearSessionCookie();
   redirect('/');
 }

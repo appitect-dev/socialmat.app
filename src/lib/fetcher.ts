@@ -13,10 +13,7 @@ const API_BASE_URL =
   process.env.API_URL ??
   "https://api.socialmat.cz";
 
-const mergeHeaders = (
-  target: Headers,
-  source?: HeadersInit
-): Headers => {
+const mergeHeaders = (target: Headers, source?: HeadersInit): Headers => {
   if (!source) return target;
   new Headers(source).forEach((value, key) => target.set(key, value));
   return target;
@@ -31,9 +28,7 @@ export async function apiFetch<T>(
 
   const method =
     (isStringInput ? init.method : input.method ?? init.method) ?? "GET";
-  const signal = isStringInput
-    ? init.signal
-    : input.signal ?? init.signal;
+  const signal = isStringInput ? init.signal : input.signal ?? init.signal;
 
   const headers = mergeHeaders(
     mergeHeaders(new Headers(), isStringInput ? undefined : input.headers),
@@ -73,11 +68,7 @@ export async function apiFetch<T>(
   const isJson = contentType.includes("application/json");
 
   const parsedBody =
-    [204, 205, 304].includes(res.status)
-      ? null
-      : isJson
-        ? await res.json()
-        : await res.text();
+    [204, 205, 304].includes(res.status) ? null : isJson ? await res.json() : await res.text();
 
   return {
     data: parsedBody ?? {},
