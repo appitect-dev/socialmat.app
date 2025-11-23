@@ -5,6 +5,7 @@
  * API documentation for SocialMat.app backend - automatic subtitle generation for short-form content
  * OpenAPI spec version: 1.0
  */
+import { apiFetch } from './fetcher';
 export interface SubtitleDTO {
   id?: number;
   startTime?: number;
@@ -18,15 +19,15 @@ export interface ProjectCreateDTO {
   description?: string;
 }
 
-export type ProjectResponseDTOStatus =
-  (typeof ProjectResponseDTOStatus)[keyof typeof ProjectResponseDTOStatus];
+export type ProjectResponseDTOStatus = typeof ProjectResponseDTOStatus[keyof typeof ProjectResponseDTOStatus];
+
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ProjectResponseDTOStatus = {
-  UPLOADING: "UPLOADING",
-  PROCESSING: "PROCESSING",
-  COMPLETED: "COMPLETED",
-  ERROR: "ERROR",
+  UPLOADING: 'UPLOADING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  ERROR: 'ERROR',
 } as const;
 
 export interface ProjectResponseDTO {
@@ -73,724 +74,673 @@ export interface HealthComponent {
   status?: string;
 }
 
-export type DeleteProject200 = { [key: string]: string };
+export type DeleteProject200 = {[key: string]: string};
 
-export type DeleteProject404 = { [key: string]: string };
+export type DeleteProject404 = {[key: string]: string};
 
 export type UploadVideoBody = {
   /** MP4 video file (<= 100MB) */
   file: Blob;
 };
 
-export type UploadVideo200 = { [key: string]: string };
+export type UploadVideo200 = {[key: string]: string};
 
-export type UploadVideo400 = { [key: string]: string };
+export type UploadVideo400 = {[key: string]: string};
 
-export type UploadVideo401 = { [key: string]: string };
+export type UploadVideo401 = {[key: string]: string};
 
-export type UploadVideo404 = { [key: string]: string };
+export type UploadVideo404 = {[key: string]: string};
 
-export type RefreshTokenBody = { [key: string]: string };
+export type RefreshTokenBody = {[key: string]: string};
 
-export type Logout200 = { [key: string]: string };
+export type Logout200 = {[key: string]: string};
 
-export type GetProjectStatus200 = { [key: string]: string };
+export type GetProjectStatus200 = {[key: string]: string};
 
-export type GetProjectStatus404 = { [key: string]: string };
+export type GetProjectStatus404 = {[key: string]: string};
 
-export type GetProjectDescription200 = { [key: string]: string };
+export type GetProjectDescription200 = {[key: string]: string};
 
-export type GetProjectDescription202 = { [key: string]: string };
+export type GetProjectDescription202 = {[key: string]: string};
 
-export type GetProjectDescription401 = { [key: string]: string };
+export type GetProjectDescription401 = {[key: string]: string};
 
-export type GetProjectDescription404 = { [key: string]: string };
+export type GetProjectDescription404 = {[key: string]: string};
 
 /**
  * Returns the list of subtitles for the given project ID.
  * @summary Get project subtitles
  */
 export type getProjectSubtitlesResponse200 = {
-  data: SubtitleDTO[];
-  status: 200;
-};
+  data: SubtitleDTO[]
+  status: 200
+}
 
 export type getProjectSubtitlesResponse404 = {
-  data: SubtitleDTO[];
-  status: 404;
+  data: SubtitleDTO[]
+  status: 404
+}
+    
+export type getProjectSubtitlesResponseSuccess = (getProjectSubtitlesResponse200) & {
+  headers: Headers;
+};
+export type getProjectSubtitlesResponseError = (getProjectSubtitlesResponse404) & {
+  headers: Headers;
 };
 
-export type getProjectSubtitlesResponseSuccess =
-  getProjectSubtitlesResponse200 & {
-    headers: Headers;
-  };
-export type getProjectSubtitlesResponseError =
-  getProjectSubtitlesResponse404 & {
-    headers: Headers;
-  };
+export type getProjectSubtitlesResponse = (getProjectSubtitlesResponseSuccess | getProjectSubtitlesResponseError)
 
-export type getProjectSubtitlesResponse =
-  | getProjectSubtitlesResponseSuccess
-  | getProjectSubtitlesResponseError;
+export const getGetProjectSubtitlesUrl = (projectId: number,) => {
 
-export const getGetProjectSubtitlesUrl = (projectId: number) => {
-  return `/api/projects/${projectId}/subtitles`;
-};
 
-export const getProjectSubtitles = async (
-  projectId: number,
-  options?: RequestInit
-): Promise<getProjectSubtitlesResponse> => {
-  const res = await fetch(getGetProjectSubtitlesUrl(projectId), {
+  
+
+  return `/api/projects/${projectId}/subtitles`
+}
+
+export const getProjectSubtitles = async (projectId: number, options?: RequestInit): Promise<getProjectSubtitlesResponse> => {
+  
+  return apiFetch<getProjectSubtitlesResponse>(getGetProjectSubtitlesUrl(projectId),
+  {      
     ...options,
-    method: "GET",
-  });
+    method: 'GET'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: getProjectSubtitlesResponse["data"] = body
-    ? JSON.parse(body)
-    : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as getProjectSubtitlesResponse;
-};
 
 /**
  * Replaces all subtitles for the given project with the provided list. Useful for manual corrections.
  * @summary Replace project subtitles
  */
 export type updateProjectSubtitlesResponse200 = {
-  data: SubtitleDTO[];
-  status: 200;
-};
+  data: SubtitleDTO[]
+  status: 200
+}
 
 export type updateProjectSubtitlesResponse400 = {
-  data: SubtitleDTO[];
-  status: 400;
-};
+  data: SubtitleDTO[]
+  status: 400
+}
 
 export type updateProjectSubtitlesResponse404 = {
-  data: SubtitleDTO[];
-  status: 404;
+  data: SubtitleDTO[]
+  status: 404
+}
+    
+export type updateProjectSubtitlesResponseSuccess = (updateProjectSubtitlesResponse200) & {
+  headers: Headers;
 };
-
-export type updateProjectSubtitlesResponseSuccess =
-  updateProjectSubtitlesResponse200 & {
-    headers: Headers;
-  };
-export type updateProjectSubtitlesResponseError = (
-  | updateProjectSubtitlesResponse400
-  | updateProjectSubtitlesResponse404
-) & {
+export type updateProjectSubtitlesResponseError = (updateProjectSubtitlesResponse400 | updateProjectSubtitlesResponse404) & {
   headers: Headers;
 };
 
-export type updateProjectSubtitlesResponse =
-  | updateProjectSubtitlesResponseSuccess
-  | updateProjectSubtitlesResponseError;
+export type updateProjectSubtitlesResponse = (updateProjectSubtitlesResponseSuccess | updateProjectSubtitlesResponseError)
 
-export const getUpdateProjectSubtitlesUrl = (projectId: number) => {
-  return `/api/projects/${projectId}/subtitles`;
-};
+export const getUpdateProjectSubtitlesUrl = (projectId: number,) => {
 
-export const updateProjectSubtitles = async (
-  projectId: number,
-  subtitleDTO: SubtitleDTO,
-  options?: RequestInit
-): Promise<updateProjectSubtitlesResponse> => {
-  const res = await fetch(getUpdateProjectSubtitlesUrl(projectId), {
+
+  
+
+  return `/api/projects/${projectId}/subtitles`
+}
+
+export const updateProjectSubtitles = async (projectId: number,
+    subtitleDTO: SubtitleDTO, options?: RequestInit): Promise<updateProjectSubtitlesResponse> => {
+  
+  return apiFetch<updateProjectSubtitlesResponse>(getUpdateProjectSubtitlesUrl(projectId),
+  {      
     ...options,
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(subtitleDTO),
-  });
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      subtitleDTO,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: updateProjectSubtitlesResponse["data"] = body
-    ? JSON.parse(body)
-    : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as updateProjectSubtitlesResponse;
-};
 
 /**
  * Returns a single project with subtitles and generated description if available.
  * @summary Get project by ID
  */
 export type getProjectResponse200 = {
-  data: ProjectResponseDTO;
-  status: 200;
-};
+  data: ProjectResponseDTO
+  status: 200
+}
 
 export type getProjectResponse404 = {
-  data: ProjectResponseDTO;
-  status: 404;
-};
-
-export type getProjectResponseSuccess = getProjectResponse200 & {
+  data: ProjectResponseDTO
+  status: 404
+}
+    
+export type getProjectResponseSuccess = (getProjectResponse200) & {
   headers: Headers;
 };
-export type getProjectResponseError = getProjectResponse404 & {
+export type getProjectResponseError = (getProjectResponse404) & {
   headers: Headers;
 };
 
-export type getProjectResponse =
-  | getProjectResponseSuccess
-  | getProjectResponseError;
+export type getProjectResponse = (getProjectResponseSuccess | getProjectResponseError)
 
-export const getGetProjectUrl = (id: number) => {
-  return `/api/projects/${id}`;
-};
+export const getGetProjectUrl = (id: number,) => {
 
-export const getProject = async (
-  id: number,
-  options?: RequestInit
-): Promise<getProjectResponse> => {
-  const res = await fetch(getGetProjectUrl(id), {
+
+  
+
+  return `/api/projects/${id}`
+}
+
+export const getProject = async (id: number, options?: RequestInit): Promise<getProjectResponse> => {
+  
+  return apiFetch<getProjectResponse>(getGetProjectUrl(id),
+  {      
     ...options,
-    method: "GET",
-  });
+    method: 'GET'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: getProjectResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as getProjectResponse;
-};
 
 /**
  * Updates project name/description.
  * @summary Update project
  */
 export type updateProjectResponse200 = {
-  data: ProjectResponseDTO;
-  status: 200;
-};
+  data: ProjectResponseDTO
+  status: 200
+}
 
 export type updateProjectResponse400 = {
-  data: ProjectResponseDTO;
-  status: 400;
-};
+  data: ProjectResponseDTO
+  status: 400
+}
 
 export type updateProjectResponse404 = {
-  data: ProjectResponseDTO;
-  status: 404;
-};
-
-export type updateProjectResponseSuccess = updateProjectResponse200 & {
+  data: ProjectResponseDTO
+  status: 404
+}
+    
+export type updateProjectResponseSuccess = (updateProjectResponse200) & {
   headers: Headers;
 };
-export type updateProjectResponseError = (
-  | updateProjectResponse400
-  | updateProjectResponse404
-) & {
+export type updateProjectResponseError = (updateProjectResponse400 | updateProjectResponse404) & {
   headers: Headers;
 };
 
-export type updateProjectResponse =
-  | updateProjectResponseSuccess
-  | updateProjectResponseError;
+export type updateProjectResponse = (updateProjectResponseSuccess | updateProjectResponseError)
 
-export const getUpdateProjectUrl = (id: number) => {
-  return `/api/projects/${id}`;
-};
+export const getUpdateProjectUrl = (id: number,) => {
 
-export const updateProject = async (
-  id: number,
-  projectCreateDTO: ProjectCreateDTO,
-  options?: RequestInit
-): Promise<updateProjectResponse> => {
-  const res = await fetch(getUpdateProjectUrl(id), {
+
+  
+
+  return `/api/projects/${id}`
+}
+
+export const updateProject = async (id: number,
+    projectCreateDTO: ProjectCreateDTO, options?: RequestInit): Promise<updateProjectResponse> => {
+  
+  return apiFetch<updateProjectResponse>(getUpdateProjectUrl(id),
+  {      
     ...options,
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(projectCreateDTO),
-  });
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectCreateDTO,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: updateProjectResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as updateProjectResponse;
-};
 
 /**
  * Deletes a project and associated data.
  * @summary Delete project
  */
 export type deleteProjectResponse200 = {
-  data: DeleteProject200;
-  status: 200;
-};
+  data: DeleteProject200
+  status: 200
+}
 
 export type deleteProjectResponse404 = {
-  data: DeleteProject404;
-  status: 404;
-};
-
-export type deleteProjectResponseSuccess = deleteProjectResponse200 & {
+  data: DeleteProject404
+  status: 404
+}
+    
+export type deleteProjectResponseSuccess = (deleteProjectResponse200) & {
   headers: Headers;
 };
-export type deleteProjectResponseError = deleteProjectResponse404 & {
+export type deleteProjectResponseError = (deleteProjectResponse404) & {
   headers: Headers;
 };
 
-export type deleteProjectResponse =
-  | deleteProjectResponseSuccess
-  | deleteProjectResponseError;
+export type deleteProjectResponse = (deleteProjectResponseSuccess | deleteProjectResponseError)
 
-export const getDeleteProjectUrl = (id: number) => {
-  return `/api/projects/${id}`;
-};
+export const getDeleteProjectUrl = (id: number,) => {
 
-export const deleteProject = async (
-  id: number,
-  options?: RequestInit
-): Promise<deleteProjectResponse> => {
-  const res = await fetch(getDeleteProjectUrl(id), {
+
+  
+
+  return `/api/projects/${id}`
+}
+
+export const deleteProject = async (id: number, options?: RequestInit): Promise<deleteProjectResponse> => {
+  
+  return apiFetch<deleteProjectResponse>(getDeleteProjectUrl(id),
+  {      
     ...options,
-    method: "DELETE",
-  });
+    method: 'DELETE'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: deleteProjectResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as deleteProjectResponse;
-};
 
 /**
  * Returns all projects for the current user, including metadata.
  * @summary List projects
  */
 export type getAllProjectsResponse200 = {
-  data: ProjectResponseDTO[];
-  status: 200;
-};
-
-export type getAllProjectsResponseSuccess = getAllProjectsResponse200 & {
+  data: ProjectResponseDTO[]
+  status: 200
+}
+    
+export type getAllProjectsResponseSuccess = (getAllProjectsResponse200) & {
   headers: Headers;
 };
-export type getAllProjectsResponse = getAllProjectsResponseSuccess;
+;
+
+export type getAllProjectsResponse = (getAllProjectsResponseSuccess)
 
 export const getGetAllProjectsUrl = () => {
-  return `/api/projects`;
-};
 
-export const getAllProjects = async (
-  options?: RequestInit
-): Promise<getAllProjectsResponse> => {
-  const res = await fetch(getGetAllProjectsUrl(), {
+
+  
+
+  return `/api/projects`
+}
+
+export const getAllProjects = async ( options?: RequestInit): Promise<getAllProjectsResponse> => {
+  
+  return apiFetch<getAllProjectsResponse>(getGetAllProjectsUrl(),
+  {      
     ...options,
-    method: "GET",
-  });
+    method: 'GET'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: getAllProjectsResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as getAllProjectsResponse;
-};
 
 /**
  * Creates a new project placeholder to which a video can be uploaded.
  * @summary Create project
  */
 export type createProjectResponse200 = {
-  data: ProjectResponseDTO;
-  status: 200;
-};
+  data: ProjectResponseDTO
+  status: 200
+}
 
 export type createProjectResponse400 = {
-  data: ProjectResponseDTO;
-  status: 400;
-};
-
-export type createProjectResponseSuccess = createProjectResponse200 & {
+  data: ProjectResponseDTO
+  status: 400
+}
+    
+export type createProjectResponseSuccess = (createProjectResponse200) & {
   headers: Headers;
 };
-export type createProjectResponseError = createProjectResponse400 & {
+export type createProjectResponseError = (createProjectResponse400) & {
   headers: Headers;
 };
 
-export type createProjectResponse =
-  | createProjectResponseSuccess
-  | createProjectResponseError;
+export type createProjectResponse = (createProjectResponseSuccess | createProjectResponseError)
 
 export const getCreateProjectUrl = () => {
-  return `/api/projects`;
-};
 
-export const createProject = async (
-  projectCreateDTO: ProjectCreateDTO,
-  options?: RequestInit
-): Promise<createProjectResponse> => {
-  const res = await fetch(getCreateProjectUrl(), {
+
+  
+
+  return `/api/projects`
+}
+
+export const createProject = async (projectCreateDTO: ProjectCreateDTO, options?: RequestInit): Promise<createProjectResponse> => {
+  
+  return apiFetch<createProjectResponse>(getCreateProjectUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(projectCreateDTO),
-  });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectCreateDTO,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: createProjectResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as createProjectResponse;
-};
 
 /**
  * Uploads a video file (MP4, <= 100MB) for processing (transcription, subtitles, description).
  * @summary Upload video for a project
  */
 export type uploadVideoResponse200 = {
-  data: UploadVideo200;
-  status: 200;
-};
+  data: UploadVideo200
+  status: 200
+}
 
 export type uploadVideoResponse400 = {
-  data: UploadVideo400;
-  status: 400;
-};
+  data: UploadVideo400
+  status: 400
+}
 
 export type uploadVideoResponse401 = {
-  data: UploadVideo401;
-  status: 401;
-};
+  data: UploadVideo401
+  status: 401
+}
 
 export type uploadVideoResponse404 = {
-  data: UploadVideo404;
-  status: 404;
-};
-
-export type uploadVideoResponseSuccess = uploadVideoResponse200 & {
+  data: UploadVideo404
+  status: 404
+}
+    
+export type uploadVideoResponseSuccess = (uploadVideoResponse200) & {
   headers: Headers;
 };
-export type uploadVideoResponseError = (
-  | uploadVideoResponse400
-  | uploadVideoResponse401
-  | uploadVideoResponse404
-) & {
+export type uploadVideoResponseError = (uploadVideoResponse400 | uploadVideoResponse401 | uploadVideoResponse404) & {
   headers: Headers;
 };
 
-export type uploadVideoResponse =
-  | uploadVideoResponseSuccess
-  | uploadVideoResponseError;
+export type uploadVideoResponse = (uploadVideoResponseSuccess | uploadVideoResponseError)
 
-export const getUploadVideoUrl = (id: number) => {
-  return `/api/projects/${id}/upload`;
-};
+export const getUploadVideoUrl = (id: number,) => {
 
-export const uploadVideo = async (
-  id: number,
-  uploadVideoBody: UploadVideoBody,
-  options?: RequestInit
-): Promise<uploadVideoResponse> => {
-  const formData = new FormData();
-  formData.append(`file`, uploadVideoBody.file);
 
-  const res = await fetch(getUploadVideoUrl(id), {
+  
+
+  return `/api/projects/${id}/upload`
+}
+
+export const uploadVideo = async (id: number,
+    uploadVideoBody: UploadVideoBody, options?: RequestInit): Promise<uploadVideoResponse> => {
+    const formData = new FormData();
+formData.append(`file`, uploadVideoBody.file)
+
+  return apiFetch<uploadVideoResponse>(getUploadVideoUrl(id),
+  {      
     ...options,
-    method: "POST",
-    body: formData,
-  });
+    method: 'POST'
+    ,
+    body: 
+      formData,
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: uploadVideoResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as uploadVideoResponse;
-};
 
 export type registerResponse200 = {
-  data: AuthResponseDTO;
-  status: 200;
-};
-
-export type registerResponseSuccess = registerResponse200 & {
+  data: AuthResponseDTO
+  status: 200
+}
+    
+export type registerResponseSuccess = (registerResponse200) & {
   headers: Headers;
 };
-export type registerResponse = registerResponseSuccess;
+;
+
+export type registerResponse = (registerResponseSuccess)
 
 export const getRegisterUrl = () => {
-  return `/api/auth/register`;
-};
 
-export const register = async (
-  registerRequestDTO: RegisterRequestDTO,
-  options?: RequestInit
-): Promise<registerResponse> => {
-  const res = await fetch(getRegisterUrl(), {
+
+  
+
+  return `/api/auth/register`
+}
+
+export const register = async (registerRequestDTO: RegisterRequestDTO, options?: RequestInit): Promise<registerResponse> => {
+  
+  return apiFetch<registerResponse>(getRegisterUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(registerRequestDTO),
-  });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      registerRequestDTO,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: registerResponse["data"] = body ? JSON.parse(body) : {};
-  return { data, status: res.status, headers: res.headers } as registerResponse;
-};
 
 export type refreshTokenResponse200 = {
-  data: AuthResponseDTO;
-  status: 200;
-};
-
-export type refreshTokenResponseSuccess = refreshTokenResponse200 & {
+  data: AuthResponseDTO
+  status: 200
+}
+    
+export type refreshTokenResponseSuccess = (refreshTokenResponse200) & {
   headers: Headers;
 };
-export type refreshTokenResponse = refreshTokenResponseSuccess;
+;
+
+export type refreshTokenResponse = (refreshTokenResponseSuccess)
 
 export const getRefreshTokenUrl = () => {
-  return `/api/auth/refresh`;
-};
 
-export const refreshToken = async (
-  refreshTokenBody: RefreshTokenBody,
-  options?: RequestInit
-): Promise<refreshTokenResponse> => {
-  const res = await fetch(getRefreshTokenUrl(), {
+
+  
+
+  return `/api/auth/refresh`
+}
+
+export const refreshToken = async (refreshTokenBody: RefreshTokenBody, options?: RequestInit): Promise<refreshTokenResponse> => {
+  
+  return apiFetch<refreshTokenResponse>(getRefreshTokenUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(refreshTokenBody),
-  });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      refreshTokenBody,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: refreshTokenResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as refreshTokenResponse;
-};
 
 export type logoutResponse200 = {
-  data: Logout200;
-  status: 200;
-};
-
-export type logoutResponseSuccess = logoutResponse200 & {
+  data: Logout200
+  status: 200
+}
+    
+export type logoutResponseSuccess = (logoutResponse200) & {
   headers: Headers;
 };
-export type logoutResponse = logoutResponseSuccess;
+;
+
+export type logoutResponse = (logoutResponseSuccess)
 
 export const getLogoutUrl = () => {
-  return `/api/auth/logout`;
-};
 
-export const logout = async (
-  options?: RequestInit
-): Promise<logoutResponse> => {
-  const res = await fetch(getLogoutUrl(), {
+
+  
+
+  return `/api/auth/logout`
+}
+
+export const logout = async ( options?: RequestInit): Promise<logoutResponse> => {
+  
+  return apiFetch<logoutResponse>(getLogoutUrl(),
+  {      
     ...options,
-    method: "POST",
-  });
+    method: 'POST'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: logoutResponse["data"] = body ? JSON.parse(body) : {};
-  return { data, status: res.status, headers: res.headers } as logoutResponse;
-};
 
 export type loginResponse200 = {
-  data: AuthResponseDTO;
-  status: 200;
-};
-
-export type loginResponseSuccess = loginResponse200 & {
+  data: AuthResponseDTO
+  status: 200
+}
+    
+export type loginResponseSuccess = (loginResponse200) & {
   headers: Headers;
 };
-export type loginResponse = loginResponseSuccess;
+;
+
+export type loginResponse = (loginResponseSuccess)
 
 export const getLoginUrl = () => {
-  return `/api/auth/login`;
-};
 
-export const login = async (
-  loginRequestDTO: LoginRequestDTO,
-  options?: RequestInit
-): Promise<loginResponse> => {
-  const res = await fetch(getLoginUrl(), {
+
+  
+
+  return `/api/auth/login`
+}
+
+export const login = async (loginRequestDTO: LoginRequestDTO, options?: RequestInit): Promise<loginResponse> => {
+  
+  return apiFetch<loginResponse>(getLoginUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(loginRequestDTO),
-  });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginRequestDTO,)
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: loginResponse["data"] = body ? JSON.parse(body) : {};
-  return { data, status: res.status, headers: res.headers } as loginResponse;
-};
 
 /**
  * Returns processing status: UPLOADING, PROCESSING, COMPLETED, or ERROR.
  * @summary Get processing status
  */
 export type getProjectStatusResponse200 = {
-  data: GetProjectStatus200;
-  status: 200;
-};
+  data: GetProjectStatus200
+  status: 200
+}
 
 export type getProjectStatusResponse404 = {
-  data: GetProjectStatus404;
-  status: 404;
-};
-
-export type getProjectStatusResponseSuccess = getProjectStatusResponse200 & {
+  data: GetProjectStatus404
+  status: 404
+}
+    
+export type getProjectStatusResponseSuccess = (getProjectStatusResponse200) & {
   headers: Headers;
 };
-export type getProjectStatusResponseError = getProjectStatusResponse404 & {
+export type getProjectStatusResponseError = (getProjectStatusResponse404) & {
   headers: Headers;
 };
 
-export type getProjectStatusResponse =
-  | getProjectStatusResponseSuccess
-  | getProjectStatusResponseError;
+export type getProjectStatusResponse = (getProjectStatusResponseSuccess | getProjectStatusResponseError)
 
-export const getGetProjectStatusUrl = (id: number) => {
-  return `/api/projects/${id}/status`;
-};
+export const getGetProjectStatusUrl = (id: number,) => {
 
-export const getProjectStatus = async (
-  id: number,
-  options?: RequestInit
-): Promise<getProjectStatusResponse> => {
-  const res = await fetch(getGetProjectStatusUrl(id), {
+
+  
+
+  return `/api/projects/${id}/status`
+}
+
+export const getProjectStatus = async (id: number, options?: RequestInit): Promise<getProjectStatusResponse> => {
+  
+  return apiFetch<getProjectStatusResponse>(getGetProjectStatusUrl(id),
+  {      
     ...options,
-    method: "GET",
-  });
+    method: 'GET'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: getProjectStatusResponse["data"] = body ? JSON.parse(body) : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as getProjectStatusResponse;
-};
 
 /**
  * Returns the AI-generated description for the given project. If the transcription hasn't finished yet, returns HTTP 202 with an informational message.
  * @summary Get AI-generated description
  */
 export type getProjectDescriptionResponse200 = {
-  data: GetProjectDescription200;
-  status: 200;
-};
+  data: GetProjectDescription200
+  status: 200
+}
 
 export type getProjectDescriptionResponse202 = {
-  data: GetProjectDescription202;
-  status: 202;
-};
+  data: GetProjectDescription202
+  status: 202
+}
 
 export type getProjectDescriptionResponse401 = {
-  data: GetProjectDescription401;
-  status: 401;
-};
+  data: GetProjectDescription401
+  status: 401
+}
 
 export type getProjectDescriptionResponse404 = {
-  data: GetProjectDescription404;
-  status: 404;
-};
-
-export type getProjectDescriptionResponseSuccess = (
-  | getProjectDescriptionResponse200
-  | getProjectDescriptionResponse202
-) & {
+  data: GetProjectDescription404
+  status: 404
+}
+    
+export type getProjectDescriptionResponseSuccess = (getProjectDescriptionResponse200 | getProjectDescriptionResponse202) & {
   headers: Headers;
 };
-export type getProjectDescriptionResponseError = (
-  | getProjectDescriptionResponse401
-  | getProjectDescriptionResponse404
-) & {
+export type getProjectDescriptionResponseError = (getProjectDescriptionResponse401 | getProjectDescriptionResponse404) & {
   headers: Headers;
 };
 
-export type getProjectDescriptionResponse =
-  | getProjectDescriptionResponseSuccess
-  | getProjectDescriptionResponseError;
+export type getProjectDescriptionResponse = (getProjectDescriptionResponseSuccess | getProjectDescriptionResponseError)
 
-export const getGetProjectDescriptionUrl = (id: number) => {
-  return `/api/projects/${id}/description`;
-};
+export const getGetProjectDescriptionUrl = (id: number,) => {
 
-export const getProjectDescription = async (
-  id: number,
-  options?: RequestInit
-): Promise<getProjectDescriptionResponse> => {
-  const res = await fetch(getGetProjectDescriptionUrl(id), {
+
+  
+
+  return `/api/projects/${id}/description`
+}
+
+export const getProjectDescription = async (id: number, options?: RequestInit): Promise<getProjectDescriptionResponse> => {
+  
+  return apiFetch<getProjectDescriptionResponse>(getGetProjectDescriptionUrl(id),
+  {      
     ...options,
-    method: "GET",
-  });
+    method: 'GET'
+    
+    
+  }
+);}
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: getProjectDescriptionResponse["data"] = body
-    ? JSON.parse(body)
-    : {};
-  return {
-    data,
-    status: res.status,
-    headers: res.headers,
-  } as getProjectDescriptionResponse;
-};
 
 export type healthResponse200 = {
-  data: HealthComponent;
-  status: 200;
-};
-
-export type healthResponseSuccess = healthResponse200 & {
+  data: HealthComponent
+  status: 200
+}
+    
+export type healthResponseSuccess = (healthResponse200) & {
   headers: Headers;
 };
-export type healthResponse = healthResponseSuccess;
+;
+
+export type healthResponse = (healthResponseSuccess)
 
 export const getHealthUrl = () => {
-  return `/api/health`;
-};
 
-export const health = async (
-  options?: RequestInit
-): Promise<healthResponse> => {
-  const res = await fetch(getHealthUrl(), {
+
+  
+
+  return `/api/health`
+}
+
+export const health = async ( options?: RequestInit): Promise<healthResponse> => {
+  
+  return apiFetch<healthResponse>(getHealthUrl(),
+  {      
     ...options,
-    method: "GET",
-  });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: healthResponse["data"] = body ? JSON.parse(body) : {};
-  return { data, status: res.status, headers: res.headers } as healthResponse;
-};
+    method: 'GET'
+    
+    
+  }
+);}
