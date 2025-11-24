@@ -19,6 +19,21 @@ const mergeHeaders = (target: Headers, source?: HeadersInit): Headers => {
   return target;
 };
 
+const getClientToken = () => {
+  if (typeof window === "undefined") return null;
+  const raw = document.cookie
+    ?.split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("session="));
+  if (!raw) return null;
+  try {
+    const payload = JSON.parse(decodeURIComponent(raw.split("=")[1] ?? ""));
+    return payload.token as string | undefined;
+  } catch {
+    return null;
+  }
+};
+
 export async function apiFetch<T>(
   input: ApiFetchArgs,
   init: RequestInit = {}
@@ -36,7 +51,9 @@ export async function apiFetch<T>(
   );
 
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("token") || getClientToken()
+      : null;
 
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
