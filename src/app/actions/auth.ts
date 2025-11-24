@@ -43,7 +43,7 @@ const ONE_WEEK_SECONDS = 60 * 60 * 24 * 7;
 async function setSessionCookie(auth: AuthResponseDTO) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, JSON.stringify(auth), {
-    httpOnly: true,
+    httpOnly: false,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',

@@ -19,7 +19,12 @@ const mergeHeaders = (target: Headers, source?: HeadersInit): Headers => {
   return target;
 };
 
-const getClientToken = () => {
+type SessionPayload = {
+  token?: string;
+  refreshToken?: string;
+};
+
+const getClientSession = (): SessionPayload | null => {
   if (typeof window === "undefined") return null;
   const raw = document.cookie
     ?.split(";")
@@ -27,10 +32,21 @@ const getClientToken = () => {
     .find((c) => c.startsWith("session="));
   if (!raw) return null;
   try {
-    const payload = JSON.parse(decodeURIComponent(raw.split("=")[1] ?? ""));
-    return payload.token as string | undefined;
+    return JSON.parse(decodeURIComponent(raw.split("=")[1] ?? "")) as SessionPayload;
   } catch {
     return null;
+  }
+};
+
+const persistClientSession = (payload: SessionPayload) => {
+  if (typeof window === "undefined") return;
+  const value = encodeURIComponent(JSON.stringify(payload));
+  document.cookie = `session=${value}; path=/; max-age=604800; samesite=lax; secure`;
+  if (payload.token) {
+    localStorage.setItem("token", payload.token);
+  }
+  if (payload.refreshToken) {
+    localStorage.setItem("refreshToken", payload.refreshToken);
   }
 };
 
@@ -50,9 +66,10 @@ export async function apiFetch<T>(
     init.headers
   );
 
+  const session = getClientSession();
   const token =
     typeof window !== "undefined"
-      ? localStorage.getItem("token") || getClientToken()
+      ? localStorage.getItem("token") || session?.token || null
       : null;
 
   if (token && !headers.has("Authorization")) {
@@ -73,16 +90,45 @@ export async function apiFetch<T>(
 
   const finalUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
 
-  const res = await fetch(finalUrl, {
-    ...init,
-    method,
-    signal,
-    headers,
-    body,
-  });
+  const doFetch = async () =>
+    fetch(finalUrl, {
+      ...init,
+      method,
+      signal,
+      headers,
+      body,
+    });
+
+  let res = await doFetch();
 
   const contentType = res.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
+
+  // If unauthorized on client, try refresh once
+  if (typeof window !== "undefined" && res.status === 401) {
+    const refreshToken =
+      localStorage.getItem("refreshToken") || session?.refreshToken;
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (refreshRes.ok) {
+          const refreshed = await refreshRes.json();
+          persistClientSession({
+            token: refreshed?.token,
+            refreshToken: refreshed?.refreshToken ?? refreshToken,
+          });
+          headers.set("Authorization", `Bearer ${refreshed?.token ?? ""}`);
+          res = await doFetch();
+        }
+      } catch {
+        // ignore and fall through with original 401
+      }
+    }
+  }
 
   const parsedBody =
     [204, 205, 304].includes(res.status) ? null : isJson ? await res.json() : await res.text();
