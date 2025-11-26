@@ -28,6 +28,37 @@ export function SubtitleGenerator({
   // State pro chybovou zprávu
   const [errorMessage, setErrorMessage] = useState("");
 
+  const formatTimestamp = (ms: number) => {
+    const date = new Date(ms);
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+    const milliseconds = String(date.getUTCMilliseconds()).padStart(3, "0");
+    return `${hours}:${minutes}:${seconds},${milliseconds}`;
+  };
+
+  const convertToSRT = (subtitles: SubtitleDTO[]) =>
+    subtitles
+      .map((subtitle, index) => {
+        const start = formatTimestamp((subtitle.startTime ?? 0) * 1000);
+        const end = formatTimestamp((subtitle.endTime ?? 0) * 1000);
+        return `${index + 1}\n${start} --> ${end}\n${subtitle.text ?? ""}\n`;
+      })
+      .join("\n");
+
+  // Funkce pro stažení titulků jako .srt soubor
+  const downloadSubtitles = (subtitles: string) => {
+    const blob = new Blob([subtitles], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${videoFile.name.replace(/\.[^/.]+$/, "")}.srt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Funkce pro generování titulků
   const handleGenerateSubtitles = async () => {
     setIsGenerating(true);
@@ -51,19 +82,17 @@ export function SubtitleGenerator({
 
       // Krok 3: Čekání na zpracování (polling)
       let statusResponse = await getProjectStatus(projectId);
-      let status =
-        (statusResponse.data as { status?: string })?.status ?? "";
+      let status = statusResponse.data?.status ?? "";
 
       while (status === "UPLOADING" || status === "PROCESSING") {
         // Čekáme 3 sekundy před dalším kontrolováním
         await new Promise((resolve) => setTimeout(resolve, 3000));
         statusResponse = await getProjectStatus(projectId);
-        status =
-          (statusResponse.data as { status?: string })?.status ?? "";
+        status = statusResponse.data?.status ?? "";
       }
 
       // Kontrola, zda zpracování proběhlo úspěšně
-      if (status === "ERROR" || status === "FAILED") {
+      if (status === "ERROR") {
         throw new Error("Zpracování videa selhalo");
       }
 
@@ -97,37 +126,6 @@ export function SubtitleGenerator({
       setIsGenerating(false);
     }
   };
-
-  // Funkce pro stažení titulků jako .srt soubor
-  const downloadSubtitles = (subtitles: string) => {
-    const blob = new Blob([subtitles], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${videoFile.name.replace(/\.[^/.]+$/, "")}.srt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const formatTimestamp = (ms: number) => {
-    const date = new Date(ms);
-    const hours = String(date.getUTCHours()).padStart(2, "0");
-    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
-    const milliseconds = String(date.getUTCMilliseconds()).padStart(3, "0");
-    return `${hours}:${minutes}:${seconds},${milliseconds}`;
-  };
-
-  const convertToSRT = (subtitles: SubtitleDTO[]) =>
-    subtitles
-      .map((subtitle, index) => {
-        const start = formatTimestamp((subtitle.startTime ?? 0) * 1000);
-        const end = formatTimestamp((subtitle.endTime ?? 0) * 1000);
-        return `${index + 1}\n${start} --> ${end}\n${subtitle.text ?? ""}\n`;
-      })
-      .join("\n");
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
