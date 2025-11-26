@@ -188,7 +188,7 @@ export const getUpdateProjectSubtitlesUrl = (projectId: number,) => {
 }
 
 export const updateProjectSubtitles = async (projectId: number,
-    subtitleDTO: SubtitleDTO, options?: RequestInit): Promise<updateProjectSubtitlesResponse> => {
+    subtitleDTO: SubtitleDTO[], options?: RequestInit): Promise<updateProjectSubtitlesResponse> => {
   
   return apiFetch<updateProjectSubtitlesResponse>(getUpdateProjectSubtitlesUrl(projectId),
   {      

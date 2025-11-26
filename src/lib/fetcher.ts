@@ -50,6 +50,14 @@ const persistClientSession = (payload: SessionPayload) => {
   }
 };
 
+const clearSessionAndRedirect = () => {
+  if (typeof window === "undefined") return;
+  document.cookie = "session=; path=/; max-age=0; samesite=lax; secure";
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  window.location.href = "/login";
+};
+
 export async function apiFetch<T>(
   input: ApiFetchArgs,
   init: RequestInit = {}
@@ -104,8 +112,8 @@ export async function apiFetch<T>(
   const contentType = res.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
 
-  // If unauthorized on client, try refresh once
-  if (typeof window !== "undefined" && res.status === 401) {
+  // If unauthorized/forbidden on client, try refresh once
+  if (typeof window !== "undefined" && (res.status === 401 || res.status === 403)) {
     const refreshToken =
       localStorage.getItem("refreshToken") || session?.refreshToken;
     if (refreshToken) {
@@ -123,10 +131,15 @@ export async function apiFetch<T>(
           });
           headers.set("Authorization", `Bearer ${refreshed?.token ?? ""}`);
           res = await doFetch();
+        } else {
+          clearSessionAndRedirect();
         }
       } catch {
         // ignore and fall through with original 401
+        clearSessionAndRedirect();
       }
+    } else {
+      clearSessionAndRedirect();
     }
   }
 
