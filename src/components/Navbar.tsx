@@ -55,7 +55,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo a navigace */}
           <div className="flex items-center space-x-8">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="text-xl font-bold text-gray-900">SocialMat</span>
             </Link>
 

@@ -251,7 +251,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-white text-black font-sans overflow-x-hidden">
+    <div className="bg-black text-white font-sans overflow-x-hidden">
       {/* Grain texture overlay */}
       <div
         className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-[0.015] z-[1]"
@@ -263,180 +263,144 @@ export default function LandingPage() {
       {/* Navigation with GSAP animations */}
       <nav
         ref={navRef}
-        className="fixed z-50 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-full py-3 px-6 sm:px-8 flex items-center justify-center gap-4 sm:gap-10 shadow-lg transition-all duration-300 hover:shadow-xl w-auto max-w-[90vw]"
-        style={{
-          opacity: 0,
-          top: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
+        className="
+    fixed top-6 inset-x-0
+    z-50 
+    flex justify-center
+    px-4
+    opacity-0
+  "
       >
-        <button
-          onClick={() => scrollToSection("hero")}
-          className="font-semibold text-base text-black no-underline bg-transparent border-none cursor-pointer transition-colors duration-300"
+        <div
+          className="
+      bg-black/40 backdrop-blur-xl 
+      border border-white/10 
+      rounded-full
+      px-8 py-3
+      flex items-center justify-between
+      w-full max-w-4xl
+      transition-all duration-300
+    "
         >
-          SocialMat
-        </button>
-        <button
-          onClick={() => scrollToSection("features")}
-          className="text-sm text-gray-600 font-medium transition-colors duration-300 hover:text-black hidden md:block bg-transparent border-none cursor-pointer"
-        >
-          Features
-        </button>
-        <button
-          onClick={() => scrollToSection("pricing")}
-          className="text-sm text-gray-600 font-medium transition-colors duration-300 hover:text-black hidden md:block bg-transparent border-none cursor-pointer"
-        >
-          Pricing
-        </button>
-        <button
-          onClick={() => scrollToSection("contact")}
-          className="text-sm text-gray-600 font-medium transition-colors duration-300 hover:text-black hidden md:block bg-transparent border-none cursor-pointer"
-        >
-          Contact
-        </button>
-        <a
-          href="/dashboard"
-          className="bg-black text-white py-2 px-6 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg border-none cursor-pointer no-underline whitespace-nowrap"
-        >
-          Přihlásit se
-        </a>
+          {/* LOGO LEFT */}
+          <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight cursor-pointer">
+            SocialMat
+          </div>
+
+          {/* CENTER LINKS */}
+          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-white/85">
+            <button
+              onClick={() => scrollToSection("features")}
+              className="hover:text-white transition-colors duration-200 bg-transparent border-none cursor-pointer"
+            >
+              Features
+            </button>
+
+            <button
+              onClick={() => scrollToSection("pricing")}
+              className="hover:text-white transition-colors duration-200 bg-transparent border-none cursor-pointer"
+            >
+              Pricing
+            </button>
+
+            <button
+              onClick={() => scrollToSection("contact")}
+              className="hover:text-white transition-colors duration-200 bg-transparent border-none cursor-pointer"
+            >
+              Contact
+            </button>
+          </div>
+
+          {/* RIGHT BUTTONS */}
+          <div className="flex items-center gap-3">
+            {/* Login button */}
+            <a
+              href="/dashboard"
+              className="
+        text-white/80 hover:text-white 
+        text-sm font-semibold
+        bg-transparent border-none cursor-pointer
+        transition-colors duration-300
+      "
+            >
+              Login
+            </a>
+
+            {/* Get Started */}
+            <button
+              onClick={() => scrollToSection("waitlist")}
+              className="
+        text-black
+        bg-white
+        py-2 px-6 
+        rounded-full 
+        text-sm font-semibold 
+        transition-all duration-300 
+        hover:scale-105 hover:shadow-[0_12px_28px_rgba(98,52,255,0.3)] cursor-pointer
+      "
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
       </nav>
 
       {/* Hero Section with GSAP scroll animations */}
       <section
         ref={heroRef}
         id="hero"
-        className="min-h-screen flex items-center justify-center relative overflow-hidden py-20"
+        className="min-h-screen flex items-center justify-center relative overflow-hidden py-32 bg-black text-white"
       >
-        {/* Clean background gradients */}
+        {/* GRID BACKGROUND */}
         <div
-          className="absolute inset-0 opacity-40"
+          className="absolute inset-0 opacity-[0.08]"
           style={{
-            background: `
-              radial-gradient(circle at 80% 20%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.06) 0%, transparent 50%)
-            `,
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
           }}
         />
 
-        <div className="text-center max-w-5xl mx-auto px-6 relative z-[2] pt-24">
-          {/* Hero badge */}
-          <div className="hero-badge inline-flex items-center gap-2 bg-gray-50 border border-gray-200 py-2 px-5 rounded-full text-xs font-medium text-gray-700 mb-12 transition-all duration-300 hover:bg-white hover:shadow-md cursor-pointer opacity-0">
-            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
-            Private Beta — Czech Republic
-          </div>
+        {/* SPOTLIGHT */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% -10%, rgba(255,255,255,0.25), rgba(0,0,0,0) 70%)",
+          }}
+        />
 
-          {/* Hero title */}
-          <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] tracking-tight mb-10 bg-gradient-to-b from-black to-gray-700 bg-clip-text text-transparent opacity-0">
-            AI titulky které
-            <br />
-            rozumí češtině
+        {/* CONTENT */}
+        <div className="text-center max-w-5xl mx-auto px-6 relative z-[2]">
+          {/* TITLE */}
+          <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] tracking-tight mb-10 text-white opacity-0">
+            Tvořte české titulky{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">
+              rychle a spolehlivě
+            </span>
           </h1>
 
-          {/* Hero subtitle */}
-          <p className="hero-subtitle text-lg md:text-xl lg:text-2xl text-gray-600 font-normal max-w-3xl mx-auto mb-16 leading-relaxed opacity-0">
-            Konec s &quot;Hello beautiful&quot; překladem. Naše AI je trénovaná
-            výhradně na českém obsahu pro perfektní přepis každého slova.
+          {/* SUBTITLE */}
+          <p className="hero-subtitle text-lg md:text-xl lg:text-2xl text-white/85 font-normal max-w-3xl mx-auto mb-16 leading-relaxed opacity-0">
+            Stačí vložit video a během pár sekund získáte kompletní titulky
+            vytvořené na základě zvuku videa.
           </p>
 
-          {/* Hero CTA buttons */}
-          <div className="hero-buttons flex flex-col sm:flex-row gap-6 justify-center mb-20 opacity-0">
+          {/* CTA BUTTONS */}
+          <div className="hero-buttons flex flex-col sm:flex-row gap-6 justify-center opacity-0">
             <button
               onClick={() => scrollToSection("waitlist")}
-              className="bg-black text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 inline-flex items-center justify-center gap-2 hover:-translate-y-1 hover:shadow-lg border-none cursor-pointer group min-w-[200px]"
+              className="bg-white text-black py-4 px-10 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_14px_34px_rgba(98,52,255,0.3)] cursor-pointer"
             >
               Získat early access
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
             </button>
+
             <button
               onClick={() => scrollToSection("demo")}
-              className="bg-transparent text-gray-700 py-4 px-8 rounded-xl font-semibold text-lg border-2 border-gray-300 transition-all duration-300 hover:bg-gray-50 hover:border-gray-400 cursor-pointer min-w-[180px]"
+              className="bg-transparent text-white py-4 px-10 rounded-full font-semibold text-lg border border-white/20 hover:bg-white/10 transition-all duration-300 cursor-pointer"
             >
               Zobrazit demo
             </button>
-          </div>
-
-          {/* Hero 3D demo */}
-          <div
-            className="hero-demo relative max-w-4xl mx-auto opacity-0"
-            style={{ perspective: "1000px" }}
-          >
-            <div
-              className="bg-black rounded-3xl overflow-hidden transition-all duration-500 ease-out shadow-2xl group"
-              style={{
-                transform: "rotateX(5deg)",
-                transformStyle: "preserve-3d",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "rotateX(0deg) scale(1.02)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "rotateX(5deg) scale(1)";
-              }}
-            >
-              {/* Demo Header */}
-              <div className="bg-gray-900 px-6 py-4 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                </div>
-                <div className="text-gray-400 text-xs font-medium ml-auto">
-                  socialmat.app
-                </div>
-              </div>
-
-              {/* Demo Content */}
-              <div
-                className="h-96 flex items-center justify-center relative"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
-                }}
-              >
-                {/* Video Placeholder */}
-                <div
-                  className="rounded-2xl relative overflow-hidden shadow-xl transition-transform duration-500 group-hover:scale-105"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #ff6b35 0%, #4285f4 100%)",
-                    width: "280px",
-                    height: "320px",
-                  }}
-                >
-                  {/* Process Indicator */}
-                  <div className="absolute top-5 right-5 bg-white/10 backdrop-blur-xl rounded-lg py-2 px-3 text-xs text-gray-300 font-medium">
-                    Zpracovávání...
-                  </div>
-
-                  {/* Subtitle Overlay */}
-                  <div
-                    className="absolute inset-5 bg-white/95 backdrop-blur-xl rounded-xl flex items-center justify-center font-semibold text-base text-black text-center leading-snug opacity-0 transform translate-y-2"
-                    style={{
-                      animation: "subtitleAppear 4s ease-in-out infinite",
-                    }}
-                  >
-                    &quot;Prostě úžasné! Konečně titulky které dávají smysl a
-                    rozumí našemu jazyku.&quot;
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -445,15 +409,15 @@ export default function LandingPage() {
       <section
         ref={featuresRef}
         id="features"
-        className="py-48 bg-white relative overflow-hidden"
+        className="py-48 bg-black relative overflow-hidden"
       >
         {/* Subtle background */}
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-20"
           style={{
             background: `
-              radial-gradient(circle at 20% 30%, rgba(255, 107, 53, 0.03) 0%, transparent 50%),
-              radial-gradient(circle at 80% 70%, rgba(66, 133, 244, 0.02) 0%, transparent 50%)
+              radial-gradient(circle at 20% 30%, rgba(108, 92, 231, 0.18) 0%, transparent 45%),
+              radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.18) 0%, transparent 45%)
             `,
           }}
         />
@@ -461,20 +425,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-10 relative z-[2]">
           {/* Features header */}
           <div className="text-center mb-32">
-            <div className="features-badge inline-block bg-gray-50 text-gray-700 py-2 px-5 rounded-full text-xs font-semibold uppercase tracking-wider border border-gray-100 mb-8 transition-all duration-300 hover:bg-white hover:shadow-sm opacity-0">
+            <div className="features-badge inline-block bg-white/10 text-white py-2 px-5 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10 mb-8 transition-all duration-300 hover:bg-white/15 hover:shadow-sm opacity-0">
               Features
             </div>
-            <h2 className="features-title text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-black leading-tight opacity-0">
+            <h2 className="features-title text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white leading-tight opacity-0">
               Proč SocialMat?
             </h2>
-            <p className="features-subtitle text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-normal opacity-0">
+            <p className="features-subtitle text-xl md:text-2xl text-white/75 max-w-3xl mx-auto leading-relaxed font-normal opacity-0">
               První AI systém navržený specificky pro český jazyk a potřeby
               lokálních content creatorů
             </p>
           </div>
 
           {/* Features grid */}
-          <div className="features-grid grid grid-cols-1 md:grid-cols-2 gap-0.5 bg-gray-100 rounded-3xl overflow-hidden shadow-xl opacity-0">
+          <div className="features-grid grid grid-cols-1 md:grid-cols-2 gap-0.5 bg-white/5 rounded-3xl overflow-hidden shadow-xl opacity-0">
             {[
               {
                 icon: "🇨🇿",
@@ -503,7 +467,7 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="feature-card bg-white p-16 transition-all duration-400 relative overflow-hidden flex flex-col h-full hover:shadow-lg group cursor-pointer opacity-0"
+                className="feature-card bg-[#0f0f14] p-16 transition-all duration-400 relative overflow-hidden flex flex-col h-full hover:shadow-lg group cursor-pointer opacity-0 border border-white/5"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
                 }}
@@ -516,17 +480,17 @@ export default function LandingPage() {
 
                 <div className="relative z-[2]">
                   {/* Clean icon */}
-                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-gray-100 transition-all duration-300 group-hover:bg-gray-100 group-hover:scale-105">
+                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-white/10 transition-all duration-300 group-hover:bg-white/10 group-hover:scale-105">
                     {feature.icon}
                   </div>
 
                   {/* Clean title */}
-                  <h3 className="text-3xl font-bold mb-5 text-black tracking-tight">
+                  <h3 className="text-3xl font-bold mb-5 text-white tracking-tight">
                     {feature.title}
                   </h3>
 
                   {/* Clean description */}
-                  <p className="text-gray-600 leading-relaxed text-lg font-normal">
+                  <p className="text-white/75 leading-relaxed text-lg font-normal">
                     {feature.description}
                   </p>
                 </div>
@@ -546,7 +510,7 @@ export default function LandingPage() {
             <h2 className="stats-title text-4xl md:text-6xl font-bold text-white mb-8 opacity-0">
               Věříme v transparentnost
             </h2>
-            <p className="stats-subtitle text-gray-400 text-lg max-w-2xl mx-auto opacity-0">
+            <p className="stats-subtitle text-white/70 text-lg max-w-2xl mx-auto opacity-0">
               Naše čísla hovoří za nás
             </p>
           </div>
@@ -561,7 +525,7 @@ export default function LandingPage() {
                 <div className="text-4xl md:text-6xl font-bold text-white mb-4 transition-colors duration-300 hover:text-blue-400">
                   {stat.number}
                 </div>
-                <div className="text-gray-400 text-sm uppercase tracking-wider">
+                <div className="text-white/60 text-sm uppercase tracking-wider">
                   {stat.label}
                 </div>
               </div>
@@ -573,7 +537,7 @@ export default function LandingPage() {
       {/* CTA Section with GSAP scroll animations */}
       <section
         ref={ctaRef}
-        className="cta py-40 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden"
+        className="cta bg-black text-white py-40 relative overflow-hidden"
         id="waitlist"
       >
         <div className="absolute inset-0 opacity-20">
@@ -581,18 +545,18 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/2 to-transparent"></div>
         </div>
 
-        <div className="container max-w-7xl mx-auto px-10 relative z-10">
+        <div className="container max-w-7xl mx-auto px-10 relative z-10 text-white">
           <div className="cta-content text-center">
-            <div className="cta-badge inline-flex items-center gap-2 bg-white border border-gray-200 px-5 py-2 rounded-full text-xs font-semibold text-gray-700 mb-8 uppercase tracking-wider transition-all duration-300 hover:shadow-md cursor-pointer opacity-0">
-              <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+            <div className="cta-badge inline-flex items-center gap-2 bg-white/10 border border-white/15 px-5 py-2 rounded-full text-xs font-semibold text-white mb-8 uppercase tracking-wider transition-all duration-300 hover:shadow-md cursor-pointer opacity-0">
+              <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
               Limited Beta Access
             </div>
 
-            <h2 className="cta-title text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-8 text-black opacity-0">
+            <h2 className="cta-title text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-8 text-white opacity-0">
               Připojte se k beta programu
             </h2>
 
-            <p className="cta-subtitle text-xl text-gray-600 mb-16 max-w-3xl mx-auto leading-relaxed font-normal opacity-0">
+            <p className="cta-subtitle text-xl text-white/75 mb-16 max-w-3xl mx-auto leading-relaxed font-normal opacity-0">
               Získejte early access a 3 měsíce premium funkcí zdarma. Pouze pro
               prvních 1,000 uživatelů.
             </p>
@@ -601,12 +565,12 @@ export default function LandingPage() {
               onSubmit={handleSubmit}
               className="cta-form max-w-2xl mx-auto mb-12 relative opacity-0"
             >
-              <div className="flex gap-2 bg-white border-2 border-gray-200 rounded-2xl p-2 transition-all duration-300 shadow-lg focus-within:border-black focus-within:shadow-xl">
+              <div className="flex gap-2 bg-[#0f0f14] border-2 border-white/10 rounded-2xl p-2 transition-all duration-300 shadow-lg focus-within:border-white focus-within:shadow-xl">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 bg-transparent border-none py-5 px-6 text-base text-black outline-none font-medium placeholder-gray-500"
+                  className="flex-1 bg-transparent border-none py-5 px-6 text-base text-white outline-none font-medium placeholder-white/50"
                   placeholder="vas@email.cz"
                 />
                 <button
@@ -627,7 +591,7 @@ export default function LandingPage() {
               ].map((text, index) => (
                 <div
                   key={index}
-                  className="trust-badge trust-item flex items-center gap-3 text-gray-600 text-sm font-medium transition-colors duration-300 hover:text-gray-800 opacity-0"
+                  className="trust-badge trust-item flex items-center gap-3 text-white/75 text-sm font-medium transition-colors duration-300 hover:text-white opacity-0"
                 >
                   <div className="trust-icon w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     ✓
