@@ -22,7 +22,27 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-clash), var(--font-archivo), Arial, Helvetica,
+    sans-serif;
+}
+
+/* Fallback font utilities because Tailwind v4 doesn't read tailwind.config.ts */
+.font-heading {
+  font-family: var(--font-clash), var(--font-archivo), Arial, Helvetica,
+    sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
 }
 
 /* Custom slider styling for subtitle customizer */
@@ -96,4 +116,10 @@ body {
   50% {
     background-color: rgba(147, 51, 234, 0.2);
   }
+}
+
+:root {
+  --spot-width: 30vw;
+  --spot-strength: 0.25;
+  --spot-blur: 42px;
 }

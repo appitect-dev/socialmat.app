@@ -1,34 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import localFont from "next/font/local";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const clash = localFont({
+  src: [{ path: "./fonts/ClashDisplay-Bold.woff2", weight: "700" }],
+  variable: "--font-clash",
+  display: "swap",
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const archivo = localFont({
+  src: [
+    { path: "./fonts/Archivo-Regular.woff2", weight: "400" },
+    { path: "./fonts/Archivo-Medium.woff2", weight: "500" },
+  ],
+  variable: "--font-archivo",
+  display: "swap",
 });
-
-export const metadata: Metadata = {
-  title: "SocialMat - AI Content Creation",
-  description: "AI-powered video editing and social media content generation",
-};
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html lang="en" className={`${clash.variable} ${archivo.variable}`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

@@ -283,7 +283,13 @@ export default function LandingPage() {
     "
         >
           {/* LOGO LEFT */}
-          <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight cursor-pointer">
+          <div
+            className="flex items-center gap-2 text-white font-bold text-lg tracking-tight cursor-pointer"
+            style={{
+              fontFamily:
+                "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
+            }}
+          >
             SocialMat
           </div>
 
@@ -349,7 +355,7 @@ export default function LandingPage() {
       <section
         ref={heroRef}
         id="hero"
-        className="min-h-screen flex items-center justify-center relative overflow-hidden py-32 bg-black text-white"
+        className="min-h-screen flex items-center justify-center relative overflow-visible py-32 bg-black text-white"
       >
         {/* GRID BACKGROUND */}
         <div
@@ -361,19 +367,21 @@ export default function LandingPage() {
           }}
         />
 
-        {/* SPOTLIGHT */}
+        {/* SPOTLIGHT — simple editable column */}
         <div
-          className="absolute inset-0"
+          className="absolute -top-[5%] left-1/2 -translate-x-1/2 h-[220%] pointer-events-none"
           style={{
+            width: "90vw",
             background:
-              "radial-gradient(circle at 50% -10%, rgba(255,255,255,0.25), rgba(0,0,0,0) 70%)",
+              "radial-gradient(90% 240% at 50% 6%, rgba(255,255,255,0.26), rgba(255,255,255,0.13) 28%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0) 98%)",
+            filter: "blur(180px)",
+            opacity: 0.8,
           }}
         />
-
         {/* CONTENT */}
         <div className="text-center max-w-5xl mx-auto px-6 relative z-[2]">
           {/* TITLE */}
-          <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] tracking-tight mb-10 text-white opacity-0">
+          <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-heading font-bold leading-[0.9] tracking-tight mb-10 text-white opacity-0">
             Tvořte české titulky{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">
               rychle a spolehlivě
@@ -409,7 +417,7 @@ export default function LandingPage() {
       <section
         ref={featuresRef}
         id="features"
-        className="py-48 bg-black relative overflow-hidden"
+        className="py-48 bg-black relative overflow-visible"
       >
         {/* Subtle background */}
         <div

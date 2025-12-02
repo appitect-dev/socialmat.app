@@ -48,15 +48,19 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
     }
   };
 
-
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+    <nav className="backdrop-blur-xl bg-white/10 border-b border-white/20 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo a navigace */}
           <div className="flex items-center space-x-8">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-gray-900">SocialMat</span>
+              <span
+                className="text-xl font-bold text-white"
+                style={{ fontFamily: "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif" }}
+              >
+                SocialMat
+              </span>
             </Link>
 
             {/* Desktop navigace */}
@@ -68,10 +72,10 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-body transition-colors ${
                       isActive
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-white/20 text-white"
+                        : "text-gray-300 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -150,7 +154,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
+        <div className="md:hidden border-t border-white/20 backdrop-blur-xl bg-white/10">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
@@ -159,10 +163,10 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-colors ${
                     isActive
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      ? "bg-white/20 text-white"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
