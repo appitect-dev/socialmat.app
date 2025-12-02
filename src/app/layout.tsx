@@ -9,6 +9,9 @@ const clash = localFont({
 });
 const archivo = localFont({
   src: [
+    { path: "./fonts/Archivo-Thin.woff2", weight: "100" },
+    { path: "./fonts/Archivo-ThinItalic.woff2", style: "italic", weight: "100" },
+    { path: "./fonts/Archivo-Light.woff2", weight: "300" },
     { path: "./fonts/Archivo-Regular.woff2", weight: "400" },
     { path: "./fonts/Archivo-Medium.woff2", weight: "500" },
   ],

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Link from "next/link";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -381,32 +382,28 @@ export default function LandingPage() {
           {/* TITLE */}
           <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-heading font-bold leading-[0.9] tracking-tight mb-10 text-white opacity-0">
             Tvořte české titulky{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">
+            <span
+              className="text-white
+             bg-clip-text"
+            >
               rychle a spolehlivě
             </span>
           </h1>
 
           {/* SUBTITLE */}
-          <p className="hero-subtitle text-lg md:text-xl lg:text-2xl text-white/85 font-normal max-w-3xl mx-auto mb-16 leading-relaxed opacity-0">
+          <p className="hero-subtitle text-lg md:text-xl lg:text-2xl text-white/85 max-w-3xl mx-auto mb-16 leading-relaxed opacity-0">
             Stačí vložit video a během pár sekund získáte kompletní titulky
             vytvořené na základě zvuku videa.
           </p>
 
           {/* CTA BUTTONS */}
           <div className="hero-buttons flex flex-col sm:flex-row gap-6 justify-center opacity-0">
-            <button
-              onClick={() => scrollToSection("waitlist")}
-              className="bg-white text-black py-4 px-10 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_14px_34px_rgba(98,52,255,0.3)] cursor-pointer"
-            >
-              Získat early access
-            </button>
-
-            <button
-              onClick={() => scrollToSection("demo")}
+            <Link
+              href="/dashboard"
               className="bg-transparent text-white py-4 px-10 rounded-full font-semibold text-lg border border-white/20 hover:bg-white/10 transition-all duration-300 cursor-pointer"
             >
               Zobrazit demo
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -417,14 +414,11 @@ export default function LandingPage() {
         className="py-48 relative overflow-visible"
       >
         {/* Subtle background */}
-        <div className="absolute inset-0 opacity-20" style={{}} />
+        <div className="absolute inset-0 opacity-20" />
 
         <div className="max-w-7xl mx-auto px-10 relative z-[2]">
           {/* Features header */}
           <div className="text-center mb-32">
-            <div className="features-badge inline-block bg-white/10 text-white py-2 px-5 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10 mb-8 transition-all duration-300 hover:bg-white/15 hover:shadow-sm opacity-0">
-              Features
-            </div>
             <h2 className="features-title text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white leading-tight opacity-0">
               Proč SocialMat?
             </h2>
@@ -438,25 +432,21 @@ export default function LandingPage() {
           <div className="features-grid grid grid-cols-1 md:grid-cols-2 gap-0.5  rounded-3xl2 shadow-xl opacity-0">
             {[
               {
-                icon: "🇨🇿",
                 title: "Czech-First AI",
                 description:
                   "Trénovaná výhradně na českém obsahu. Rozpozná slang, rychlou řeč i regionální přízvuky s 98.7% přesností.",
               },
               {
-                icon: "⚡",
                 title: "30s Processing",
                 description:
                   "Průměrný čas zpracování 30 sekund. Zatímco ostatní služby běží minuty, vy už uploadujete na TikTok.",
               },
               {
-                icon: "🎨",
                 title: "Viral Templates",
                 description:
                   "Styly inspirované nejvíce sledovanými účty. Nebo si vytvořte vlastní brand identity.",
               },
               {
-                icon: "📊",
                 title: "Performance Analytics",
                 description:
                   "Sledujte které styly titulků generují nejvíce views a optimalizujte obsah na základě dat.",
@@ -464,7 +454,7 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="feature-card bg-[#0f0f14] p-16 transition-all duration-400 relative flex flex-col h-full hover:shadow-lg group cursor-pointer opacity-0 border border-white/5"
+                className="feature-card relative overflow-hidden bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent p-12 transition-all duration-500 flex flex-col h-full hover:shadow-[0_24px_80px_rgba(0,0,0,0.55)] group cursor-pointer opacity-0 border border-white/10 rounded-3xl"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
                 }}
@@ -473,16 +463,17 @@ export default function LandingPage() {
                 }}
               >
                 {/* Subtle hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/2 to-blue-500/2 opacity-0 transition-opacity duration-400 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition-opacity duration-500" />
 
                 <div className="relative z-[2]">
-                  {/* Clean icon */}
-                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-white/10 transition-all duration-300 group-hover:bg-white/10 group-hover:scale-105">
-                    {feature.icon}
-                  </div>
+                  {/* Tag */}
+                  <span className="inline-flex items-center px-4 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 bg-white/5 rounded-full border border-white/10 mb-6">
+                    Feature
+                  </span>
 
                   {/* Clean title */}
-                  <h3 className="text-3xl font-bold mb-5 text-white tracking-tight">
+                  <h3 className="text-3xl font-bold mb-4 text-white tracking-tight leading-tight">
                     {feature.title}
                   </h3>
 
@@ -490,6 +481,12 @@ export default function LandingPage() {
                   <p className="text-white/75 leading-relaxed text-lg font-normal">
                     {feature.description}
                   </p>
+
+                  {/* Divider and footer */}
+                  <div className="mt-8 flex items-center gap-3 text-white/60 text-sm">
+                    <div className="h-px w-10 bg-gradient-to-r from-white/30 to-white/0" />
+                    <span>Optimalizováno pro krátká videa</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -521,80 +518,11 @@ export default function LandingPage() {
                 <div className="text-4xl md:text-6xl font-bold text-white mb-4 transition-colors duration-300 hover:text-blue-400">
                   {stat.number}
                 </div>
-                <div className="text-white/60 text-sm uppercase tracking-wider">
+                <div className="text-white/60 text-sm tracking-wide font-thin">
                   {stat.label}
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-      {/* CTA Section with GSAP scroll animations */}
-      <section
-        ref={ctaRef}
-        className="cta bg-black text-white py-40 relative "
-        id="waitlist"
-      >
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/3 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/2 to-transparent"></div>
-        </div>
-
-        <div className="container max-w-7xl mx-auto px-10 relative z-10 text-white">
-          <div className="cta-content text-center">
-            <div className="cta-badge inline-flex items-center gap-2 bg-white/10 border border-white/15 px-5 py-2 rounded-full text-xs font-semibold text-white mb-8 uppercase tracking-wider transition-all duration-300 hover:shadow-md cursor-pointer opacity-0">
-              <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
-              Limited Beta Access
-            </div>
-
-            <h2 className="cta-title text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-8 text-white opacity-0">
-              Připojte se k beta programu
-            </h2>
-
-            <p className="cta-subtitle text-xl text-white/75 mb-16 max-w-3xl mx-auto leading-relaxed font-normal opacity-0">
-              Získejte early access a 3 měsíce premium funkcí zdarma. Pouze pro
-              prvních 1,000 uživatelů.
-            </p>
-
-            <form
-              onSubmit={handleSubmit}
-              className="cta-form max-w-2xl mx-auto mb-12 relative opacity-0"
-            >
-              <div className="flex gap-2 bg-[#0f0f14] border-2 border-white/10 rounded-2xl p-2 transition-all duration-300 shadow-lg focus-within:border-white focus-within:shadow-xl">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 bg-transparent border-none py-5 px-6 text-base text-white outline-none font-medium placeholder-white/50"
-                  placeholder="vas@email.cz"
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`${getButtonStyles()} transition-all duration-300`}
-                >
-                  {getButtonText()}
-                </button>
-              </div>
-            </form>
-
-            <div className="trust-badges flex justify-center gap-12 flex-wrap">
-              {[
-                "3 měsíce zdarma",
-                "Bez platebních údajů",
-                "Zrušit kdykoliv",
-              ].map((text, index) => (
-                <div
-                  key={index}
-                  className="trust-badge trust-item flex items-center gap-3 text-white/75 text-sm font-medium transition-colors duration-300 hover:text-white opacity-0"
-                >
-                  <div className="trust-icon w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    ✓
-                  </div>
-                  <span>{text}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>

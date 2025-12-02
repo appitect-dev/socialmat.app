@@ -25,6 +25,12 @@ body {
   font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
 }
 
+p {
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
 h1,
 h2,
 h3,
@@ -44,6 +50,16 @@ h6 {
 .font-body {
   font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
 }
+
+/* Keep nav and buttons thin but non-italic */
+nav,
+nav *,
+button,
+.button {
+  font-style: normal;
+  font-weight: 100;
+}
+
 
 /* Custom slider styling for subtitle customizer */
 .slider {
@@ -116,10 +132,4 @@ h6 {
   50% {
     background-color: rgba(147, 51, 234, 0.2);
   }
-}
-
-:root {
-  --spot-width: 30vw;
-  --spot-strength: 0.25;
-  --spot-blur: 42px;
 }
