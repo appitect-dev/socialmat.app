@@ -381,13 +381,9 @@ export default function LandingPage() {
         <div className="text-center max-w-5xl mx-auto px-6 relative z-[2]">
           {/* TITLE */}
           <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-heading font-bold leading-[0.9] tracking-tight mb-10 text-white opacity-0">
-            Tvořte české titulky{" "}
-            <span
-              className="text-white
-             bg-clip-text"
-            >
-              rychle a spolehlivě
-            </span>
+            Tvořte <span className="text-[#FAE12A]">české</span> titulky{" "}
+            <span className="text-[#FAE12A] bg-clip-text">rychle</span> a{" "}
+            <span className="text-[#FAE12A] bg-clip-text">spolehlivě</span>
           </h1>
 
           {/* SUBTITLE */}
@@ -463,30 +459,25 @@ export default function LandingPage() {
                 }}
               >
                 {/* Subtle hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#FAE12A]/35 via-transparent to-transparent" />
+                </div>
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition-opacity duration-500" />
 
                 <div className="relative z-[2]">
-                  {/* Tag */}
-                  <span className="inline-flex items-center px-4 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 bg-white/5 rounded-full border border-white/10 mb-6">
-                    Feature
-                  </span>
-
                   {/* Clean title */}
                   <h3 className="text-3xl font-bold mb-4 text-white tracking-tight leading-tight">
                     {feature.title}
                   </h3>
-
+                  <div className="mt-6 flex items-center gap-3 text-white/60 text-sm">
+                    <div className="h-px w-10 bg-gradient-to-r from-white/30 to-white/0" />
+                  </div>
                   {/* Clean description */}
-                  <p className="text-white/75 leading-relaxed text-lg font-normal">
+                  <p className="text-white/75 leading-relaxed text-lg font-normal mt-4">
                     {feature.description}
                   </p>
 
                   {/* Divider and footer */}
-                  <div className="mt-8 flex items-center gap-3 text-white/60 text-sm">
-                    <div className="h-px w-10 bg-gradient-to-r from-white/30 to-white/0" />
-                    <span>Optimalizováno pro krátká videa</span>
-                  </div>
                 </div>
               </div>
             ))}

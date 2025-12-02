@@ -125,11 +125,11 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
               max={duration || 0}
               value={currentTime}
               onChange={handleTimeChange}
-              className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-1 bg-white/15 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
+                background: `linear-gradient(to right, #FAE12A 0%, #FAE12A ${
                   (currentTime / duration) * 100
-                }%, #4b5563 ${(currentTime / duration) * 100}%, #4b5563 100%)`,
+                }%, #3f3f46 ${(currentTime / duration) * 100}%, #3f3f46 100%)`,
               }}
             />
             <div className="flex justify-between text-xs text-white mt-1">
@@ -143,7 +143,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
             {/* Play/Pause tlačítko */}
             <button
               onClick={togglePlay}
-              className="text-white hover:text-blue-400 transition-colors p-2"
+              className="text-white hover:text-[#FAE12A] transition-colors p-2"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
@@ -185,11 +185,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
                 step="0.1"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="flex-1 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                className="flex-1 h-1 bg-white/15 rounded-lg appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
-                    volume * 100
-                  }%, #4b5563 ${volume * 100}%, #4b5563 100%)`,
+                  background: `linear-gradient(to right, #FAE12A 0%, #FAE12A ${volume * 100}%, #3f3f46 ${volume * 100}%, #3f3f46 100%)`,
                 }}
               />
               <span className="text-white text-sm min-w-[3ch]">

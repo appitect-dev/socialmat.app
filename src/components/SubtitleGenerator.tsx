@@ -128,14 +128,14 @@ export function SubtitleGenerator({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-[#0f0f14] border border-white/10 rounded-2xl shadow-md p-6 text-white">
       {/* Nadpis */}
-      <h3 className="text-lg font-bold text-gray-900 mb-4">
+      <h3 className="text-lg font-bold text-white mb-4">
         Generování titulků
       </h3>
 
       {/* Popis */}
-      <p className="text-sm text-gray-600 mb-6">
+      <p className="text-sm text-white/70 mb-6">
         Automaticky vygenerujte titulky pro vaše video pomocí AI technologie.
       </p>
 
@@ -145,8 +145,8 @@ export function SubtitleGenerator({
         disabled={isGenerating}
         className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
           isGenerating
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-blue-600 text-white hover:bg-blue-700"
+            ? "bg-white/10 text-white/40 cursor-not-allowed"
+            : "bg-[#FAE12A] text-black hover:shadow-[0_14px_32px_rgba(250,225,42,0.35)]"
         }`}
       >
         {isGenerating ? (
@@ -181,14 +181,14 @@ export function SubtitleGenerator({
 
       {/* Zpráva o úspěchu */}
       {result === "success" && (
-        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mt-4 p-4 bg-green-900/30 border border-green-500/40 rounded-lg">
           <div className="flex items-start gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <p className="text-green-800 font-medium">
+              <p className="text-green-200 font-medium">
                 Titulky úspěšně vygenerovány!
               </p>
-              <p className="text-sm text-green-600 mt-1">
+              <p className="text-sm text-green-200/80 mt-1">
                 Titulky jsou připraveny k použití.
               </p>
             </div>
@@ -198,12 +198,12 @@ export function SubtitleGenerator({
 
       {/* Chybová zpráva */}
       {result === "error" && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mt-4 p-4 bg-red-900/30 border border-red-500/40 rounded-lg">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <p className="text-red-800 font-medium">Chyba při generování</p>
-              <p className="text-sm text-red-600 mt-1">{errorMessage}</p>
+              <p className="text-red-200 font-medium">Chyba při generování</p>
+              <p className="text-sm text-red-200/80 mt-1">{errorMessage}</p>
             </div>
           </div>
         </div>
@@ -211,14 +211,14 @@ export function SubtitleGenerator({
 
       {/* Loading progress indicator */}
       {isGenerating && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-4 p-4 bg-[#FAE12A]/10 border border-[#FAE12A]/40 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm text-blue-800 mb-2">
+              <p className="text-sm text-[#FAE12A] mb-2">
                 Zpracovávám video a generuji titulky...
               </p>
-              <div className="w-full bg-blue-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full animate-pulse w-3/4"></div>
+              <div className="w-full bg-white/10 rounded-full h-2">
+                <div className="bg-[#FAE12A] h-2 rounded-full animate-pulse w-3/4"></div>
               </div>
             </div>
           </div>
@@ -226,12 +226,12 @@ export function SubtitleGenerator({
       )}
 
       {/* Informace o souboru */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <p className="text-xs text-gray-500 mb-2">Video k zpracování:</p>
-        <p className="text-sm text-gray-900 font-medium truncate">
+      <div className="mt-6 pt-6 border-t border-white/10">
+        <p className="text-xs text-white/50 mb-2">Video k zpracování:</p>
+        <p className="text-sm text-white font-medium truncate">
           {videoFile.name}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-white/50 mt-1">
           {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
         </p>
       </div>

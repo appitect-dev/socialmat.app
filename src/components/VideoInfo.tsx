@@ -52,19 +52,19 @@ export function VideoInfo({
       case "uploaded":
         return {
           text: "Nahráno",
-          color: "bg-blue-100 text-blue-800",
+          color: "bg-[#FAE12A]/20 text-[#FAE12A]",
           icon: "📤",
         };
       case "processing":
         return {
           text: "Zpracovává se",
-          color: "bg-yellow-100 text-yellow-800",
+          color: "bg-[#FAE12A]/20 text-[#FAE12A]",
           icon: "⚙️",
         };
       case "ready":
         return {
           text: "Připraveno",
-          color: "bg-green-100 text-green-800",
+          color: "bg-green-900/40 text-green-200",
           icon: "✅",
         };
     }
@@ -73,9 +73,9 @@ export function VideoInfo({
   const statusInfo = getStatusInfo();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-[#0f0f14] border border-white/10 rounded-2xl shadow-md p-6 text-white">
       {/* Nadpis */}
-      <h3 className="text-lg font-bold text-gray-900 mb-4">
+      <h3 className="text-lg font-bold text-white mb-4">
         Informace o videu
       </h3>
 
@@ -92,41 +92,41 @@ export function VideoInfo({
       {/* Metadata */}
       <div className="space-y-3">
         {/* Název souboru */}
-        <div className="border-b border-gray-200 pb-3">
-          <p className="text-xs text-gray-500 mb-1">Název souboru</p>
-          <p className="text-sm text-gray-900 font-medium break-all">
+        <div className="border-b border-white/10 pb-3">
+          <p className="text-xs text-white/50 mb-1">Název souboru</p>
+          <p className="text-sm text-white font-medium break-all">
             {fileName}
           </p>
         </div>
 
         {/* Velikost */}
-        <div className="border-b border-gray-200 pb-3">
-          <p className="text-xs text-gray-500 mb-1">Velikost</p>
-          <p className="text-sm text-gray-900 font-medium">
+        <div className="border-b border-white/10 pb-3">
+          <p className="text-xs text-white/50 mb-1">Velikost</p>
+          <p className="text-sm text-white font-medium">
             {formatFileSize(fileSize)}
           </p>
         </div>
 
         {/* Délka */}
-        <div className="border-b border-gray-200 pb-3">
-          <p className="text-xs text-gray-500 mb-1">Délka</p>
-          <p className="text-sm text-gray-900 font-medium">
+        <div className="border-b border-white/10 pb-3">
+          <p className="text-xs text-white/50 mb-1">Délka</p>
+          <p className="text-sm text-white font-medium">
             {formatDuration(duration)}
           </p>
         </div>
 
         {/* Rozlišení (pokud je k dispozici) */}
         {resolution && (
-          <div className="border-b border-gray-200 pb-3">
-            <p className="text-xs text-gray-500 mb-1">Rozlišení</p>
-            <p className="text-sm text-gray-900 font-medium">{resolution}</p>
+          <div className="border-b border-white/10 pb-3">
+            <p className="text-xs text-white/50 mb-1">Rozlišení</p>
+            <p className="text-sm text-white font-medium">{resolution}</p>
           </div>
         )}
 
         {/* Datum nahrání */}
         <div className="pb-3">
-          <p className="text-xs text-gray-500 mb-1">Datum nahrání</p>
-          <p className="text-sm text-gray-900 font-medium">
+          <p className="text-xs text-white/50 mb-1">Datum nahrání</p>
+          <p className="text-sm text-white font-medium">
             {formatDate(uploadDate)}
           </p>
         </div>
