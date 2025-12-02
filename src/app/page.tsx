@@ -251,7 +251,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-black text-white font-sans overflow-x-hidden">
+    <div className="bg-black text-white font-sans overflow-visible">
       {/* Grain texture overlay */}
       <div
         className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-[0.015] z-[1]"
@@ -259,7 +259,6 @@ export default function LandingPage() {
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
       />
-
       {/* Navigation with GSAP animations */}
       <nav
         ref={navRef}
@@ -350,7 +349,6 @@ export default function LandingPage() {
           </div>
         </div>
       </nav>
-
       {/* Hero Section with GSAP scroll animations */}
       <section
         ref={heroRef}
@@ -412,23 +410,14 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* Features Section with GSAP scroll animations */}
       <section
         ref={featuresRef}
         id="features"
-        className="py-48 bg-black relative overflow-visible"
+        className="py-48 relative overflow-visible"
       >
         {/* Subtle background */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            background: `
-              radial-gradient(circle at 20% 30%, rgba(108, 92, 231, 0.18) 0%, transparent 45%),
-              radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.18) 0%, transparent 45%)
-            `,
-          }}
-        />
+        <div className="absolute inset-0 opacity-20" style={{}} />
 
         <div className="max-w-7xl mx-auto px-10 relative z-[2]">
           {/* Features header */}
@@ -446,7 +435,7 @@ export default function LandingPage() {
           </div>
 
           {/* Features grid */}
-          <div className="features-grid grid grid-cols-1 md:grid-cols-2 gap-0.5 bg-white/5 rounded-3xl overflow-hidden shadow-xl opacity-0">
+          <div className="features-grid grid grid-cols-1 md:grid-cols-2 gap-0.5  rounded-3xl2 shadow-xl opacity-0">
             {[
               {
                 icon: "🇨🇿",
@@ -475,7 +464,7 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="feature-card bg-[#0f0f14] p-16 transition-all duration-400 relative overflow-hidden flex flex-col h-full hover:shadow-lg group cursor-pointer opacity-0 border border-white/5"
+                className="feature-card bg-[#0f0f14] p-16 transition-all duration-400 relative flex flex-col h-full hover:shadow-lg group cursor-pointer opacity-0 border border-white/5"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
                 }}
@@ -507,11 +496,10 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* Stats Section with GSAP scroll animations */}
       <section
         ref={statsRef}
-        className="py-32 px-6 bg-black text-white relative overflow-hidden"
+        className="py-32 px-6 bg-black text-white relative "
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
@@ -541,11 +529,10 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* CTA Section with GSAP scroll animations */}
       <section
         ref={ctaRef}
-        className="cta bg-black text-white py-40 relative overflow-hidden"
+        className="cta bg-black text-white py-40 relative "
         id="waitlist"
       >
         <div className="absolute inset-0 opacity-20">
