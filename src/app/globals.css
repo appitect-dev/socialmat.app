@@ -57,7 +57,7 @@ nav *,
 button,
 .button {
   font-style: normal;
-  font-weight: 100;
+  font-weight: inherit;
 }
 
 

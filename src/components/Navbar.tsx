@@ -49,7 +49,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
   };
 
   return (
-    <nav className="backdrop-blur-xl bg-black order-b border-white/20 sticky top-0 z-50">
+    <nav className="backdrop-blur-xl bg-black/90 border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo a navigace */}

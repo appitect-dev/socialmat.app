@@ -100,24 +100,24 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
       {!uploadedVideo && (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-colors bg-[#0f0f14] ${
+          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-colors bg-transparent ${
             isDragActive
-              ? "border-[#FAE12A] bg-[#FAE12A]/5"
-              : "border-white/15 hover:border-[#FAE12A]/70"
+              ? "border-yellow-400 bg-yellow-400/5"
+              : "border-white/15 hover:border-yellow-400/70"
           }`}
         >
           <input {...getInputProps()} />
           <div className="space-y-4">
             <div className="text-6xl">🎬</div>
             {isDragActive ? (
-              <p className="text-lg text-[#FAE12A]">Přetáhněte video sem...</p>
+              <p className="text-lg text-yellow-400">Přetáhněte video sem...</p>
             ) : (
               <>
                 <p className="text-lg text-white font-medium">
                   Přetáhněte video sem nebo klikněte pro výběr
                 </p>
                 <p className="text-sm text-white/60">
-                  Podporované formáty: MP4, MOV, AVI (max. 100MB)
+                  Podporova2né formáty: MP4, MOV, AVI (max. 100MB)
                 </p>
               </>
             )}
@@ -138,7 +138,7 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
           <p className="text-sm text-white/70">Nahrávání videa...</p>
           <div className="w-full bg-white/10 rounded-full h-3">
             <div
-              className="bg-[#FAE12A] h-3 rounded-full transition-all duration-300"
+              className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
@@ -157,9 +157,7 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
           <div className="bg-[#0f0f14] border border-white/10 rounded-lg shadow-md p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-white">
-                  {uploadedVideo.name}
-                </p>
+                <p className="font-medium text-white">{uploadedVideo.name}</p>
                 <p className="text-sm text-white/60">
                   {(uploadedVideo.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
