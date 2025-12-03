@@ -198,9 +198,14 @@ export default function LandingPage() {
       >
         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-8 py-3 flex items-center justify-between w-full max-w-4xl transition-all duration-300">
           {/* LOGO */}
-          <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight cursor-pointer font-heading">
+          <button
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            className="flex items-center gap-2 text-white font-bold text-lg tracking-tight cursor-pointer font-heading"
+          >
             SocialMat
-          </div>
+          </button>
 
           {/* CENTER LINKS */}
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-white/85">
