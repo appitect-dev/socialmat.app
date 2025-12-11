@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { Navbar } from "@/components/Navbar";
+import { DashboardThemeProvider } from "@/components/dashboard-theme";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -9,36 +10,42 @@ export default async function DashboardLayout({
 }) {
   const cookieStore = await cookies();
   const rawSession = cookieStore.get("session")?.value;
-  let user:
-    | { email?: string; firstName?: string; lastName?: string }
-    | null = null;
 
-  if (rawSession) {
+  const parseSession = (
+    value?: string
+  ): { email?: string; firstName?: string; lastName?: string; token?: string } | null => {
+    if (!value) return null;
+    const candidates = [value];
     try {
-      const parsed = JSON.parse(rawSession);
-      user = {
-        email: parsed.email,
-        firstName: parsed.firstName,
-        lastName: parsed.lastName,
-      };
-    } catch (e) {
-      user = null;
+      candidates.push(decodeURIComponent(value));
+    } catch {
+      // ignore decode failure
     }
-  }
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        // try next variant
+      }
+    }
+    return null;
+  };
 
-  // Pokud uživatel není přihlášený, přesměruj na login
-  // (double check - middleware už by měl zachytit, ale pro jistotu)
-  if (!user) {
+  const session = parseSession(rawSession);
+
+  if (!session?.token) {
     redirect("/login");
   }
 
   const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+    [session.firstName, session.lastName].filter(Boolean).join(" ") ||
+    session.email ||
+    "Uživatel";
 
   return (
-    <>
-      <Navbar userName={displayName} userEmail={user.email} />
+    <DashboardThemeProvider>
+      <Navbar userName={displayName} userEmail={session.email} />
       {children}
-    </>
+    </DashboardThemeProvider>
   );
 }

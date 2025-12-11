@@ -5,7 +5,35 @@
  * API documentation for SocialMat.app backend - automatic subtitle generation for short-form content
  * OpenAPI spec version: 1.0
  */
-import { apiFetch } from './fetcher';
+import { apiFetch } from "./fetcher";
+
+const getAuthHeaders = () => {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const mergeHeaders = (
+  headers?: HeadersInit,
+  extra: Record<string, string> = {}
+): HeadersInit => {
+  const auth = getAuthHeaders();
+
+  const merged = new Headers();
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => merged.set(key, value));
+  } else if (Array.isArray(headers)) {
+    headers.forEach(([key, value]) => merged.set(key, value));
+  } else if (headers) {
+    Object.entries(headers).forEach(([key, value]) => merged.set(key, value));
+  }
+
+  Object.entries(extra).forEach(([key, value]) => merged.set(key, value));
+  Object.entries(auth).forEach(([key, value]) => merged.set(key, value));
+
+  return merged;
+};
 export interface SubtitleDTO {
   id?: number;
   startTime?: number;
@@ -19,15 +47,15 @@ export interface ProjectCreateDTO {
   description?: string;
 }
 
-export type ProjectResponseDTOStatus = typeof ProjectResponseDTOStatus[keyof typeof ProjectResponseDTOStatus];
-
+export type ProjectResponseDTOStatus =
+  (typeof ProjectResponseDTOStatus)[keyof typeof ProjectResponseDTOStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ProjectResponseDTOStatus = {
-  UPLOADING: 'UPLOADING',
-  PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  ERROR: 'ERROR',
+  UPLOADING: "UPLOADING",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED",
+  ERROR: "ERROR",
 } as const;
 
 export interface ProjectResponseDTO {
@@ -74,673 +102,629 @@ export interface HealthComponent {
   status?: string;
 }
 
-export type DeleteProject200 = {[key: string]: string};
+export type DeleteProject200 = { [key: string]: string };
 
-export type DeleteProject404 = {[key: string]: string};
+export type DeleteProject404 = { [key: string]: string };
 
 export type UploadVideoBody = {
   /** MP4 video file (<= 100MB) */
   file: Blob;
 };
 
-export type UploadVideo200 = {[key: string]: string};
+export type UploadVideo200 = { [key: string]: string };
 
-export type UploadVideo400 = {[key: string]: string};
+export type UploadVideo400 = { [key: string]: string };
 
-export type UploadVideo401 = {[key: string]: string};
+export type UploadVideo401 = { [key: string]: string };
 
-export type UploadVideo404 = {[key: string]: string};
+export type UploadVideo404 = { [key: string]: string };
 
-export type RefreshTokenBody = {[key: string]: string};
+export type RefreshTokenBody = { [key: string]: string };
 
-export type Logout200 = {[key: string]: string};
+export type Logout200 = { [key: string]: string };
 
-export type GetProjectStatus200 = {[key: string]: string};
+export type GetProjectStatus200 = { [key: string]: string };
 
-export type GetProjectStatus404 = {[key: string]: string};
+export type GetProjectStatus404 = { [key: string]: string };
 
-export type GetProjectDescription200 = {[key: string]: string};
+export type GetProjectDescription200 = { [key: string]: string };
 
-export type GetProjectDescription202 = {[key: string]: string};
+export type GetProjectDescription202 = { [key: string]: string };
 
-export type GetProjectDescription401 = {[key: string]: string};
+export type GetProjectDescription401 = { [key: string]: string };
 
-export type GetProjectDescription404 = {[key: string]: string};
+export type GetProjectDescription404 = { [key: string]: string };
 
 /**
  * Returns the list of subtitles for the given project ID.
  * @summary Get project subtitles
  */
 export type getProjectSubtitlesResponse200 = {
-  data: SubtitleDTO[]
-  status: 200
-}
+  data: SubtitleDTO[];
+  status: 200;
+};
 
 export type getProjectSubtitlesResponse404 = {
-  data: SubtitleDTO[]
-  status: 404
-}
-    
-export type getProjectSubtitlesResponseSuccess = (getProjectSubtitlesResponse200) & {
-  headers: Headers;
-};
-export type getProjectSubtitlesResponseError = (getProjectSubtitlesResponse404) & {
-  headers: Headers;
+  data: SubtitleDTO[];
+  status: 404;
 };
 
-export type getProjectSubtitlesResponse = (getProjectSubtitlesResponseSuccess | getProjectSubtitlesResponseError)
+export type getProjectSubtitlesResponseSuccess =
+  getProjectSubtitlesResponse200 & {
+    headers: Headers;
+  };
+export type getProjectSubtitlesResponseError =
+  getProjectSubtitlesResponse404 & {
+    headers: Headers;
+  };
 
-export const getGetProjectSubtitlesUrl = (projectId: number,) => {
+export type getProjectSubtitlesResponse =
+  | getProjectSubtitlesResponseSuccess
+  | getProjectSubtitlesResponseError;
 
+export const getGetProjectSubtitlesUrl = (projectId: number) => {
+  return `/api/projects/${projectId}/subtitles`;
+};
 
-  
-
-  return `/api/projects/${projectId}/subtitles`
-}
-
-export const getProjectSubtitles = async (projectId: number, options?: RequestInit): Promise<getProjectSubtitlesResponse> => {
-  
-  return apiFetch<getProjectSubtitlesResponse>(getGetProjectSubtitlesUrl(projectId),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+export const getProjectSubtitles = async (
+  projectId: number,
+  options?: RequestInit
+): Promise<getProjectSubtitlesResponse> => {
+  return apiFetch<getProjectSubtitlesResponse>(
+    getGetProjectSubtitlesUrl(projectId),
+    {
+      ...options,
+      method: "GET",
+      headers: mergeHeaders(options?.headers),
+    }
+  );
+};
 
 /**
  * Replaces all subtitles for the given project with the provided list. Useful for manual corrections.
  * @summary Replace project subtitles
  */
 export type updateProjectSubtitlesResponse200 = {
-  data: SubtitleDTO[]
-  status: 200
-}
+  data: SubtitleDTO[];
+  status: 200;
+};
 
 export type updateProjectSubtitlesResponse400 = {
-  data: SubtitleDTO[]
-  status: 400
-}
+  data: SubtitleDTO[];
+  status: 400;
+};
 
 export type updateProjectSubtitlesResponse404 = {
-  data: SubtitleDTO[]
-  status: 404
-}
-    
-export type updateProjectSubtitlesResponseSuccess = (updateProjectSubtitlesResponse200) & {
-  headers: Headers;
-};
-export type updateProjectSubtitlesResponseError = (updateProjectSubtitlesResponse400 | updateProjectSubtitlesResponse404) & {
-  headers: Headers;
+  data: SubtitleDTO[];
+  status: 404;
 };
 
-export type updateProjectSubtitlesResponse = (updateProjectSubtitlesResponseSuccess | updateProjectSubtitlesResponseError)
+export type updateProjectSubtitlesResponseSuccess =
+  updateProjectSubtitlesResponse200 & {
+    headers: Headers;
+  };
+export type updateProjectSubtitlesResponseError = (
+  | updateProjectSubtitlesResponse400
+  | updateProjectSubtitlesResponse404
+) & {
+  headers: Headers;
+};
 
-export const getUpdateProjectSubtitlesUrl = (projectId: number,) => {
+export type updateProjectSubtitlesResponse =
+  | updateProjectSubtitlesResponseSuccess
+  | updateProjectSubtitlesResponseError;
 
+export const getUpdateProjectSubtitlesUrl = (projectId: number) => {
+  return `/api/projects/${projectId}/subtitles`;
+};
 
-  
-
-  return `/api/projects/${projectId}/subtitles`
-}
-
-export const updateProjectSubtitles = async (projectId: number,
-    subtitleDTO: SubtitleDTO[], options?: RequestInit): Promise<updateProjectSubtitlesResponse> => {
-  
-  return apiFetch<updateProjectSubtitlesResponse>(getUpdateProjectSubtitlesUrl(projectId),
-  {      
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      subtitleDTO,)
-  }
-);}
-
-
+export const updateProjectSubtitles = async (
+  projectId: number,
+  subtitleDTO: SubtitleDTO[],
+  options?: RequestInit
+): Promise<updateProjectSubtitlesResponse> => {
+  return apiFetch<updateProjectSubtitlesResponse>(
+    getUpdateProjectSubtitlesUrl(projectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: mergeHeaders(options?.headers, {
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify(subtitleDTO),
+    }
+  );
+};
 
 /**
  * Returns a single project with subtitles and generated description if available.
  * @summary Get project by ID
  */
 export type getProjectResponse200 = {
-  data: ProjectResponseDTO
-  status: 200
-}
+  data: ProjectResponseDTO;
+  status: 200;
+};
 
 export type getProjectResponse404 = {
-  data: ProjectResponseDTO
-  status: 404
-}
-    
-export type getProjectResponseSuccess = (getProjectResponse200) & {
-  headers: Headers;
-};
-export type getProjectResponseError = (getProjectResponse404) & {
-  headers: Headers;
+  data: ProjectResponseDTO;
+  status: 404;
 };
 
-export type getProjectResponse = (getProjectResponseSuccess | getProjectResponseError)
+export type getProjectResponseSuccess = getProjectResponse200 & {
+  headers: Headers;
+};
+export type getProjectResponseError = getProjectResponse404 & {
+  headers: Headers;
+};
 
-export const getGetProjectUrl = (id: number,) => {
+export type getProjectResponse =
+  | getProjectResponseSuccess
+  | getProjectResponseError;
 
+export const getGetProjectUrl = (id: number) => {
+  return `/api/projects/${id}`;
+};
 
-  
-
-  return `/api/projects/${id}`
-}
-
-export const getProject = async (id: number, options?: RequestInit): Promise<getProjectResponse> => {
-  
-  return apiFetch<getProjectResponse>(getGetProjectUrl(id),
-  {      
+export const getProject = async (
+  id: number,
+  options?: RequestInit
+): Promise<getProjectResponse> => {
+  return apiFetch<getProjectResponse>(getGetProjectUrl(id), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: "GET",
+    headers: mergeHeaders(options?.headers),
+  });
+};
 
 /**
  * Updates project name/description.
  * @summary Update project
  */
 export type updateProjectResponse200 = {
-  data: ProjectResponseDTO
-  status: 200
-}
+  data: ProjectResponseDTO;
+  status: 200;
+};
 
 export type updateProjectResponse400 = {
-  data: ProjectResponseDTO
-  status: 400
-}
+  data: ProjectResponseDTO;
+  status: 400;
+};
 
 export type updateProjectResponse404 = {
-  data: ProjectResponseDTO
-  status: 404
-}
-    
-export type updateProjectResponseSuccess = (updateProjectResponse200) & {
-  headers: Headers;
-};
-export type updateProjectResponseError = (updateProjectResponse400 | updateProjectResponse404) & {
-  headers: Headers;
+  data: ProjectResponseDTO;
+  status: 404;
 };
 
-export type updateProjectResponse = (updateProjectResponseSuccess | updateProjectResponseError)
+export type updateProjectResponseSuccess = updateProjectResponse200 & {
+  headers: Headers;
+};
+export type updateProjectResponseError = (
+  | updateProjectResponse400
+  | updateProjectResponse404
+) & {
+  headers: Headers;
+};
 
-export const getUpdateProjectUrl = (id: number,) => {
+export type updateProjectResponse =
+  | updateProjectResponseSuccess
+  | updateProjectResponseError;
 
+export const getUpdateProjectUrl = (id: number) => {
+  return `/api/projects/${id}`;
+};
 
-  
-
-  return `/api/projects/${id}`
-}
-
-export const updateProject = async (id: number,
-    projectCreateDTO: ProjectCreateDTO, options?: RequestInit): Promise<updateProjectResponse> => {
-  
-  return apiFetch<updateProjectResponse>(getUpdateProjectUrl(id),
-  {      
+export const updateProject = async (
+  id: number,
+  projectCreateDTO: ProjectCreateDTO,
+  options?: RequestInit
+): Promise<updateProjectResponse> => {
+  return apiFetch<updateProjectResponse>(getUpdateProjectUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      projectCreateDTO,)
-  }
-);}
-
-
+    method: "PUT",
+    headers: mergeHeaders(options?.headers, {
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(projectCreateDTO),
+  });
+};
 
 /**
  * Deletes a project and associated data.
  * @summary Delete project
  */
 export type deleteProjectResponse200 = {
-  data: DeleteProject200
-  status: 200
-}
+  data: DeleteProject200;
+  status: 200;
+};
 
 export type deleteProjectResponse404 = {
-  data: DeleteProject404
-  status: 404
-}
-    
-export type deleteProjectResponseSuccess = (deleteProjectResponse200) & {
-  headers: Headers;
-};
-export type deleteProjectResponseError = (deleteProjectResponse404) & {
-  headers: Headers;
+  data: DeleteProject404;
+  status: 404;
 };
 
-export type deleteProjectResponse = (deleteProjectResponseSuccess | deleteProjectResponseError)
+export type deleteProjectResponseSuccess = deleteProjectResponse200 & {
+  headers: Headers;
+};
+export type deleteProjectResponseError = deleteProjectResponse404 & {
+  headers: Headers;
+};
 
-export const getDeleteProjectUrl = (id: number,) => {
+export type deleteProjectResponse =
+  | deleteProjectResponseSuccess
+  | deleteProjectResponseError;
 
+export const getDeleteProjectUrl = (id: number) => {
+  return `/api/projects/${id}`;
+};
 
-  
-
-  return `/api/projects/${id}`
-}
-
-export const deleteProject = async (id: number, options?: RequestInit): Promise<deleteProjectResponse> => {
-  
-  return apiFetch<deleteProjectResponse>(getDeleteProjectUrl(id),
-  {      
+export const deleteProject = async (
+  id: number,
+  options?: RequestInit
+): Promise<deleteProjectResponse> => {
+  return apiFetch<deleteProjectResponse>(getDeleteProjectUrl(id), {
     ...options,
-    method: 'DELETE'
-    
-    
-  }
-);}
-
-
+    method: "DELETE",
+    headers: mergeHeaders(options?.headers),
+  });
+};
 
 /**
  * Returns all projects for the current user, including metadata.
  * @summary List projects
  */
 export type getAllProjectsResponse200 = {
-  data: ProjectResponseDTO[]
-  status: 200
-}
-    
-export type getAllProjectsResponseSuccess = (getAllProjectsResponse200) & {
+  data: ProjectResponseDTO[];
+  status: 200;
+};
+
+export type getAllProjectsResponseSuccess = getAllProjectsResponse200 & {
   headers: Headers;
 };
-;
-
-export type getAllProjectsResponse = (getAllProjectsResponseSuccess)
+export type getAllProjectsResponse = getAllProjectsResponseSuccess;
 
 export const getGetAllProjectsUrl = () => {
+  return `/api/projects`;
+};
 
-
-  
-
-  return `/api/projects`
-}
-
-export const getAllProjects = async ( options?: RequestInit): Promise<getAllProjectsResponse> => {
-  
-  return apiFetch<getAllProjectsResponse>(getGetAllProjectsUrl(),
-  {      
+export const getAllProjects = async (
+  options?: RequestInit
+): Promise<getAllProjectsResponse> => {
+  return apiFetch<getAllProjectsResponse>(getGetAllProjectsUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: "GET",
+    headers: mergeHeaders(options?.headers),
+  });
+};
 
 /**
  * Creates a new project placeholder to which a video can be uploaded.
  * @summary Create project
  */
 export type createProjectResponse200 = {
-  data: ProjectResponseDTO
-  status: 200
-}
+  data: ProjectResponseDTO;
+  status: 200;
+};
 
 export type createProjectResponse400 = {
-  data: ProjectResponseDTO
-  status: 400
-}
-    
-export type createProjectResponseSuccess = (createProjectResponse200) & {
+  data: ProjectResponseDTO;
+  status: 400;
+};
+
+export type createProjectResponseSuccess = createProjectResponse200 & {
   headers: Headers;
 };
-export type createProjectResponseError = (createProjectResponse400) & {
+export type createProjectResponseError = createProjectResponse400 & {
   headers: Headers;
 };
 
-export type createProjectResponse = (createProjectResponseSuccess | createProjectResponseError)
+export type createProjectResponse =
+  | createProjectResponseSuccess
+  | createProjectResponseError;
 
 export const getCreateProjectUrl = () => {
+  return `/api/projects`;
+};
 
-
-  
-
-  return `/api/projects`
-}
-
-export const createProject = async (projectCreateDTO: ProjectCreateDTO, options?: RequestInit): Promise<createProjectResponse> => {
-  
-  return apiFetch<createProjectResponse>(getCreateProjectUrl(),
-  {      
+export const createProject = async (
+  projectCreateDTO: ProjectCreateDTO,
+  options?: RequestInit
+): Promise<createProjectResponse> => {
+  return apiFetch<createProjectResponse>(getCreateProjectUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      projectCreateDTO,)
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers, {
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(projectCreateDTO),
+  });
+};
 
 /**
  * Uploads a video file (MP4, <= 100MB) for processing (transcription, subtitles, description).
  * @summary Upload video for a project
  */
 export type uploadVideoResponse200 = {
-  data: UploadVideo200
-  status: 200
-}
+  data: UploadVideo200;
+  status: 200;
+};
 
 export type uploadVideoResponse400 = {
-  data: UploadVideo400
-  status: 400
-}
+  data: UploadVideo400;
+  status: 400;
+};
 
 export type uploadVideoResponse401 = {
-  data: UploadVideo401
-  status: 401
-}
+  data: UploadVideo401;
+  status: 401;
+};
 
 export type uploadVideoResponse404 = {
-  data: UploadVideo404
-  status: 404
-}
-    
-export type uploadVideoResponseSuccess = (uploadVideoResponse200) & {
-  headers: Headers;
-};
-export type uploadVideoResponseError = (uploadVideoResponse400 | uploadVideoResponse401 | uploadVideoResponse404) & {
-  headers: Headers;
+  data: UploadVideo404;
+  status: 404;
 };
 
-export type uploadVideoResponse = (uploadVideoResponseSuccess | uploadVideoResponseError)
+export type uploadVideoResponseSuccess = uploadVideoResponse200 & {
+  headers: Headers;
+};
+export type uploadVideoResponseError = (
+  | uploadVideoResponse400
+  | uploadVideoResponse401
+  | uploadVideoResponse404
+) & {
+  headers: Headers;
+};
 
-export const getUploadVideoUrl = (id: number,) => {
+export type uploadVideoResponse =
+  | uploadVideoResponseSuccess
+  | uploadVideoResponseError;
 
+export const getUploadVideoUrl = (id: number) => {
+  return `/api/projects/${id}/upload`;
+};
 
-  
+export const uploadVideo = async (
+  id: number,
+  uploadVideoBody: UploadVideoBody,
+  options?: RequestInit
+): Promise<uploadVideoResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, uploadVideoBody.file);
 
-  return `/api/projects/${id}/upload`
-}
-
-export const uploadVideo = async (id: number,
-    uploadVideoBody: UploadVideoBody, options?: RequestInit): Promise<uploadVideoResponse> => {
-    const formData = new FormData();
-formData.append(`file`, uploadVideoBody.file)
-
-  return apiFetch<uploadVideoResponse>(getUploadVideoUrl(id),
-  {      
+  return apiFetch<uploadVideoResponse>(getUploadVideoUrl(id), {
     ...options,
-    method: 'POST'
-    ,
-    body: 
-      formData,
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers),
+    body: formData,
+  });
+};
 
 export type registerResponse200 = {
-  data: AuthResponseDTO
-  status: 200
-}
-    
-export type registerResponseSuccess = (registerResponse200) & {
+  data: AuthResponseDTO;
+  status: 200;
+};
+
+export type registerResponseSuccess = registerResponse200 & {
   headers: Headers;
 };
-;
-
-export type registerResponse = (registerResponseSuccess)
+export type registerResponse = registerResponseSuccess;
 
 export const getRegisterUrl = () => {
+  return `/api/auth/register`;
+};
 
-
-  
-
-  return `/api/auth/register`
-}
-
-export const register = async (registerRequestDTO: RegisterRequestDTO, options?: RequestInit): Promise<registerResponse> => {
-  
-  return apiFetch<registerResponse>(getRegisterUrl(),
-  {      
+export const register = async (
+  registerRequestDTO: RegisterRequestDTO,
+  options?: RequestInit
+): Promise<registerResponse> => {
+  return apiFetch<registerResponse>(getRegisterUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      registerRequestDTO,)
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers, {
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(registerRequestDTO),
+  });
+};
 
 export type refreshTokenResponse200 = {
-  data: AuthResponseDTO
-  status: 200
-}
-    
-export type refreshTokenResponseSuccess = (refreshTokenResponse200) & {
+  data: AuthResponseDTO;
+  status: 200;
+};
+
+export type refreshTokenResponseSuccess = refreshTokenResponse200 & {
   headers: Headers;
 };
-;
-
-export type refreshTokenResponse = (refreshTokenResponseSuccess)
+export type refreshTokenResponse = refreshTokenResponseSuccess;
 
 export const getRefreshTokenUrl = () => {
+  return `/api/auth/refresh`;
+};
 
-
-  
-
-  return `/api/auth/refresh`
-}
-
-export const refreshToken = async (refreshTokenBody: RefreshTokenBody, options?: RequestInit): Promise<refreshTokenResponse> => {
-  
-  return apiFetch<refreshTokenResponse>(getRefreshTokenUrl(),
-  {      
+export const refreshToken = async (
+  refreshTokenBody: RefreshTokenBody,
+  options?: RequestInit
+): Promise<refreshTokenResponse> => {
+  return apiFetch<refreshTokenResponse>(getRefreshTokenUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      refreshTokenBody,)
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers, {
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(refreshTokenBody),
+  });
+};
 
 export type logoutResponse200 = {
-  data: Logout200
-  status: 200
-}
-    
-export type logoutResponseSuccess = (logoutResponse200) & {
+  data: Logout200;
+  status: 200;
+};
+
+export type logoutResponseSuccess = logoutResponse200 & {
   headers: Headers;
 };
-;
-
-export type logoutResponse = (logoutResponseSuccess)
+export type logoutResponse = logoutResponseSuccess;
 
 export const getLogoutUrl = () => {
+  return `/api/auth/logout`;
+};
 
-
-  
-
-  return `/api/auth/logout`
-}
-
-export const logout = async ( options?: RequestInit): Promise<logoutResponse> => {
-  
-  return apiFetch<logoutResponse>(getLogoutUrl(),
-  {      
+export const logout = async (
+  options?: RequestInit
+): Promise<logoutResponse> => {
+  return apiFetch<logoutResponse>(getLogoutUrl(), {
     ...options,
-    method: 'POST'
-    
-    
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers),
+  });
+};
 
 export type loginResponse200 = {
-  data: AuthResponseDTO
-  status: 200
-}
-    
-export type loginResponseSuccess = (loginResponse200) & {
+  data: AuthResponseDTO;
+  status: 200;
+};
+
+export type loginResponseSuccess = loginResponse200 & {
   headers: Headers;
 };
-;
-
-export type loginResponse = (loginResponseSuccess)
+export type loginResponse = loginResponseSuccess;
 
 export const getLoginUrl = () => {
+  return `/api/auth/login`;
+};
 
-
-  
-
-  return `/api/auth/login`
-}
-
-export const login = async (loginRequestDTO: LoginRequestDTO, options?: RequestInit): Promise<loginResponse> => {
-  
-  return apiFetch<loginResponse>(getLoginUrl(),
-  {      
+export const login = async (
+  loginRequestDTO: LoginRequestDTO,
+  options?: RequestInit
+): Promise<loginResponse> => {
+  return apiFetch<loginResponse>(getLoginUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginRequestDTO,)
-  }
-);}
-
-
+    method: "POST",
+    headers: mergeHeaders(options?.headers, {
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(loginRequestDTO),
+  });
+};
 
 /**
  * Returns processing status: UPLOADING, PROCESSING, COMPLETED, or ERROR.
  * @summary Get processing status
  */
 export type getProjectStatusResponse200 = {
-  data: GetProjectStatus200
-  status: 200
-}
+  data: GetProjectStatus200;
+  status: 200;
+};
 
 export type getProjectStatusResponse404 = {
-  data: GetProjectStatus404
-  status: 404
-}
-    
-export type getProjectStatusResponseSuccess = (getProjectStatusResponse200) & {
-  headers: Headers;
-};
-export type getProjectStatusResponseError = (getProjectStatusResponse404) & {
-  headers: Headers;
+  data: GetProjectStatus404;
+  status: 404;
 };
 
-export type getProjectStatusResponse = (getProjectStatusResponseSuccess | getProjectStatusResponseError)
+export type getProjectStatusResponseSuccess = getProjectStatusResponse200 & {
+  headers: Headers;
+};
+export type getProjectStatusResponseError = getProjectStatusResponse404 & {
+  headers: Headers;
+};
 
-export const getGetProjectStatusUrl = (id: number,) => {
+export type getProjectStatusResponse =
+  | getProjectStatusResponseSuccess
+  | getProjectStatusResponseError;
 
+export const getGetProjectStatusUrl = (id: number) => {
+  return `/api/projects/${id}/status`;
+};
 
-  
-
-  return `/api/projects/${id}/status`
-}
-
-export const getProjectStatus = async (id: number, options?: RequestInit): Promise<getProjectStatusResponse> => {
-  
-  return apiFetch<getProjectStatusResponse>(getGetProjectStatusUrl(id),
-  {      
+export const getProjectStatus = async (
+  id: number,
+  options?: RequestInit
+): Promise<getProjectStatusResponse> => {
+  return apiFetch<getProjectStatusResponse>(getGetProjectStatusUrl(id), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: "GET",
+    headers: mergeHeaders(options?.headers),
+  });
+};
 
 /**
  * Returns the AI-generated description for the given project. If the transcription hasn't finished yet, returns HTTP 202 with an informational message.
  * @summary Get AI-generated description
  */
 export type getProjectDescriptionResponse200 = {
-  data: GetProjectDescription200
-  status: 200
-}
+  data: GetProjectDescription200;
+  status: 200;
+};
 
 export type getProjectDescriptionResponse202 = {
-  data: GetProjectDescription202
-  status: 202
-}
+  data: GetProjectDescription202;
+  status: 202;
+};
 
 export type getProjectDescriptionResponse401 = {
-  data: GetProjectDescription401
-  status: 401
-}
+  data: GetProjectDescription401;
+  status: 401;
+};
 
 export type getProjectDescriptionResponse404 = {
-  data: GetProjectDescription404
-  status: 404
-}
-    
-export type getProjectDescriptionResponseSuccess = (getProjectDescriptionResponse200 | getProjectDescriptionResponse202) & {
-  headers: Headers;
-};
-export type getProjectDescriptionResponseError = (getProjectDescriptionResponse401 | getProjectDescriptionResponse404) & {
-  headers: Headers;
+  data: GetProjectDescription404;
+  status: 404;
 };
 
-export type getProjectDescriptionResponse = (getProjectDescriptionResponseSuccess | getProjectDescriptionResponseError)
+export type getProjectDescriptionResponseSuccess = (
+  | getProjectDescriptionResponse200
+  | getProjectDescriptionResponse202
+) & {
+  headers: Headers;
+};
+export type getProjectDescriptionResponseError = (
+  | getProjectDescriptionResponse401
+  | getProjectDescriptionResponse404
+) & {
+  headers: Headers;
+};
 
-export const getGetProjectDescriptionUrl = (id: number,) => {
+export type getProjectDescriptionResponse =
+  | getProjectDescriptionResponseSuccess
+  | getProjectDescriptionResponseError;
 
+export const getGetProjectDescriptionUrl = (id: number) => {
+  return `/api/projects/${id}/description`;
+};
 
-  
-
-  return `/api/projects/${id}/description`
-}
-
-export const getProjectDescription = async (id: number, options?: RequestInit): Promise<getProjectDescriptionResponse> => {
-  
-  return apiFetch<getProjectDescriptionResponse>(getGetProjectDescriptionUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+export const getProjectDescription = async (
+  id: number,
+  options?: RequestInit
+): Promise<getProjectDescriptionResponse> => {
+  return apiFetch<getProjectDescriptionResponse>(
+    getGetProjectDescriptionUrl(id),
+    {
+      ...options,
+      method: "GET",
+      headers: mergeHeaders(options?.headers),
+    }
+  );
+};
 
 export type healthResponse200 = {
-  data: HealthComponent
-  status: 200
-}
-    
-export type healthResponseSuccess = (healthResponse200) & {
+  data: HealthComponent;
+  status: 200;
+};
+
+export type healthResponseSuccess = healthResponse200 & {
   headers: Headers;
 };
-;
-
-export type healthResponse = (healthResponseSuccess)
+export type healthResponse = healthResponseSuccess;
 
 export const getHealthUrl = () => {
+  return `/api/health`;
+};
 
-
-  
-
-  return `/api/health`
-}
-
-export const health = async ( options?: RequestInit): Promise<healthResponse> => {
-  
-  return apiFetch<healthResponse>(getHealthUrl(),
-  {      
+export const health = async (
+  options?: RequestInit
+): Promise<healthResponse> => {
+  return apiFetch<healthResponse>(getHealthUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
+    method: "GET",
+    headers: mergeHeaders(options?.headers),
+  });
+};

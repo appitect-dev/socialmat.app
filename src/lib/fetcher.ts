@@ -50,12 +50,11 @@ const persistClientSession = (payload: SessionPayload) => {
   }
 };
 
-const clearSessionAndRedirect = () => {
+const clearSession = () => {
   if (typeof window === "undefined") return;
   document.cookie = "session=; path=/; max-age=0; samesite=lax; secure";
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
-  window.location.href = "/login";
 };
 
 export async function apiFetch<T>(
@@ -132,14 +131,14 @@ export async function apiFetch<T>(
           headers.set("Authorization", `Bearer ${refreshed?.token ?? ""}`);
           res = await doFetch();
         } else {
-          clearSessionAndRedirect();
+          clearSession();
         }
       } catch {
         // ignore and fall through with original 401
-        clearSessionAndRedirect();
+        clearSession();
       }
     } else {
-      clearSessionAndRedirect();
+      clearSession();
     }
   }
 

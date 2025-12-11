@@ -8,6 +8,7 @@ import {
   getProjectSubtitles,
   type SubtitleDTO,
 } from "@/lib/api";
+import { useDashboardTheme } from "./dashboard-theme";
 
 // Props pro SubtitleGenerator komponentu
 interface SubtitleGeneratorProps {
@@ -21,6 +22,7 @@ export function SubtitleGenerator({
   onSuccess,
   onError,
 }: SubtitleGeneratorProps) {
+  const { isDark, palette } = useDashboardTheme();
   // State pro sledování stavu generování
   const [isGenerating, setIsGenerating] = useState(false);
   // State pro zobrazení výsledku
@@ -128,14 +130,22 @@ export function SubtitleGenerator({
   };
 
   return (
-    <div className="bg-[#0f0f14] border border-white/10 rounded-2xl shadow-md p-6 text-white">
+    <div className={`${palette.card} rounded-2xl p-6`}>
       {/* Nadpis */}
-      <h3 className="text-lg font-bold text-white mb-4">
+      <h3
+        className={`text-lg font-bold ${
+          isDark ? "text-white" : "text-slate-900"
+        } mb-4`}
+      >
         Generování titulků
       </h3>
 
       {/* Popis */}
-      <p className="text-sm text-white/70 mb-6">
+      <p
+        className={`text-sm mb-6 ${
+          isDark ? "text-white/70" : "text-slate-600"
+        }`}
+      >
         Automaticky vygenerujte titulky pro vaše video pomocí AI technologie.
       </p>
 
@@ -143,10 +153,12 @@ export function SubtitleGenerator({
       <button
         onClick={handleGenerateSubtitles}
         disabled={isGenerating}
-        className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+        className={`w-full py-3 px-4 rounded-lg font-medium transition-all border ${palette.border} ${
           isGenerating
-            ? "bg-white/10 text-white/40 cursor-not-allowed"
-            : "bg-[#FAE12A] text-black hover:shadow-[0_14px_32px_rgba(250,225,42,0.35)]"
+            ? isDark
+              ? "bg-white/5 text-white/40 cursor-not-allowed"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            : `${palette.accentButton} ${palette.accentButtonHover}`
         }`}
       >
         {isGenerating ? (
@@ -181,14 +193,28 @@ export function SubtitleGenerator({
 
       {/* Zpráva o úspěchu */}
       {result === "success" && (
-        <div className="mt-4 p-4 bg-green-900/30 border border-green-500/40 rounded-lg">
+        <div
+          className={`mt-4 p-4 rounded-lg border ${
+            isDark
+              ? "bg-green-900/30 border-green-500/40"
+              : "bg-green-50 border-green-200"
+          }`}
+        >
           <div className="flex items-start gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <p className="text-green-200 font-medium">
+              <p
+                className={`font-medium ${
+                  isDark ? "text-green-200" : "text-green-700"
+                }`}
+              >
                 Titulky úspěšně vygenerovány!
               </p>
-              <p className="text-sm text-green-200/80 mt-1">
+              <p
+                className={`text-sm mt-1 ${
+                  isDark ? "text-green-200/80" : "text-green-700/70"
+                }`}
+              >
                 Titulky jsou připraveny k použití.
               </p>
             </div>
@@ -198,12 +224,30 @@ export function SubtitleGenerator({
 
       {/* Chybová zpráva */}
       {result === "error" && (
-        <div className="mt-4 p-4 bg-red-900/30 border border-red-500/40 rounded-lg">
+        <div
+          className={`mt-4 p-4 rounded-lg border ${
+            isDark
+              ? "bg-red-900/30 border-red-500/40"
+              : "bg-red-50 border-red-200"
+          }`}
+        >
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <p className="text-red-200 font-medium">Chyba při generování</p>
-              <p className="text-sm text-red-200/80 mt-1">{errorMessage}</p>
+              <p
+                className={`font-medium ${
+                  isDark ? "text-red-200" : "text-red-700"
+                }`}
+              >
+                Chyba při generování
+              </p>
+              <p
+                className={`text-sm mt-1 ${
+                  isDark ? "text-red-200/80" : "text-red-700/70"
+                }`}
+              >
+                {errorMessage}
+              </p>
             </div>
           </div>
         </div>
@@ -211,14 +255,28 @@ export function SubtitleGenerator({
 
       {/* Loading progress indicator */}
       {isGenerating && (
-        <div className="mt-4 p-4 bg-[#FAE12A]/10 border border-[#FAE12A]/40 rounded-lg">
+        <div
+          className={`mt-4 p-4 rounded-lg border ${
+            isDark
+              ? "bg-indigo-500/10 border-indigo-400/40"
+              : "bg-indigo-50 border-indigo-200"
+          }`}
+        >
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm text-[#FAE12A] mb-2">
+              <p
+                className={`text-sm mb-2 ${
+                  isDark ? "text-indigo-200" : "text-indigo-700"
+                }`}
+              >
                 Zpracovávám video a generuji titulky...
               </p>
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div className="bg-[#FAE12A] h-2 rounded-full animate-pulse w-3/4"></div>
+              <div
+                className={`w-full rounded-full h-2 ${
+                  isDark ? "bg-white/10" : "bg-slate-200"
+                }`}
+              >
+                <div className="bg-indigo-500 h-2 rounded-full animate-pulse w-3/4"></div>
               </div>
             </div>
           </div>
@@ -226,12 +284,26 @@ export function SubtitleGenerator({
       )}
 
       {/* Informace o souboru */}
-      <div className="mt-6 pt-6 border-t border-white/10">
-        <p className="text-xs text-white/50 mb-2">Video k zpracování:</p>
-        <p className="text-sm text-white font-medium truncate">
+      <div className={`mt-6 pt-6 border-t ${palette.border}`}>
+        <p
+          className={`text-xs mb-2 ${
+            isDark ? "text-white/50" : "text-slate-500"
+          }`}
+        >
+          Video k zpracování:
+        </p>
+        <p
+          className={`text-sm font-medium truncate ${
+            isDark ? "text-white" : "text-slate-900"
+          }`}
+        >
           {videoFile.name}
         </p>
-        <p className="text-xs text-white/50 mt-1">
+        <p
+          className={`text-xs mt-1 ${
+            isDark ? "text-white/50" : "text-slate-500"
+          }`}
+        >
           {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
         </p>
       </div>

@@ -1,10 +1,29 @@
 "use client";
+
+import { useDashboardTheme } from "@/components/dashboard-theme";
+
 export default function SettingsPage() {
+  const { palette, isDark } = useDashboardTheme();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[#1f1f1f] to-black text-white">
-      <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className={`relative min-h-screen ${palette.page}`}>
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(99,102,241,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px)",
+          backgroundSize: "120px 120px",
+        }}
+      />
+      <div className="max-w-6xl mx-auto px-4 py-10 relative">
         <div className="mb-10 text-center space-y-3">
-          <h1 className="text-4xl font-bold text-white">Nastavení</h1>
+          <h1
+            className={`text-4xl font-bold ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
+            Nastavení
+          </h1>
         </div>
       </div>
     </div>

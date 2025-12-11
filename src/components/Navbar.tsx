@@ -14,6 +14,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useDashboardTheme } from "./dashboard-theme";
+import { logout as apiLogout } from "@/lib/api";
 
 interface NavbarProps {
   userName?: string;
@@ -23,6 +25,7 @@ interface NavbarProps {
 export function Navbar({ userName, userEmail }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isDark, toggleTheme, palette } = useDashboardTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -38,25 +41,34 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
   const handleLogout = async () => {
     try {
-      // Volání logout Server Action
-      const { logout } = await import("@/app/actions/auth");
-      await logout();
+      // Call API logout so the server clears httpOnly session
+      await apiLogout();
     } catch (error) {
       console.error("Logout failed:", error);
-      // Fallback - přesměruj na homepage i když logout selhal
-      router.push("/");
+    } finally {
+      // Always clear client tokens
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        document.cookie = "session=; path=/; max-age=0; samesite=lax; secure";
+      }
+      router.replace("/login");
     }
   };
 
   return (
-    <nav className="backdrop-blur-xl bg-black/90 border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] sticky top-0 z-50">
+    <nav
+      className={`backdrop-blur-xl sticky top-0 z-50 ${palette.nav.container}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo a navigace */}
           <div className="flex items-center space-x-8">
             <Link href="/" className="flex items-center space-x-2">
               <span
-                className="text-xl font-bold text-white"
+                className={`text-xl font-bold ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
                 style={{
                   fontFamily:
                     "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
@@ -76,9 +88,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                     key={link.href}
                     href={link.href}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-body transition-colors ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "text-gray-300 hover:bg-white/10 hover:text-white"
+                      isActive ? palette.nav.linkActive : palette.nav.link
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -89,44 +99,88 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
             </div>
           </div>
 
-          {/* Desktop user menu */}
+          {/* Desktop actions */}
           <div className="hidden md:flex items-center">
+            <button
+              onClick={toggleTheme}
+              aria-label="Přepnout vzhled"
+              className={`relative h-9 w-16 rounded-full border transition-all duration-300 mr-3 ${palette.nav.toggleBase}`}
+            >
+              <span className="sr-only">Přepnout vzhled</span>
+              <span
+                className={`absolute top-1 left-1 h-7 w-7 rounded-full transition-all duration-300 ${palette.nav.toggleThumb}`}
+              />
+            </button>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
-                  className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FAE12A] focus:ring-offset-2 focus:ring-offset-black"
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                    palette.nav.userButton
+                  } ${
+                    isDark
+                      ? "focus:ring-offset-black"
+                      : "focus:ring-offset-white"
+                  }`}
                   aria-label="User menu"
                 >
                   <div className="text-right">
-                    <p className="text-sm font-medium text-white">
+                    <p
+                      className={`text-sm font-medium ${
+                        isDark ? "text-white" : "text-slate-900"
+                      }`}
+                    >
                       {userName || "Uživatel"}
                     </p>
-                    <p className="text-xs text-white/70">
+                    <p
+                      className={`text-xs ${
+                        isDark ? "text-white/70" : "text-slate-500"
+                      }`}
+                    >
                       {userEmail || "user@example.com"}
                     </p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-white/70" />
+                  <ChevronDown
+                    className={`w-4 h-4 ${
+                      isDark ? "text-white/70" : "text-slate-500"
+                    }`}
+                  />
                 </button>
               </DropdownMenu.Trigger>
 
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                  className="min-w-[220px] bg-[#0f0f14] text-white rounded-lg shadow-lg border border-white/10 p-1 z-50"
+                  className={`min-w-[220px] rounded-lg shadow-lg border p-1 z-50 ${
+                    isDark
+                      ? "bg-[#0f0f14] text-white border-white/10"
+                      : "bg-white text-slate-900 border-slate-200"
+                  }`}
                   sideOffset={5}
                   align="end"
                 >
                   <DropdownMenu.Item
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-md cursor-pointer outline-none"
+                    className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md cursor-pointer outline-none ${
+                      isDark
+                        ? "text-white hover:bg-white/10"
+                        : "text-slate-800 hover:bg-slate-100"
+                    }`}
                     onSelect={() => router.push("/dashboard/settings")}
                   >
                     <Settings className="w-4 h-4" />
                     Nastavení
                   </DropdownMenu.Item>
 
-                  <DropdownMenu.Separator className="h-px bg-white/10 my-1" />
+                  <DropdownMenu.Separator
+                    className={`h-px my-1 ${
+                      isDark ? "bg-white/10" : "bg-slate-200"
+                    }`}
+                  />
 
                   <DropdownMenu.Item
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-red-900/30 rounded-md cursor-pointer outline-none"
+                    className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md cursor-pointer outline-none ${
+                      isDark
+                        ? "text-red-300 hover:bg-red-900/30"
+                        : "text-red-600 hover:bg-red-50"
+                    }`}
                     onSelect={handleLogout}
                   >
                     <LogOut className="w-4 h-4" />
@@ -141,7 +195,11 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isDark
+                  ? "text-white hover:bg-white/10"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
               aria-label={mobileMenuOpen ? "Zavřít menu" : "Otevřít menu"}
               aria-expanded={mobileMenuOpen}
             >
@@ -157,7 +215,13 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/20 backdrop-blur-xl bg-white/10">
+        <div
+          className={`md:hidden backdrop-blur-xl border-t ${
+            isDark
+              ? "border-white/10 bg-black/70"
+              : "border-slate-200 bg-white/90"
+          }`}
+        >
           <div className="px-4 py-3 space-y-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
@@ -168,8 +232,8 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                   href={link.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-colors ${
                     isActive
-                      ? "bg-white/20 text-white"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                      ? palette.nav.mobileLinkActive
+                      : palette.nav.mobileLink
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -178,28 +242,57 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
               );
             })}
 
-            <div className="pt-3 mt-3 border-t border-gray-200">
-            <div className="flex items-center gap-3 px-3 py-2 mb-2">
-              <div>
-                <p className="text-sm font-medium text-white">
-                  {userName || "Uživatel"}
-                </p>
-                <p className="text-xs text-white/70">
-                  {userEmail || "user@example.com"}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                handleLogout();
-              }}
-              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-300 hover:bg-red-900/30"
+            <div
+              className={`pt-3 mt-3 border-t ${
+                isDark ? "border-white/10" : "border-slate-200"
+              }`}
             >
-              <LogOut className="w-5 h-5" />
-              Odhlásit se
-            </button>
+              <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      isDark ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    {userName || "Uživatel"}
+                  </p>
+                  <p
+                    className={`text-xs ${
+                      isDark ? "text-white/70" : "text-slate-500"
+                    }`}
+                  >
+                    {userEmail || "user@example.com"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                <button
+                  onClick={toggleTheme}
+                  aria-label="Přepnout vzhled"
+                  className={`relative h-9 w-16 rounded-full border transition-all duration-300 ${palette.nav.toggleBase}`}
+                >
+                  <span className="sr-only">Přepnout vzhled</span>
+                  <span
+                    className={`absolute top-1 left-1 h-7 w-7 rounded-full transition-all duration-300 ${palette.nav.toggleThumb}`}
+                  />
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isDark
+                    ? "text-red-300 hover:bg-red-900/30"
+                    : "text-red-600 hover:bg-red-50"
+                }`}
+              >
+                <LogOut className="w-5 h-5" />
+                Odhlásit se
+              </button>
             </div>
           </div>
         </div>

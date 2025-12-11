@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useDashboardTheme } from "./dashboard-theme";
 
 // Props pro VideoUploader komponentu
 interface VideoUploaderProps {
@@ -9,6 +10,7 @@ interface VideoUploaderProps {
 }
 
 export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
+  const { isDark, palette } = useDashboardTheme();
   // State pro uložení nahraného videa
   const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
   // State pro progress nahrávání (0-100)
@@ -95,29 +97,45 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto text-white">
+    <div
+      className={`max-w-2xl mx-auto ${
+        isDark ? "text-white" : "text-slate-900"
+      }`}
+    >
       {/* Dropzone oblast */}
       {!uploadedVideo && (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-colors bg-transparent ${
+          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
             isDragActive
-              ? "border-yellow-400 bg-yellow-400/5"
-              : "border-white/15 hover:border-yellow-400/70"
+              ? "border-indigo-400 shadow-[0_20px_60px_rgba(79,70,229,0.25)] bg-indigo-500/10"
+              : isDark
+              ? "border-white/15 hover:border-indigo-300/80 bg-white/5"
+              : "border-slate-200 hover:border-indigo-400 bg-white shadow-[0_16px_40px_rgba(79,70,229,0.08)]"
           }`}
         >
           <input {...getInputProps()} />
           <div className="space-y-4">
             <div className="text-6xl">🎬</div>
             {isDragActive ? (
-              <p className="text-lg text-yellow-400">Přetáhněte video sem...</p>
+              <p className="text-lg text-indigo-500">
+                Přetáhněte video sem...
+              </p>
             ) : (
               <>
-                <p className="text-lg text-white font-medium">
+                <p
+                  className={`text-lg font-medium ${
+                    isDark ? "text-white" : "text-slate-900"
+                  }`}
+                >
                   Přetáhněte video sem nebo klikněte pro výběr
                 </p>
-                <p className="text-sm text-white/60">
-                  Podporova2né formáty: MP4, MOV, AVI (max. 100MB)
+                <p
+                  className={`text-sm ${
+                    isDark ? "text-white/60" : "text-slate-600"
+                  }`}
+                >
+                  Podporované formáty: MP4, MOV, AVI (max. 100MB)
                 </p>
               </>
             )}
@@ -127,51 +145,93 @@ export function VideoUploader({ onVideoUploaded }: VideoUploaderProps) {
 
       {/* Chybová hláška */}
       {error && (
-        <div className="mt-4 p-4 bg-red-900/30 border border-red-500/40 rounded-lg">
-          <p className="text-red-200">⚠️ {error}</p>
+        <div
+          className={`mt-4 p-4 rounded-lg border ${
+            isDark
+              ? "bg-red-900/30 border-red-500/40"
+              : "bg-red-50 border-red-200"
+          }`}
+        >
+          <p className={isDark ? "text-red-200" : "text-red-700"}>
+            ⚠️ {error}
+          </p>
         </div>
       )}
 
       {/* Progress bar během nahrávání */}
       {uploadedVideo && uploadProgress < 100 && (
         <div className="mt-6 space-y-2">
-          <p className="text-sm text-white/70">Nahrávání videa...</p>
-          <div className="w-full bg-white/10 rounded-full h-3">
+          <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
+            Nahrávání videa...
+          </p>
+          <div
+            className={`w-full rounded-full h-3 ${
+              isDark ? "bg-white/10" : "bg-slate-200"
+            }`}
+          >
             <div
-              className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
+              className="bg-indigo-500 h-3 rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className="text-sm text-white/70 text-right">{uploadProgress}%</p>
+          <p
+            className={`text-sm text-right ${
+              isDark ? "text-white/70" : "text-slate-600"
+            }`}
+          >
+            {uploadProgress}%
+          </p>
         </div>
       )}
 
       {/* Náhled nahraného videa */}
       {uploadedVideo && uploadProgress === 100 && (
         <div className="mt-6 space-y-4">
-          <div className="p-4 bg-green-900/30 border border-green-500/40 rounded-lg">
-            <p className="text-green-200">✅ Video úspěšně nahráno!</p>
+          <div
+            className={`p-4 rounded-lg border ${
+              isDark
+                ? "bg-green-900/30 border-green-500/40"
+                : "bg-green-50 border-green-200"
+            }`}
+          >
+            <p className={isDark ? "text-green-200" : "text-green-700"}>
+              ✅ Video úspěšně nahráno!
+            </p>
           </div>
 
           {/* Video náhled */}
-          <div className="bg-[#0f0f14] border border-white/10 rounded-lg shadow-md p-4 space-y-4">
+          <div className={`${palette.card} rounded-lg p-4 space-y-4`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-white">{uploadedVideo.name}</p>
-                <p className="text-sm text-white/60">
+                <p
+                  className={`font-medium ${
+                    isDark ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  {uploadedVideo.name}
+                </p>
+                <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
                   {(uploadedVideo.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
               </div>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-sm text-red-200 hover:bg-red-900/40 rounded-lg transition-colors"
+                className={`px-4 py-2 text-sm rounded-lg transition-colors border ${
+                  isDark
+                    ? "text-red-200 border-red-500/30 hover:bg-red-900/30"
+                    : "text-red-600 border-red-200 hover:bg-red-50"
+                }`}
               >
                 Smazat
               </button>
             </div>
 
             {/* Video přehrávač */}
-            <video src={videoPreviewUrl} controls className="w-full rounded-lg">
+            <video
+              src={videoPreviewUrl}
+              controls
+              className="w-full rounded-lg"
+            >
               Váš prohlížeč nepodporuje video tag.
             </video>
           </div>

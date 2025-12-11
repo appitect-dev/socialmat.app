@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { useDashboardTheme } from "./dashboard-theme";
 
 // Props pro VideoPlayer komponentu
 interface VideoPlayerProps {
@@ -8,6 +9,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ src }: VideoPlayerProps) {
+  const { isDark } = useDashboardTheme();
   // Reference na HTML5 video element
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -93,11 +95,18 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     };
   }, []);
 
+  const accent = "#6366f1";
+  const track = isDark ? "#27272a" : "#e5e7eb";
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Kontejner pro video a ovládací prvky */}
       <div
-        className="relative bg-black rounded-lg overflow-hidden shadow-xl"
+        className={`relative overflow-hidden shadow-xl border ${
+          isDark
+            ? "bg-black border-white/10"
+            : "bg-white border-slate-200 shadow-[0_24px_60px_rgba(79,70,229,0.15)]"
+        } rounded-xl`}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(true)} // Nechám vždy viditelné pro lepší UX
       >
@@ -113,7 +122,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
 
         {/* Ovládací prvky */}
         <div
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity ${
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 transition-opacity ${
             showControls ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -125,14 +134,18 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
               max={duration || 0}
               value={currentTime}
               onChange={handleTimeChange}
-              className="w-full h-1 bg-white/15 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-1 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #FAE12A 0%, #FAE12A ${
+                background: `linear-gradient(to right, ${accent} 0%, ${accent} ${
                   (currentTime / duration) * 100
-                }%, #3f3f46 ${(currentTime / duration) * 100}%, #3f3f46 100%)`,
+                }%, ${track} ${(currentTime / duration) * 100}%, ${track} 100%)`,
               }}
             />
-            <div className="flex justify-between text-xs text-white mt-1">
+            <div
+              className={`flex justify-between text-xs mt-1 ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            >
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -143,7 +156,11 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
             {/* Play/Pause tlačítko */}
             <button
               onClick={togglePlay}
-              className="text-white hover:text-[#FAE12A] transition-colors p-2"
+              className={`transition-colors p-2 ${
+                isDark
+                  ? "text-white hover:text-indigo-400"
+                  : "text-slate-900 hover:text-indigo-600"
+              }`}
               aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
@@ -171,7 +188,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
             <div className="flex items-center gap-2 flex-1 max-w-xs">
               {/* Volume icon */}
               <svg
-                className="w-5 h-5 text-white"
+                className={`w-5 h-5 ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -185,12 +204,18 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
                 step="0.1"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="flex-1 h-1 bg-white/15 rounded-lg appearance-none cursor-pointer"
+                className="flex-1 h-1 rounded-lg appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #FAE12A 0%, #FAE12A ${volume * 100}%, #3f3f46 ${volume * 100}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, ${accent} 0%, ${accent} ${
+                    volume * 100
+                  }%, ${track} ${volume * 100}%, ${track} 100%)`,
                 }}
               />
-              <span className="text-white text-sm min-w-[3ch]">
+              <span
+                className={`text-sm min-w-[3ch] ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
+              >
                 {Math.round(volume * 100)}%
               </span>
             </div>

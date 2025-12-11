@@ -5,6 +5,7 @@ import { VideoUploader } from "@/components/VideoUploader";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { VideoInfo } from "@/components/VideoInfo";
 import { SubtitleGenerator } from "@/components/SubtitleGenerator";
+import { useDashboardTheme } from "./dashboard-theme";
 
 // Typ pro video data
 interface VideoData {
@@ -16,6 +17,7 @@ interface VideoData {
 }
 
 export function Dashboard() {
+  const { isDark, palette, toggleTheme } = useDashboardTheme();
   // Centrální state pro nahrané video
   const [videoData, setVideoData] = useState<VideoData | null>(null);
   // State pro délku videa (získáme z video elementu)
@@ -71,21 +73,43 @@ export function Dashboard() {
             : null
         );
       };
+
+      return () => {
+        video.src = "";
+        video.load();
+        // Revoke the previous object URL when it changes to avoid leaks
+        URL.revokeObjectURL(videoData.url);
+      };
     }
   }, [videoData?.url]);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[#1f1f1f] to-black text-white">
-      <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="mb-10 text-center space-y-3">
-          <h1 className="text-4xl font-bold text-white">
-            AI Subtitle Generator
-          </h1>
-          <p className="text-lg text-white/75">
-            Add AI-powered subtitles to your videos instantly
-          </p>
-        </div>
+  const panelClass = `${palette.card} rounded-3xl backdrop-blur`;
+  const mutedText = isDark ? "text-white/70" : "text-slate-600";
+  const badgeClass = isDark
+    ? "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-indigo-300/50 text-indigo-200 bg-indigo-500/10 uppercase tracking-wide"
+    : "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-indigo-200/60 text-indigo-700 bg-indigo-50/80 uppercase tracking-wide";
 
+  return (
+    <div
+      className={`relative overflow-hidden min-h-screen ${palette.page} transition-colors`}
+    >
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(99,102,241,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px)",
+          backgroundSize: "120px 120px",
+        }}
+      />
+      <div
+        className="absolute -top-1/2 left-1/2 -translate-x-1/2 w-[140%] h-[120%] rounded-full blur-[160px] opacity-70 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 40%, rgba(79,70,229,0.22), rgba(14,165,233,0.08), transparent 60%)",
+        }}
+      />
+
+      <div className="relative max-w-6xl mx-auto px-4 py-12 space-y-8">
         {/* KROK 1: Video Uploader - zobrazí se když není video */}
         {!videoData && <VideoUploader onVideoUploaded={handleVideoUploaded} />}
 
@@ -96,7 +120,7 @@ export function Dashboard() {
             <div className="flex justify-end">
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-sm text-black bg-[#FAE12A] rounded-full transition-all hover:shadow-[0_12px_30px_rgba(250,225,42,0.35)]"
+                className={`px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
               >
                 ← Nahrát nové video
               </button>

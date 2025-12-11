@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useDashboardTheme } from "./dashboard-theme";
 
 // Props pro VideoInfo komponentu
 interface VideoInfoProps {
@@ -20,6 +21,7 @@ export function VideoInfo({
   uploadDate,
   status,
 }: VideoInfoProps) {
+  const { isDark, palette } = useDashboardTheme();
   // Funkce pro formátování velikosti souboru
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
@@ -52,19 +54,25 @@ export function VideoInfo({
       case "uploaded":
         return {
           text: "Nahráno",
-          color: "bg-[#FAE12A]/20 text-[#FAE12A]",
+          color: isDark
+            ? "bg-indigo-500/20 text-indigo-200"
+            : "bg-indigo-50 text-indigo-700 border border-indigo-200",
           icon: "📤",
         };
       case "processing":
         return {
           text: "Zpracovává se",
-          color: "bg-[#FAE12A]/20 text-[#FAE12A]",
+          color: isDark
+            ? "bg-indigo-500/20 text-indigo-200"
+            : "bg-indigo-50 text-indigo-700 border border-indigo-200",
           icon: "⚙️",
         };
       case "ready":
         return {
           text: "Připraveno",
-          color: "bg-green-900/40 text-green-200",
+          color: isDark
+            ? "bg-green-900/40 text-green-200"
+            : "bg-green-50 text-green-700 border border-green-200",
           icon: "✅",
         };
     }
@@ -73,9 +81,13 @@ export function VideoInfo({
   const statusInfo = getStatusInfo();
 
   return (
-    <div className="bg-[#0f0f14] border border-white/10 rounded-2xl shadow-md p-6 text-white">
+    <div className={`${palette.card} rounded-2xl p-6`}>
       {/* Nadpis */}
-      <h3 className="text-lg font-bold text-white mb-4">
+      <h3
+        className={`text-lg font-bold ${
+          isDark ? "text-white" : "text-slate-900"
+        } mb-4`}
+      >
         Informace o videu
       </h3>
 
@@ -92,41 +104,73 @@ export function VideoInfo({
       {/* Metadata */}
       <div className="space-y-3">
         {/* Název souboru */}
-        <div className="border-b border-white/10 pb-3">
-          <p className="text-xs text-white/50 mb-1">Název souboru</p>
-          <p className="text-sm text-white font-medium break-all">
+        <div className={`pb-3 border-b ${palette.border}`}>
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"} mb-1`}>
+            Název souboru
+          </p>
+          <p
+            className={`text-sm font-medium break-all ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
             {fileName}
           </p>
         </div>
 
         {/* Velikost */}
-        <div className="border-b border-white/10 pb-3">
-          <p className="text-xs text-white/50 mb-1">Velikost</p>
-          <p className="text-sm text-white font-medium">
+        <div className={`pb-3 border-b ${palette.border}`}>
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"} mb-1`}>
+            Velikost
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
             {formatFileSize(fileSize)}
           </p>
         </div>
 
         {/* Délka */}
-        <div className="border-b border-white/10 pb-3">
-          <p className="text-xs text-white/50 mb-1">Délka</p>
-          <p className="text-sm text-white font-medium">
+        <div className={`pb-3 border-b ${palette.border}`}>
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"} mb-1`}>
+            Délka
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
             {formatDuration(duration)}
           </p>
         </div>
 
         {/* Rozlišení (pokud je k dispozici) */}
         {resolution && (
-          <div className="border-b border-white/10 pb-3">
-            <p className="text-xs text-white/50 mb-1">Rozlišení</p>
-            <p className="text-sm text-white font-medium">{resolution}</p>
+          <div className={`pb-3 border-b ${palette.border}`}>
+            <p className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"} mb-1`}>
+              Rozlišení
+            </p>
+            <p
+              className={`text-sm font-medium ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            >
+              {resolution}
+            </p>
           </div>
         )}
 
         {/* Datum nahrání */}
         <div className="pb-3">
-          <p className="text-xs text-white/50 mb-1">Datum nahrání</p>
-          <p className="text-sm text-white font-medium">
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"} mb-1`}>
+            Datum nahrání
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
             {formatDate(uploadDate)}
           </p>
         </div>

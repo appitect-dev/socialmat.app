@@ -39,21 +39,22 @@ type ActionResult = {
 
 const SESSION_COOKIE = 'session';
 const ONE_WEEK_SECONDS = 60 * 60 * 24 * 7;
+const cookieOptions = {
+  httpOnly: false,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+} satisfies Parameters<(typeof cookies)>[0];
 
 async function setSessionCookie(auth: AuthResponseDTO) {
+  const value = encodeURIComponent(JSON.stringify(auth));
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, JSON.stringify(auth), {
-    httpOnly: false,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: ONE_WEEK_SECONDS,
-  });
+  cookieStore.set(SESSION_COOKIE, value, { ...cookieOptions, maxAge: ONE_WEEK_SECONDS });
 }
 
 async function clearSessionCookie() {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.set(SESSION_COOKIE, '', { ...cookieOptions, maxAge: 0 });
 }
 
 /**
@@ -140,5 +141,5 @@ export async function signup(prevState: ActionResult | null, formData: FormData)
  */
 export async function logout() {
   await clearSessionCookie();
-  redirect('/');
+  redirect('/login');
 }
