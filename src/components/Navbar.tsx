@@ -9,6 +9,8 @@ import {
   FolderKanban,
   Settings,
   LogOut,
+  Moon,
+  Sun,
   ChevronsLeft,
   ChevronsRight,
   User,
@@ -107,23 +109,44 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
             <button
               onClick={toggleTheme}
               aria-label="Přepnout vzhled"
-              className={`relative h-9 w-16 rounded-full border transition-all duration-300 mr-3 ${palette.nav.toggleBase}`}
+              className="relative h-9 w-16 rounded-full border transition-colors duration-300 mr-3 focus:outline-none border-white/10"
             >
               <span className="sr-only">Přepnout vzhled</span>
               <span
-                className={`absolute top-1 left-1 h-7 w-7 rounded-full transition-all duration-300 ${palette.nav.toggleThumb}`}
+                className={`absolute inset-0 rounded-full transition-colors duration-300 ${
+                  isDark
+                    ? "bg-white/5 border border-white/10"
+                    : "bg-white border border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
+                }`}
+              />
+              <Moon
+                className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
+                  isDark
+                    ? "opacity-100 text-amber-200"
+                    : "opacity-60 text-slate-500"
+                }`}
+              />
+              <Sun
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
+                  isDark ? "opacity-0" : "opacity-100 text-amber-500"
+                }`}
+              />
+              <span
+                className={`absolute top-[3px] left-1 h-7 w-7 rounded-full shadow transition-transform duration-300 ${
+                  isDark
+                    ? "translate-x-7 bg-white/10 border border-white/15"
+                    : "translate-x-0 bg-white border border-slate-200"
+                }`}
               />
             </button>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    palette.nav.userButton
-                  } ${
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors focus:outline-none ${
                     isDark
-                      ? "focus:ring-offset-black"
-                      : "focus:ring-offset-white"
-                  }`}
+                      ? "text-white hover:bg-white/10"
+                      : "text-slate-900 hover:bg-slate-100"
+                  } `}
                   aria-label="User menu"
                 >
                   <div className="text-right">
