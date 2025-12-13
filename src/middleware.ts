@@ -70,11 +70,17 @@ export default async function middleware(req: NextRequest) {
 
   const rawSession = req.cookies.get(SESSION_COOKIE)?.value;
   const session = parseSession(rawSession);
-  const tokenExpiry = getJwtExpiry(session?.token);
-  const isExpired = tokenExpiry ? Date.now() >= tokenExpiry : false;
+  const tokenExpiry = session?.token ? getJwtExpiry(session.token) : null;
+  // Treat undecodable/missing exp as expired only when a token exists
+  const isExpired =
+    session?.token && tokenExpiry !== null
+      ? Date.now() >= tokenExpiry
+      : session?.token
+      ? true
+      : false;
 
   // If session is expired, clear it
-  if (isExpired) {
+  if (session?.token && isExpired) {
     const res = NextResponse.redirect(new URL("/login", req.nextUrl));
     clearSessionCookie(res);
     return res;
@@ -105,4 +111,3 @@ export const config = {
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

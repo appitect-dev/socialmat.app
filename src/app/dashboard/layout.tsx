@@ -1,7 +1,22 @@
 import { cookies } from "next/headers";
 import { Navbar } from "@/components/Navbar";
+import { SessionSync } from "@/components/SessionSync";
 import { DashboardThemeProvider } from "@/components/dashboard-theme";
 import { redirect } from "next/navigation";
+
+const getJwtExpiry = (token?: string): number | null => {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    const payload = JSON.parse(
+      Buffer.from(parts[1], "base64").toString("utf8")
+    ) as { exp?: number };
+    return typeof payload.exp === "number" ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+};
 
 export default async function DashboardLayout({
   children,
@@ -13,7 +28,13 @@ export default async function DashboardLayout({
 
   const parseSession = (
     value?: string
-  ): { email?: string; firstName?: string; lastName?: string; token?: string } | null => {
+  ): {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    token?: string;
+    refreshToken?: string;
+  } | null => {
     if (!value) return null;
     const candidates = [value];
     try {
@@ -33,7 +54,10 @@ export default async function DashboardLayout({
 
   const session = parseSession(rawSession);
 
-  if (!session?.token) {
+  const tokenExpiry = getJwtExpiry(session?.token);
+  const isExpired = tokenExpiry === null || Date.now() >= tokenExpiry;
+
+  if (!session?.token || isExpired) {
     redirect("/login");
   }
 
@@ -44,6 +68,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardThemeProvider>
+      <SessionSync session={session} />
       <Navbar userName={displayName} userEmail={session.email} />
       {children}
     </DashboardThemeProvider>

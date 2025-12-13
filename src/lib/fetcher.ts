@@ -24,6 +24,20 @@ type SessionPayload = {
   refreshToken?: string;
 };
 
+const getJwtExpiry = (token?: string): number | null => {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+    ) as { exp?: number };
+    return typeof payload.exp === "number" ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+};
+
 const getClientSession = (): SessionPayload | null => {
   if (typeof window === "undefined") return null;
   const raw = document.cookie
@@ -79,7 +93,13 @@ export async function apiFetch<T>(
       ? localStorage.getItem("token") || session?.token || null
       : null;
 
-  if (token && !headers.has("Authorization")) {
+  const tokenExpiry = getJwtExpiry(token ?? undefined);
+  const isExpired = tokenExpiry === null || Date.now() >= tokenExpiry;
+  if (isExpired) {
+    clearSession();
+  }
+
+  if (token && !isExpired && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
