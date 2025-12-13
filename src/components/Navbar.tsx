@@ -9,6 +9,8 @@ import {
   FolderKanban,
   Settings,
   LogOut,
+  ChevronsLeft,
+  ChevronsRight,
   User,
   ChevronDown,
   Menu,
@@ -16,6 +18,7 @@ import {
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { logout as apiLogout } from "@/lib/api";
+import { useSidebar } from "./DashboardWrapper";
 
 interface NavbarProps {
   userName?: string;
@@ -26,11 +29,12 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isDark, toggleTheme, palette } = useDashboardTheme();
+  const { isOpen: sidebarOpen, setIsOpen: setSidebarOpen } = useSidebar();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/projects", label: "Projekty", icon: FolderKanban },
+    { href: "/dashboard/projects", label: "Titulky", icon: FolderKanban },
     { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
   ];
 
@@ -60,11 +64,11 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
     <nav
       className={`backdrop-blur-xl sticky top-0 z-50 ${palette.nav.container}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo a navigace */}
-          <div className="flex items-center space-x-8">
-            <Link href="/" className="flex items-center space-x-2">
+          {/* Logo + sidebar toggle */}
+          <div className="flex items-center space-x-3">
+            {!sidebarOpen && (
               <span
                 className={`text-xl font-bold ${
                   isDark ? "text-white" : "text-slate-900"
@@ -76,27 +80,26 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
               >
                 SocialMat
               </span>
-            </Link>
-
-            {/* Desktop navigace */}
-            <div className="hidden md:flex items-center space-x-1">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-body transition-colors ${
-                      isActive ? palette.nav.linkActive : palette.nav.link
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
+            )}
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Zobrazit sidebar"
+                className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-md  transition-colors ${
+                  isDark
+                    ? "text-white border-white/15 bg-black/60 hover:bg-white/10"
+                    : "text-slate-800 border-slate-200 bg-white/90 hover:bg-slate-100"
+                }`}
+              >
+                <ChevronsRight className="w-5 h-5" />
+              </button>
+            )}
+            <Link
+              href="/"
+              className={`flex items-center space-x-2 transition-all duration-300 ease-in-out ${
+                sidebarOpen ? "md:opacity-0 md:pointer-events-none" : ""
+              }`}
+            ></Link>
           </div>
 
           {/* Desktop actions */}

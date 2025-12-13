@@ -7,15 +7,15 @@ import {
   LayoutDashboard,
   FolderKanban,
   Settings,
-  ChevronLeft,
-  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { useSidebar } from "./DashboardWrapper";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/projects", label: "Projekty", icon: FolderKanban },
+  { href: "/dashboard/projects", label: "Titulky", icon: FolderKanban },
   { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
 ];
 
@@ -24,14 +24,13 @@ export function Sidebar() {
   const { isDark } = useDashboardTheme();
   const { isOpen, setIsOpen } = useSidebar();
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const sidebarWidth = isOpen ? "w-64" : "w-16";
-  const sidebarBg = isDark
-    ? "bg-black/70 border-r border-white/10 shadow-[2px_0_20px_rgba(0,0,0,0.3)]"
-    : "bg-white border-r border-slate-200 shadow-[2px_0_20px_rgba(15,23,42,0.08)]";
+  const sidebarWidth = "w-64";
+  const sidebarBg = isDark ? "bg-black/70" : "bg-white";
+  const sidebarChrome = isOpen
+    ? isDark
+      ? "border-r border-white/10 shadow-[2px_0_20px_rgba(0,0,0,0.3)]"
+      : "border-r border-slate-200 shadow-[2px_0_20px_rgba(15,23,42,0.08)]"
+    : "border-r border-transparent shadow-none";
   const linkHover = isDark ? "hover:bg-white/10" : "hover:bg-slate-100";
   const linkActive = isDark
     ? "bg-white/10 text-white"
@@ -40,14 +39,12 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`${sidebarWidth} ${sidebarBg} backdrop-blur-xl fixed left-0 top-0 h-screen z-40 transition-all duration-300 ease-in-out hidden md:flex flex-col`}
+      className={`${sidebarWidth} ${sidebarBg} ${sidebarChrome} overflow-hidden backdrop-blur-xl fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out hidden md:flex flex-col ${
+        isOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+      }`}
     >
-      {/* Logo and Toggle */}
-      <div
-        className={`flex items-center h-16 border-b border-inherit ${
-          isOpen ? "justify-between px-4" : "justify-center px-2"
-        }`}
-      >
+      {/* Logo + toggle */}
+      <div className="flex items-center h-16 border-inherit pl-6 pr-6 gap-3">
         {isOpen ? (
           <Link href="/" className="flex items-center space-x-2">
             <span
@@ -64,28 +61,28 @@ export function Sidebar() {
           </Link>
         ) : null}
         <button
-          onClick={toggleSidebar}
-          className={`p-2 rounded-lg transition-colors ${linkHover}`}
-          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Skrýt sidebar" : "Zobrazit sidebar"}
+          className={`inline-flex items-center justify-center w-9 h-9 rounded-md  transition-colors ml-auto ${
+            isDark
+              ? "text-white border-white/15 bg-black/50 hover:bg-white/10"
+              : "text-slate-800 border-slate-200 bg-white/90 hover:bg-slate-100"
+          }`}
         >
           {isOpen ? (
-            <ChevronLeft
-              className={`w-5 h-5 ${
-                isDark ? "text-white/80" : "text-slate-600"
-              }`}
-            />
+            <ChevronsLeft className="w-5 h-5" />
           ) : (
-            <ChevronRight
-              className={`w-5 h-5 ${
-                isDark ? "text-white/80" : "text-slate-600"
-              }`}
-            />
+            <ChevronsRight className="w-5 h-5" />
           )}
         </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      <nav
+        className={`flex-1 px-6 py-4 space-y-1 overflow-y-auto transition-opacity duration-200 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
@@ -93,29 +90,11 @@ export function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              onClick={() => {
-                // #region agent log
-                fetch(
-                  "http://127.0.0.1:7242/ingest/95f1db15-3356-46ec-ac70-bd4736c3da51",
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      location: "Sidebar.tsx:93",
-                      message: "Sidebar link clicked",
-                      data: { href: link.href, currentPath: pathname },
-                      timestamp: Date.now(),
-                      sessionId: "debug-session",
-                      runId: "run1",
-                      hypothesisId: "E",
-                    }),
-                  }
-                ).catch(() => {});
-                // #endregion
-              }}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive ? linkActive : linkInactive
-              } ${linkHover} ${isOpen ? "justify-start" : "justify-center"}`}
+              } ${linkHover} ${
+                isOpen ? "justify-start gap-3" : "justify-center gap-2"
+              }`}
               title={!isOpen ? link.label : undefined}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />

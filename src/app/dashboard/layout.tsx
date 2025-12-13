@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { Navbar } from "@/components/Navbar";
 import { SessionSync } from "@/components/SessionSync";
+import { DashboardWrapper } from "@/components/DashboardWrapper";
 import { DashboardThemeProvider } from "@/components/dashboard-theme";
 import { redirect } from "next/navigation";
 
@@ -69,8 +70,10 @@ export default async function DashboardLayout({
   return (
     <DashboardThemeProvider>
       <SessionSync session={session} />
-      <Navbar userName={displayName} userEmail={session.email} />
-      {children}
+      <DashboardWrapper>
+        <Navbar userName={displayName} userEmail={session.email} />
+        {children}
+      </DashboardWrapper>
     </DashboardThemeProvider>
   );
 }

@@ -36,12 +36,15 @@ export function DashboardWrapper({ children }: { children: React.ReactNode }) {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isOpen));
   }, [isOpen]);
 
-  const sidebarWidth = isOpen ? "md:pl-64" : "md:pl-16";
+  const sidebarWidth = isOpen ? "md:pl-64" : "md:pl-0";
+  const contentTransition = isOpen
+    ? "transition-[padding] duration-300 ease-in-out"
+    : "";
 
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
       <Sidebar />
-      <div className={`${sidebarWidth} transition-all duration-300`}>
+      <div className={`${sidebarWidth} ${contentTransition}`}>
         {children}
       </div>
     </SidebarContext.Provider>
