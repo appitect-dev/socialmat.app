@@ -23,12 +23,14 @@ export default function ProjectsPage() {
               isDark ? "text-white" : "text-slate-900"
             }`}
           >
-            Titulky
+            Projects
           </h1>
           <p
-            className={`text-lg ${isDark ? "text-white/75" : "text-slate-600"}`}
+            className={`text-lg ${
+              isDark ? "text-white/75" : "text-slate-600"
+            }`}
           >
-            Tvorte, zobrazte a spravujte svoje titulky a jejich zpracování.
+            Create, view, and manage your projects and processing status.
           </p>
         </div>
         <ProjectsPanel />

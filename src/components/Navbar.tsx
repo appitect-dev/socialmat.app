@@ -36,7 +36,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/projects", label: "Titulky", icon: FolderKanban },
+    { href: "/dashboard/titulky", label: "Titulky", icon: FolderKanban },
     { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
   ];
 

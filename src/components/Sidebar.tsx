@@ -9,13 +9,15 @@ import {
   Settings,
   ChevronsLeft,
   ChevronsRight,
+  Brain,
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { useSidebar } from "./DashboardWrapper";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/projects", label: "Titulky", icon: FolderKanban },
+  { href: "/dashboard/titulky", label: "Titulky", icon: FolderKanban },
+  { href: "/dashboard/aicontent", label: "AI Content", icon: Brain },
   { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
 ];
 

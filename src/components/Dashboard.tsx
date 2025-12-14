@@ -89,18 +89,24 @@ export function Dashboard() {
     ? "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-indigo-300/50 text-indigo-200 bg-indigo-500/10 uppercase tracking-wide"
     : "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-indigo-200/60 text-indigo-700 bg-indigo-50/80 uppercase tracking-wide";
 
+  const pageClass = isDark
+    ? "bg-black text-white"
+    : "bg-gradient-to-b from-white via-slate-50 to-white text-slate-900";
+
   return (
     <div
-      className={`relative overflow-hidden min-h-screen ${palette.page} transition-colors`}
+      className={`relative overflow-hidden min-h-screen ${pageClass} transition-colors`}
     >
-      <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(99,102,241,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px)",
-          backgroundSize: "120px 120px",
-        }}
-      />
+      {!isDark && (
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(99,102,241,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px)",
+            backgroundSize: "120px 120px",
+          }}
+        />
+      )}
       <div
         className="absolute -top-1/2 left-1/2 -translate-x-1/2 w-[140%] h-[120%] rounded-full blur-[160px] opacity-70 pointer-events-none"
         style={{

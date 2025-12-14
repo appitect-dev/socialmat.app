@@ -2,7 +2,7 @@
 
 import { useDashboardTheme } from "@/components/dashboard-theme";
 
-export default function SettingsPage() {
+export default function AIContentPage() {
   const { palette, isDark } = useDashboardTheme();
 
   return (
@@ -28,15 +28,16 @@ export default function SettingsPage() {
             "radial-gradient(circle at 50% 40%, rgba(79,70,229,0.22), rgba(14,165,233,0.08), transparent 60%)",
         }}
       />
-      <div className="max-w-6xl mx-auto px-4 py-10 relative">
+      <div className="max-w-6xl mx-auto px-4 py-12 relative">
         <div className="mb-10 text-center space-y-3">
           <h1
-            className={`text-4xl font-bold ${
+            className={`text-3xl font-bold ${
               isDark ? "text-white" : "text-slate-900"
             }`}
           >
-            Nastavení
+            AI Content
           </h1>
+          <p className={isDark ? "text-white/70" : "text-slate-600"}></p>
         </div>
       </div>
     </div>
