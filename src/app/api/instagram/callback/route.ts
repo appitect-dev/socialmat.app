@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   }
 
   // short-lived token
-  const res = await fetch("https://api.instagram.com/oauth/access_token", {
+  const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -21,28 +21,20 @@ export async function GET(req: NextRequest) {
     }),
   });
 
-  const data = await res.json();
-  console.log("IG SHORT TOKEN:", data);
+  const tokenData = await tokenRes.json();
+  console.log("IG SHORT TOKEN:", tokenData);
 
-  if (!res.ok) {
-    return NextResponse.json(data, { status: 500 });
-  }
-
-  const shortToken = data.access_token;
-  if (!shortToken) {
-    return NextResponse.json(
-      { error: "Missing short-lived token", data },
-      { status: 500 }
-    );
+  if (!tokenRes.ok || !tokenData.access_token) {
+    return NextResponse.json(tokenData, { status: 500 });
   }
 
   // long-lived token
   const llRes = await fetch(
-    `https://graph.instagram.com/access_token?` +
+    "https://graph.instagram.com/access_token?" +
       new URLSearchParams({
         grant_type: "ig_exchange_token",
         client_secret: process.env.INSTAGRAM_APP_SECRET!,
-        access_token: shortToken,
+        access_token: tokenData.access_token,
       })
   );
 
@@ -53,5 +45,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(llData, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    short: tokenData,
+    long: llData,
+  });
 }
