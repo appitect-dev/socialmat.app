@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   const insightsRes = await fetch(
     `https://graph.instagram.com/${meData.id}/insights` +
-      `?metric=impressions,reach,profile_views&period=day&access_token=${accessToken}`
+      `?metric=reach,profile_views,follower_count&period=day&access_token=${accessToken}`
   );
 
   const insightsData = await insightsRes.json();
