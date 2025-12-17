@@ -5,10 +5,11 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.json({ error: "Missing code" }, { status: 400 });
+    return NextResponse.redirect(
+      new URL("/dashboard?ig=missing_code", req.url)
+    );
   }
 
-  // short-lived token
   const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -22,13 +23,12 @@ export async function GET(req: NextRequest) {
   });
 
   const tokenData = await tokenRes.json();
-  console.log("IG SHORT TOKEN:", tokenData);
 
   if (!tokenRes.ok || !tokenData.access_token) {
-    return NextResponse.json(tokenData, { status: 500 });
+    console.error("IG short token error", tokenData);
+    return NextResponse.redirect(new URL("/dashboard?ig=short_error", req.url));
   }
 
-  // long-lived token
   const llRes = await fetch(
     "https://graph.instagram.com/access_token?" +
       new URLSearchParams({
@@ -39,14 +39,18 @@ export async function GET(req: NextRequest) {
   );
 
   const llData = await llRes.json();
-  console.log("IG LONG TOKEN:", llData);
 
-  if (!llRes.ok) {
-    return NextResponse.json(llData, { status: 500 });
+  if (!llRes.ok || !llData.access_token) {
+    console.error("IG long token error", llData);
+    return NextResponse.redirect(new URL("/dashboard?ig=long_error", req.url));
   }
 
-  return NextResponse.json({
-    short: tokenData,
-    long: llData,
-  });
+  const expiresAt = new Date(Date.now() + llData.expires_in * 1000);
+
+  return NextResponse.redirect(
+    new URL(
+      `/dashboard/instagram-connect?token=${llData.access_token}&expires=${llData.expires_in}&igUserId=${tokenData.user_id}`,
+      req.url
+    )
+  );
 }
