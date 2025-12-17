@@ -27,6 +27,8 @@ export function Dashboard() {
     "uploaded" | "processing" | "ready"
   >("uploaded");
 
+  const [igConnected, setIgConnected] = useState<boolean>(false);
+
   // Handler pro když je video nahráno
   const handleVideoUploaded = (data: { file: File; url: string }) => {
     setVideoData({
@@ -62,22 +64,21 @@ export function Dashboard() {
   useEffect(() => {
     const raw = localStorage.getItem("ig_auth");
     if (!raw) {
-      console.log("IG not connected");
+      setIgConnected(false);
       return;
     }
 
-    const { accessToken } = JSON.parse(raw);
+    try {
+      const ig = JSON.parse(raw);
+      const isValid =
+        typeof ig.expiresAt === "number" && Date.now() < ig.expiresAt;
+      setIgConnected(isValid);
 
-    fetch(
-      `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("IG ME:", data);
-      })
-      .catch((err) => {
-        console.error("IG API error:", err);
-      });
+      if (!isValid) localStorage.removeItem("ig_auth");
+    } catch {
+      localStorage.removeItem("ig_auth");
+      setIgConnected(false);
+    }
   }, []);
 
   // Effect pro získání délky videa a rozlišení
@@ -135,6 +136,10 @@ export function Dashboard() {
             "radial-gradient(circle at 50% 40%, rgba(79,70,229,0.22), rgba(14,165,233,0.08), transparent 60%)",
         }}
       />
+
+      <div style={{ marginBottom: 12 }}>
+        Instagram: <b>{igConnected ? "Connected" : "Not connected"}</b>
+      </div>
 
       <div className="relative max-w-6xl mx-auto px-4 py-12 space-y-8">
         {/* KROK 1: Video Uploader - zobrazí se když není video */}
