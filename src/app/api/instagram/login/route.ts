@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export async function GET() {
   const params = new URLSearchParams({
@@ -9,6 +10,7 @@ export async function GET() {
       "instagram_business_basic",
       "instagram_business_manage_insights",
     ].join(","),
+    state: crypto.randomUUID(),
   });
 
   const url = `https://www.instagram.com/oauth/authorize?${params.toString()}`;

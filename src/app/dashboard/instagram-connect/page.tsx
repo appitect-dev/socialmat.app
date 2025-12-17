@@ -1,18 +1,18 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function InstagramConnect() {
-  const params = useSearchParams();
+export default function InstagramConnectPage() {
   const router = useRouter();
+  const params = useSearchParams();
 
   useEffect(() => {
     const token = params.get("token");
     const expires = params.get("expires");
     const igUserId = params.get("igUserId");
 
-    if (!token || !expires) {
+    if (!token || !expires || !igUserId) {
       router.replace("/dashboard?ig=error");
       return;
     }
@@ -23,13 +23,14 @@ export default function InstagramConnect() {
       "ig_auth",
       JSON.stringify({
         accessToken: token,
-        expiresAt,
         igUserId,
+        expiresAt,
       })
     );
 
+    //vyčistí URL
     router.replace("/dashboard?ig=connected");
-  }, []);
+  }, [params, router]);
 
   return null;
 }

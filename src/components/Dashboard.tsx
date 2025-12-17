@@ -81,6 +81,26 @@ export function Dashboard() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!igConnected) return;
+
+    const raw = localStorage.getItem("ig_auth");
+    if (!raw) return;
+
+    const { accessToken } = JSON.parse(raw);
+
+    fetch("/api/instagram/insights", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("IG INSIGHTS:", data);
+      })
+      .catch(console.error);
+  }, [igConnected]);
+
   // Effect pro získání délky videa a rozlišení
   useEffect(() => {
     if (videoData?.url) {
@@ -140,6 +160,13 @@ export function Dashboard() {
       <div style={{ marginBottom: 12 }}>
         Instagram: <b>{igConnected ? "Connected" : "Not connected"}</b>
       </div>
+      <button
+        onClick={() => {
+          window.location.href = "/api/instagram/login";
+        }}
+      >
+        {igConnected ? "Reconnect Instagram" : "Connect Instagram"}
+      </button>
 
       <div className="relative max-w-6xl mx-auto px-4 py-12 space-y-8">
         {/* KROK 1: Video Uploader - zobrazí se když není video */}
