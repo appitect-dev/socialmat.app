@@ -59,6 +59,27 @@ export function Dashboard() {
     setProcessingStatus("uploaded");
   };
 
+  useEffect(() => {
+    const raw = localStorage.getItem("ig_auth");
+    if (!raw) {
+      console.log("IG not connected");
+      return;
+    }
+
+    const { accessToken } = JSON.parse(raw);
+
+    fetch(
+      `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("IG ME:", data);
+      })
+      .catch((err) => {
+        console.error("IG API error:", err);
+      });
+  }, []);
+
   // Effect pro získání délky videa a rozlišení
   useEffect(() => {
     if (videoData?.url) {
