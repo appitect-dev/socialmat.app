@@ -10,7 +10,7 @@ import { LargeNumberLike } from "crypto";
 
 // Typ pro video data
 
-interface Insights {
+interface IgInsights {
   name: string;
   values: {
     value: number;
