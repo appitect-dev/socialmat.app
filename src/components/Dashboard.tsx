@@ -6,8 +6,17 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { VideoInfo } from "@/components/VideoInfo";
 import { SubtitleGenerator } from "@/components/SubtitleGenerator";
 import { useDashboardTheme } from "./dashboard-theme";
+import { LargeNumberLike } from "crypto";
 
 // Typ pro video data
+
+interface Insights {
+  name: string;
+  values: {
+    value: number;
+    end_time?: string;
+  }[];
+}
 interface VideoData {
   file: File;
   url: string;
@@ -35,7 +44,7 @@ export function Dashboard() {
 
   const [igConnected, setIgConnected] = useState<boolean>(false);
 
-  const [igInsights, setIgInsights] = useState<any[] | null>(null);
+  const [igInsights, setIgInsights] = useState<IgInsights[] | null>(null);
   const [igLoading, setIgLoading] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
 
