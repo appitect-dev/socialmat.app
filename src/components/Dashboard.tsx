@@ -103,10 +103,19 @@ export function Dashboard() {
   useEffect(() => {
     if (!igConnected) return;
 
+    const raw = localStorage.getItem("ig_auth");
+    if (!raw) return;
+
+    const { accessToken } = JSON.parse(raw);
+
     setIgLoading(true);
     setIgError(null);
 
-    fetch("/api/instagram/insights")
+    fetch("/api/instagram/insights", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to load insights");
         return res.json();
