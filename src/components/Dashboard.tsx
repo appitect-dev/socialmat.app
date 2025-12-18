@@ -15,6 +15,12 @@ interface VideoData {
   duration: number;
   resolution?: string;
 }
+const IG_METRIC_LABELS: Record<string, string> = {
+  reach: "Reach",
+  profile_views: "Profile views",
+  accounts_engaged: "Accounts engaged",
+  follower_count: "Followers",
+};
 
 export function Dashboard() {
   const { isDark, palette, toggleTheme } = useDashboardTheme();
@@ -28,6 +34,10 @@ export function Dashboard() {
   >("uploaded");
 
   const [igConnected, setIgConnected] = useState<boolean>(false);
+
+  const [igInsights, setIgInsights] = useState<any[] | null>(null);
+  const [igLoading, setIgLoading] = useState(false);
+  const [igError, setIgError] = useState<string | null>(null);
 
   // Handler pro když je video nahráno
   const handleVideoUploaded = (data: { file: File; url: string }) => {
@@ -84,21 +94,24 @@ export function Dashboard() {
   useEffect(() => {
     if (!igConnected) return;
 
-    const raw = localStorage.getItem("ig_auth");
-    if (!raw) return;
+    setIgLoading(true);
+    setIgError(null);
 
-    const { accessToken } = JSON.parse(raw);
-
-    fetch("/api/instagram/insights", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("IG INSIGHTS:", data);
+    fetch("/api/instagram/insights")
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load insights");
+        return res.json();
       })
-      .catch(console.error);
+      .then((data) => {
+        setIgInsights(data.insights);
+      })
+      .catch((err) => {
+        console.error(err);
+        setIgError("Failed to load Instagram insights");
+      })
+      .finally(() => {
+        setIgLoading(false);
+      });
   }, [igConnected]);
 
   // Effect pro získání délky videa a rozlišení
@@ -156,7 +169,6 @@ export function Dashboard() {
             "radial-gradient(circle at 50% 40%, rgba(79,70,229,0.22), rgba(14,165,233,0.08), transparent 60%)",
         }}
       />
-
       <div style={{ marginBottom: 12 }}>
         Instagram: <b>{igConnected ? "Connected" : "Not connected"}</b>
       </div>
@@ -167,6 +179,28 @@ export function Dashboard() {
       >
         {igConnected ? "Reconnect Instagram" : "Connect Instagram"}
       </button>
+      {igConnected && (
+        <div className="mt-4 space-y-2">
+          {igLoading && <div>Loading Instagram insights…</div>}
+
+          {igError && <div className="text-red-500">{igError}</div>}
+
+          {igInsights && (
+            <div className="grid grid-cols-2 gap-4">
+              {igInsights.map((metric) => (
+                <div key={metric.name} className="p-3 rounded-lg border">
+                  <div className="text-sm opacity-70">
+                    {IG_METRIC_LABELS[metric.name] ?? metric.name}
+                  </div>
+                  <div className="text-xl font-semibold">
+                    {metric.values.at(-1)?.value ?? "—"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="relative max-w-6xl mx-auto px-4 py-12 space-y-8">
         {/* KROK 1: Video Uploader - zobrazí se když není video */}
