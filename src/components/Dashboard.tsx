@@ -121,7 +121,7 @@ export function Dashboard() {
         return res.json();
       })
       .then((data) => {
-        setIgInsights(data.data);
+        setIgInsights(data.insights);
       })
       .catch((err) => {
         console.error(err);
