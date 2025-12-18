@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   // 2️⃣ Daily metrics (Facebook Graph)
   const dailyRes = await fetch(
     `https://graph.facebook.com/v19.0/${igUserId}/insights` +
-      `?metric=reach,profile_views,accounts_engaged&period=day&access_token=${accessToken}`
+      `?metric=reach,profile_views,&period=day&access_token=${accessToken}`
   );
   const dailyData = await dailyRes.json();
 
