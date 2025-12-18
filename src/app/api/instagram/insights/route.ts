@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const accessToken = auth.replace("Bearer ", "");
 
-  // 1️⃣ Get user
+  // 1️⃣ Get IG user (Instagram Graph)
   const meRes = await fetch(
     `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
   );
@@ -19,9 +19,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
-  // 2️⃣ Daily metrics
+  const igUserId = meData.id;
+
+  // 2️⃣ Daily metrics (Facebook Graph)
   const dailyRes = await fetch(
-    `https://graph.instagram.com/${meData.id}/insights` +
+    `https://graph.facebook.com/v19.0/${igUserId}/insights` +
       `?metric=reach,profile_views,accounts_engaged&period=day&access_token=${accessToken}`
   );
   const dailyData = await dailyRes.json();
@@ -30,9 +32,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(dailyData, { status: 500 });
   }
 
-  // 3️⃣ Lifetime metrics
+  // 3️⃣ Lifetime metrics (Facebook Graph)
   const lifetimeRes = await fetch(
-    `https://graph.instagram.com/${meData.id}/insights` +
+    `https://graph.facebook.com/v19.0/${igUserId}/insights` +
       `?metric=follower_count&period=lifetime&access_token=${accessToken}`
   );
   const lifetimeData = await lifetimeRes.json();
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     user: {
-      id: meData.id,
+      id: igUserId,
       username: meData.username,
     },
     insights: [...dailyData.data, ...lifetimeData.data],
