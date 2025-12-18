@@ -103,7 +103,7 @@ export function Dashboard() {
         return res.json();
       })
       .then((data) => {
-        setIgInsights(data.insights);
+        setIgInsights(data.data);
       })
       .catch((err) => {
         console.error(err);
