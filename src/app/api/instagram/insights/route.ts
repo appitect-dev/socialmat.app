@@ -8,46 +8,48 @@ export async function GET(req: NextRequest) {
   }
 
   const accessToken = auth.replace("Bearer ", "");
+  const noStore = { cache: "no-store" as const };
 
-  // 1️⃣ Get IG user (Instagram Graph)
+  // 1️⃣ Get IG user
   const meRes = await fetch(
-    `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
+    `https://graph.instagram.com/me?fields=id,username&access_token=${encodeURIComponent(
+      accessToken
+    )}`,
+    noStore
   );
   const meData = await meRes.json();
 
   if (!meRes.ok || !meData.id) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid token", details: meData },
+      { status: 401 }
+    );
   }
 
-  const igUserId = meData.id;
-
-  // 2️⃣ Daily metrics (Facebook Graph)
-  const dailyRes = await fetch(
-    `https://graph.facebook.com/v19.0/${igUserId}/insights` +
-      `?metric=reach,profile_views,&period=day&access_token=${accessToken}`
+  // 2️⃣ Get last 10 media items
+  const mediaRes = await fetch(
+    `https://graph.instagram.com/${meData.id}/media` +
+      `?fields=id,media_type,media_url,permalink,timestamp` +
+      `&limit=10` +
+      `&access_token=${encodeURIComponent(accessToken)}`,
+    noStore
   );
-  const dailyData = await dailyRes.json();
 
-  if (!dailyRes.ok) {
-    return NextResponse.json(dailyData, { status: 500 });
-  }
+  const mediaData = await mediaRes.json();
 
-  // 3️⃣ Lifetime metrics (Facebook Graph)
-  const lifetimeRes = await fetch(
-    `https://graph.facebook.com/v19.0/${igUserId}/insights` +
-      `?metric=follower_count&period=lifetime&access_token=${accessToken}`
-  );
-  const lifetimeData = await lifetimeRes.json();
-
-  if (!lifetimeRes.ok) {
-    return NextResponse.json(lifetimeData, { status: 500 });
+  if (!mediaRes.ok) {
+    return NextResponse.json(
+      { error: "Failed to load media", details: mediaData },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
     user: {
-      id: igUserId,
+      id: meData.id,
       username: meData.username,
     },
-    insights: [...dailyData.data, ...lifetimeData.data],
+    media: mediaData.data,
+    paging: mediaData.paging ?? null,
   });
 }

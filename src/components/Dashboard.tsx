@@ -117,15 +117,32 @@ export function Dashboard() {
       },
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load insights");
-        return res.json();
+        const contentType = res.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json")
+          ? await res.json().catch(() => null)
+          : await res.text().catch(() => null);
+
+        if (!res.ok) {
+          const message =
+            typeof payload === "string"
+              ? payload
+              : payload?.error?.message ||
+                payload?.error ||
+                payload?.message ||
+                "Failed to load insights";
+          throw new Error(`${message} (HTTP ${res.status})`);
+        }
+
+        return payload;
       })
       .then((data) => {
         setIgInsights(data.insights);
       })
       .catch((err) => {
         console.error(err);
-        setIgError("Failed to load Instagram insights");
+        setIgError(
+          err instanceof Error ? err.message : "Failed to load Instagram insights"
+        );
       })
       .finally(() => {
         setIgLoading(false);
