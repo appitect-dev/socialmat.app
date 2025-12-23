@@ -1,5 +1,62 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
-  return NextResponse.json({ error: "Not implemented yet" }, { status: 501 });
+const NO_STORE = { cache: "no-store" as const };
+const IG_BASE = "https://graph.instagram.com";
+
+// Default metriky – některé se můžou lišit podle typu média (POST/REEL/STORY).
+// Když IG vrátí error “Unsupported metric”, pošli do query paramu jen ty, co chceš.
+const DEFAULT_METRICS = [
+  "impressions",
+  "reach",
+  "engagement",
+  "saved",
+  "video_views",
+  "plays",
+];
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { mediaId: string } }
+) {
+  const auth = req.headers.get("authorization");
+  if (!auth?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Missing token" }, { status: 401 });
+  }
+  const accessToken = auth.slice("Bearer ".length);
+
+  const mediaId = params.mediaId;
+  if (!mediaId) {
+    return NextResponse.json({ error: "Missing mediaId" }, { status: 400 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const metricParam = searchParams.get("metric");
+
+  const metrics =
+    metricParam
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean) ?? DEFAULT_METRICS;
+
+  const url =
+    `${IG_BASE}/${encodeURIComponent(mediaId)}/insights?` +
+    new URLSearchParams({
+      metric: metrics.join(","),
+      access_token: accessToken,
+    }).toString();
+
+  const res = await fetch(url, NO_STORE);
+  const data = await res.json();
+
+  if (!res.ok) {
+    return NextResponse.json(
+      { error: "Failed to load media insights", details: data },
+      { status: res.status }
+    );
+  }
+
+  return NextResponse.json({
+    mediaId,
+    insights: data?.data ?? [],
+  });
 }
