@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { VideoUploader } from "@/components/VideoUploader";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { VideoInfo } from "@/components/VideoInfo";
@@ -355,6 +355,17 @@ export function Dashboard() {
     console.error("Subtitle generation error:", error);
     setProcessingStatus("uploaded");
   };
+
+  const detailsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (selected) {
+      detailsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selected]);
 
   // initial connected check
   useEffect(() => {
@@ -771,7 +782,11 @@ export function Dashboard() {
                     <button
                       key={item.id}
                       onClick={() => openMediaDetails(item)}
-                      className={`${softCardClass} p-3 text-left hover:opacity-95 transition`}
+                      className={`${softCardClass} p-3 text-left hover:opacity-95 transition ${
+                        selected?.id === item.id
+                          ? "ring-2 ring-indigo-500/40"
+                          : ""
+                      }`}
                     >
                       <div className="rounded-xl overflow-hidden bg-slate-200/40 aspect-video">
                         {preview ? (
@@ -830,176 +845,180 @@ export function Dashboard() {
             ) : null}
           </div>
         )}
-
-        {/* Media detail modal */}
+        {/* Inline media details (instead of modal) */}
         {selected && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className={`${panelClass} w-full max-w-3xl p-5 space-y-4`}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-lg font-semibold">Media details</div>
-                  <div className="text-xs opacity-70">
-                    {selected.media_product_type ??
-                      selected.media_type ??
-                      "MEDIA"}{" "}
-                    • {formatTimestamp(selected.timestamp)}
-                  </div>
+          <div ref={detailsRef} className={`${softCardClass} p-5 space-y-4`}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-lg font-semibold">Media details</div>
+                <div className="text-xs opacity-70">
+                  {selected.media_product_type ??
+                    selected.media_type ??
+                    "MEDIA"}{" "}
+                  • {formatTimestamp(selected.timestamp)}
                 </div>
-
-                <button
-                  className={`px-3 py-2 text-sm rounded-full border ${palette.border}`}
-                  onClick={() => {
-                    setSelected(null);
-                    setSelectedInsights(null);
-                    setSelectedError(null);
-                  }}
-                >
-                  Close
-                </button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className={`${softCardClass} p-3 space-y-3`}>
-                  <div className="rounded-xl overflow-hidden bg-slate-200/40">
-                    {selected.media_url ? (
-                      selected.media_type === "VIDEO" ||
-                      selected.media_product_type === "REELS" ? (
-                        <video
-                          controls
-                          className="w-full h-auto"
-                          src={selected.media_url}
-                        />
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={selected.media_url}
-                          alt={selected.id}
-                          className="w-full h-auto object-cover"
-                        />
-                      )
-                    ) : selected.thumbnail_url ? (
+              <button
+                className={`px-3 py-2 text-sm rounded-full border ${palette.border}`}
+                onClick={() => {
+                  setSelected(null);
+                  setSelectedInsights(null);
+                  setSelectedError(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* left: preview + caption */}
+              <div className={`${softCardClass} p-3 space-y-3`}>
+                <div className="rounded-xl overflow-hidden bg-slate-200/40">
+                  {selected.media_url ? (
+                    selected.media_type === "VIDEO" ||
+                    selected.media_product_type === "REELS" ? (
+                      <video
+                        controls
+                        className="w-full h-auto"
+                        src={selected.media_url}
+                      />
+                    ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={selected.thumbnail_url}
+                        src={selected.media_url}
                         alt={selected.id}
                         className="w-full h-auto object-cover"
                       />
-                    ) : null}
-                  </div>
-
-                  {selected.caption ? (
-                    <div className="text-sm whitespace-pre-wrap">
-                      {selected.caption}
-                    </div>
-                  ) : (
-                    <div className="text-sm opacity-60">No caption</div>
-                  )}
-
-                  {selected.permalink ? (
-                    <div className="text-sm opacity-80 break-all">
-                      {selected.permalink}
-                    </div>
+                    )
+                  ) : selected.thumbnail_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={selected.thumbnail_url}
+                      alt={selected.id}
+                      className="w-full h-auto object-cover"
+                    />
                   ) : null}
                 </div>
 
-                <div className={`${softCardClass} p-3 space-y-3`}>
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">Insights</div>
-                    {selectedLoading ? (
-                      <div className="text-sm opacity-70">Loading…</div>
-                    ) : null}
+                {selected.caption ? (
+                  <div className="text-sm whitespace-pre-wrap">
+                    {selected.caption}
                   </div>
+                ) : (
+                  <div className="text-sm opacity-60">No caption</div>
+                )}
 
-                  {selectedError && (
-                    <div className="text-red-500">{selectedError}</div>
-                  )}
+                {selected.permalink ? (
+                  <a
+                    href={selected.permalink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm opacity-80 break-all underline"
+                  >
+                    Open on Instagram
+                  </a>
+                ) : null}
+              </div>
 
-                  {selectedInsights && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {selectedInsights.result.baseInsights.map((m) => {
-                          const last = m.values?.at(-1)?.value ?? null;
+              {/* right: insights */}
+              <div className={`${softCardClass} p-3 space-y-3`}>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">Insights</div>
+                  {selectedLoading ? (
+                    <div className="text-sm opacity-70">Loading…</div>
+                  ) : null}
+                </div>
+
+                {selectedError && (
+                  <div className="text-red-500">{selectedError}</div>
+                )}
+
+                {selectedInsights && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {selectedInsights.result.baseInsights.map((m) => {
+                        const last = m.values?.at(-1)?.value ?? null;
+                        return (
+                          <div
+                            key={`${m.name}:${m.period}`}
+                            className={`rounded-xl border ${palette.border} p-3`}
+                          >
+                            <div className="text-xs opacity-70">
+                              {metricLabel(m)}
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {formatInsightValue(last)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {selectedInsights.result.breakdowns.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-sm font-semibold">Breakdowns</div>
+
+                        {selectedInsights.result.breakdowns.map((b, idx) => {
+                          if (b.kind === "breakdown_error") {
+                            const msg =
+                              typeof b.error === "string"
+                                ? b.error
+                                : pickErrorMessage(b.error) ??
+                                  "Breakdown failed";
+                            return (
+                              <div key={idx} className="text-sm text-red-500">
+                                {b.metric} ({b.breakdown}): {msg}
+                              </div>
+                            );
+                          }
+
                           return (
                             <div
-                              key={`${m.name}:${m.period}`}
+                              key={idx}
                               className={`rounded-xl border ${palette.border} p-3`}
                             >
                               <div className="text-xs opacity-70">
-                                {metricLabel(m)}
+                                {b.metric} • {b.breakdown}
                               </div>
-                              <div className="text-lg font-semibold">
-                                {formatInsightValue(last)}
-                              </div>
+
+                              {b.insights.length === 0 ? (
+                                <div className="text-sm opacity-60">
+                                  No breakdown data
+                                </div>
+                              ) : (
+                                <div className="mt-2 space-y-2">
+                                  {b.insights.map((m) => {
+                                    const last =
+                                      m.values?.at(-1)?.value ?? null;
+                                    return (
+                                      <div
+                                        key={`${m.name}:${m.period}`}
+                                        className="flex items-center justify-between gap-3 text-sm"
+                                      >
+                                        <span className="opacity-80">
+                                          {metricLabel(m)}
+                                        </span>
+                                        <b>{formatInsightValue(last)}</b>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
                       </div>
+                    )}
 
-                      {selectedInsights.result.breakdowns.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="text-sm font-semibold">
-                            Breakdowns
-                          </div>
-                          {selectedInsights.result.breakdowns.map((b, idx) => {
-                            if (b.kind === "breakdown_error") {
-                              const msg =
-                                typeof b.error === "string"
-                                  ? b.error
-                                  : pickErrorMessage(b.error) ??
-                                    "Breakdown failed";
-                              return (
-                                <div key={idx} className="text-sm text-red-500">
-                                  {b.metric} ({b.breakdown}): {msg}
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div
-                                key={idx}
-                                className={`rounded-xl border ${palette.border} p-3`}
-                              >
-                                <div className="text-xs opacity-70">
-                                  {b.metric} • {b.breakdown}
-                                </div>
-                                {b.insights.length === 0 ? (
-                                  <div className="text-sm opacity-60">
-                                    No breakdown data
-                                  </div>
-                                ) : (
-                                  <div className="mt-2 space-y-2">
-                                    {b.insights.map((m) => {
-                                      const last =
-                                        m.values?.at(-1)?.value ?? null;
-                                      return (
-                                        <div
-                                          key={`${m.name}:${m.period}`}
-                                          className="flex items-center justify-between gap-3 text-sm"
-                                        >
-                                          <span className="opacity-80">
-                                            {metricLabel(m)}
-                                          </span>
-                                          <b>{formatInsightValue(last)}</b>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {selectedInsights.result.droppedMetrics.length > 0 ? (
-                        <div className="text-xs opacity-70">
-                          Dropped metrics:{" "}
-                          {selectedInsights.result.droppedMetrics.join(", ")}
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
+                    {selectedInsights.result.droppedMetrics.length > 0 ? (
+                      <div className="text-xs opacity-70">
+                        Dropped metrics:{" "}
+                        {selectedInsights.result.droppedMetrics.join(", ")}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           </div>
