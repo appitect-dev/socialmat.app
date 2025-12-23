@@ -81,10 +81,20 @@ function extractAllowedMetrics(msg?: string): string[] | null {
     .filter(Boolean);
 }
 
-function extractUnsupportedMetric(msg?: string): string | null {
+function extractUnsupportedMetrics(msg?: string): string[] | null {
   if (!msg) return null;
-  const m = msg.match(/does not support the ([a-z0-9_]+) metric/i);
-  return m?.[1]?.trim() ?? null;
+
+  // Handles:
+  // "does not support the impressions metric ..."
+  // "does not support the profile_activity, profile_visits, follows metric ..."
+  // "does not support the X, Y metrics ..."
+  const m = msg.match(/does not support the (.+?) metrics?\b/i);
+  if (!m?.[1]) return null;
+
+  return m[1]
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 async function fetchJson(
@@ -201,10 +211,10 @@ async function fetchInsightsWithAutoFilter(args: {
       continue;
     }
 
-    const unsupported = extractUnsupportedMetric(msg);
-    if (unsupported) {
-      const next = metrics.filter((m) => m !== unsupported);
-      if (next.length !== metrics.length) dropped.push(unsupported);
+    const unsupported = extractUnsupportedMetrics(msg);
+    if (unsupported?.length) {
+      const next = metrics.filter((m) => !unsupported.includes(m));
+      dropped.push(...metrics.filter((m) => unsupported.includes(m)));
       metrics = unique(next);
       continue;
     }
