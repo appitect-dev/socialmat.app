@@ -133,6 +133,25 @@ function formatValue(v: IgInsightValue): string {
   }
   return "—";
 }
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function pickErrorMessage(payload: unknown): string | undefined {
+  if (!isRecord(payload)) return undefined;
+
+  const p = payload as Record<string, unknown>;
+
+  // payload.message
+  if (typeof p.message === "string") return p.message;
+
+  // payload.error can be string or object with message
+  const err = p.error;
+  if (typeof err === "string") return err;
+  if (isRecord(err) && typeof err.message === "string") return err.message;
+
+  return undefined;
+}
 
 async function fetchJson<T>(
   url: string,
@@ -154,10 +173,8 @@ async function fetchJson<T>(
     const msg =
       typeof payload === "string"
         ? payload
-        : (payload as any)?.error?.message ||
-          (payload as any)?.error ||
-          (payload as any)?.message ||
-          "Request failed";
+        : pickErrorMessage(payload) ?? "Request failed";
+
     throw new Error(`${msg} (HTTP ${res.status})`);
   }
 
