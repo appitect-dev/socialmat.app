@@ -275,7 +275,8 @@ export function Dashboard() {
       .then((data) => {
         setMedia(Array.isArray(data.media) ? data.media : []);
         const after = data?.paging?.cursors?.after ?? null;
-        setMediaAfter(after);
+        const hasNext = Boolean(data?.paging?.next);
+        setMediaAfter(hasNext ? after : null);
       });
 
     Promise.all([p1, p2, p3])
@@ -317,7 +318,8 @@ export function Dashboard() {
       setMedia((prev) => [...prev, ...nextItems]);
 
       const after = data?.paging?.cursors?.after ?? null;
-      setMediaAfter(after);
+      const hasNext = Boolean(data?.paging?.next);
+      setMediaAfter(hasNext ? after : null);
     } catch (e) {
       console.error(e);
       setIgError(e instanceof Error ? e.message : "Failed to load more media");
