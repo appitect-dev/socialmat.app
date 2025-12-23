@@ -7,160 +7,195 @@ import { VideoInfo } from "@/components/VideoInfo";
 import { SubtitleGenerator } from "@/components/SubtitleGenerator";
 import { useDashboardTheme } from "./dashboard-theme";
 
-type IgAuth = {
-  accessToken: string;
-  igUserId: string;
-  expiresAt: number;
-};
+type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
 
-type IgAccount = {
-  id: string;
-  username: string;
-  profilePicture?: string | null;
-  followersCount?: number | null;
-};
+type IgInsightValue = number | Record<string, unknown> | null;
 
-type IgInsightMetric = {
+interface IgInsightItem {
   name: string;
-  period?: string;
+  period: string;
   title?: string;
   description?: string;
-  values: Array<{ value: number | Record<string, number>; end_time?: string }>;
-};
+  values: { value: IgInsightValue; end_time?: string }[];
+}
 
-type IgMediaItem = {
+interface IgAccountNormalized {
   id: string;
-  media_type?: string;
-  media_url?: string;
-  permalink?: string;
-  timestamp?: string;
-  caption?: string;
-  thumbnail_url?: string;
+  username: string;
+  name: string | null;
+  biography: string | null;
+  website: string | null;
+  profilePictureUrl: string | null;
+  followersCount: number | null;
+  followsCount: number | null;
+  mediaCount: number | null;
+}
+
+interface AccountResponse {
+  normalized: IgAccountNormalized;
+}
+
+interface InsightsBlock {
+  ok?: boolean;
+  insights?: IgInsightItem[];
+  metricsUsed?: string[];
+  droppedMetrics?: string[];
+  note?: string | null;
+}
+
+interface AccountInsightsResponse {
+  user: { id: string; username: string };
+  performance?: InsightsBlock & {
+    period?: string;
+    requestedMetrics?: string[];
+  };
+  audience?: InsightsBlock & { period?: string; requestedMetrics?: string[] };
+}
+
+type IgCaps = {
+  checkedAt: number;
+  performance: string[];
+  audience: string[];
 };
 
-type MediaResponse = {
-  user?: { id: string; username: string };
-  media: IgMediaItem[];
-  paging?: {
-    cursors?: { before?: string; after?: string };
-    next?: string;
-  } | null;
-};
+const CAPS_TTL_MS = 24 * 60 * 60 * 1000;
 
 const IG_METRIC_LABELS: Record<string, string> = {
   reach: "Reach",
   profile_views: "Profile views",
   accounts_engaged: "Accounts engaged",
-  follower_count: "Followers",
-  impressions: "Impressions",
-  plays: "Plays",
-  video_views: "Video views",
-  likes: "Likes",
-  comments: "Comments",
-  saves: "Saves",
-  shares: "Shares",
-  replies: "Replies",
+  follower_count: "Follower count (series)",
+  website_clicks: "Website clicks",
+  online_followers: "Online followers",
 };
 
-interface VideoData {
-  file: File;
-  url: string;
-  uploadDate: Date;
-  duration: number;
-  resolution?: string;
-}
-
-function safeJsonParse<T>(raw: string | null): T | null {
+function readIgAuth(): IgAuth | null {
+  const raw = localStorage.getItem("ig_auth");
   if (!raw) return null;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-}
 
-async function readPayload(res: Response) {
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    try {
-      return await res.json();
-    } catch {
+  try {
+    const ig = JSON.parse(raw) as Partial<IgAuth>;
+    if (
+      typeof ig.accessToken !== "string" ||
+      typeof ig.igUserId !== "string" ||
+      typeof ig.expiresAt !== "number"
+    ) {
       return null;
     }
-  }
-  try {
-    return await res.text();
+    if (Date.now() >= ig.expiresAt) return null;
+    return ig as IgAuth;
   } catch {
     return null;
   }
 }
 
-function extractErrorMessage(payload: unknown, fallback: string) {
-  if (!payload) return fallback;
-  if (typeof payload === "string") return payload;
+function capsKey(accountId: string) {
+  return `ig_caps_${accountId}`;
+}
 
-  if (typeof payload === "object") {
-    const p = payload as Record<string, unknown>;
-    const error = p["error"];
+function readCaps(accountId: string): IgCaps | null {
+  const raw = localStorage.getItem(capsKey(accountId));
+  if (!raw) return null;
 
-    if (error && typeof error === "object") {
-      const e = error as Record<string, unknown>;
-      if (typeof e["message"] === "string") return e["message"];
+  try {
+    const caps = JSON.parse(raw) as Partial<IgCaps>;
+    if (
+      typeof caps.checkedAt !== "number" ||
+      !Array.isArray(caps.performance) ||
+      !Array.isArray(caps.audience)
+    ) {
+      return null;
     }
+    if (Date.now() - caps.checkedAt > CAPS_TTL_MS) return null;
+    return {
+      checkedAt: caps.checkedAt,
+      performance: caps.performance.filter(
+        (x): x is string => typeof x === "string"
+      ),
+      audience: caps.audience.filter((x): x is string => typeof x === "string"),
+    };
+  } catch {
+    return null;
+  }
+}
 
-    if (typeof p["message"] === "string") return p["message"];
-    if (typeof p["details"] === "object" && p["details"]) {
-      const d = p["details"] as Record<string, unknown>;
-      const de = d["error"];
-      if (de && typeof de === "object") {
-        const ee = de as Record<string, unknown>;
-        if (typeof ee["message"] === "string") return ee["message"];
-      }
-    }
+function writeCaps(accountId: string, caps: IgCaps) {
+  localStorage.setItem(capsKey(accountId), JSON.stringify(caps));
+}
+
+function formatValue(v: IgInsightValue): string {
+  if (typeof v === "number" && Number.isFinite(v)) return v.toLocaleString();
+  if (v && typeof v === "object") {
+    const keys = Object.keys(v);
+    if (keys.length === 0) return "—";
+    // nechceme spamovat UI obřím JSONem
+    return `${keys.length} items`;
+  }
+  return "—";
+}
+
+async function fetchJson<T>(
+  url: string,
+  accessToken: string,
+  signal?: AbortSignal
+): Promise<T> {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+    signal,
+  });
+
+  const ct = res.headers.get("content-type") || "";
+  const payload: unknown = ct.includes("application/json")
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => null);
+
+  if (!res.ok) {
+    const msg =
+      typeof payload === "string"
+        ? payload
+        : (payload as any)?.error?.message ||
+          (payload as any)?.error ||
+          (payload as any)?.message ||
+          "Request failed";
+    throw new Error(`${msg} (HTTP ${res.status})`);
   }
 
-  return fallback;
+  return payload as T;
 }
 
 export function Dashboard() {
   const { isDark, palette } = useDashboardTheme();
 
-  // Video states
-  const [videoData, setVideoData] = useState<VideoData | null>(null);
+  // Video state (ponecháno)
+  const [videoData, setVideoData] = useState<{
+    file: File;
+    url: string;
+    uploadDate: Date;
+    duration: number;
+    resolution?: string;
+  } | null>(null);
+
   const [videoDuration, setVideoDuration] = useState(0);
   const [processingStatus, setProcessingStatus] = useState<
     "uploaded" | "processing" | "ready"
   >("uploaded");
 
-  // IG auth/state
-  const [igAuth, setIgAuth] = useState<IgAuth | null>(null);
-  const igConnected = useMemo(() => {
-    if (!igAuth) return false;
-    return (
-      typeof igAuth.expiresAt === "number" && Date.now() < igAuth.expiresAt
-    );
-  }, [igAuth]);
-
-  // IG data
-  const [igAccount, setIgAccount] = useState<IgAccount | null>(null);
-  const [igAccountInsights, setIgAccountInsights] = useState<
-    IgInsightMetric[] | null
-  >(null);
-
-  const [media, setMedia] = useState<IgMediaItem[]>([]);
-  const [mediaAfter, setMediaAfter] = useState<string | null>(null); // cursor for load-more
-
-  const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
-  const [mediaInsightsById, setMediaInsightsById] = useState<
-    Record<string, IgInsightMetric[]>
-  >({});
-
+  // Instagram state
+  const [igConnected, setIgConnected] = useState(false);
+  const [igAccount, setIgAccount] = useState<IgAccountNormalized | null>(null);
+  const [igInsights, setIgInsights] = useState<IgInsightItem[] | null>(null);
   const [igLoading, setIgLoading] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
-  const [mediaLoadingMore, setMediaLoadingMore] = useState(false);
-  const [mediaDetailLoading, setMediaDetailLoading] = useState(false);
 
-  // ---- Video handlers
+  const pageClass = useMemo(
+    () =>
+      isDark
+        ? "bg-black text-white"
+        : "bg-gradient-to-b from-white via-slate-50 to-white text-slate-900",
+    [isDark]
+  );
+
   const handleVideoUploaded = (data: { file: File; url: string }) => {
     setVideoData({
       file: data.file,
@@ -185,478 +220,293 @@ export function Dashboard() {
     setProcessingStatus("uploaded");
   };
 
-  // ---- Load auth from localStorage once
+  // 1) initial igConnected check
   useEffect(() => {
-    const parsed = safeJsonParse<IgAuth>(localStorage.getItem("ig_auth"));
-    if (!parsed) {
-      setIgAuth(null);
-      return;
-    }
-    if (
-      typeof parsed.expiresAt !== "number" ||
-      Date.now() >= parsed.expiresAt
-    ) {
+    const auth = readIgAuth();
+    setIgConnected(Boolean(auth));
+
+    if (!auth) {
       localStorage.removeItem("ig_auth");
-      setIgAuth(null);
-      return;
     }
-    setIgAuth(parsed);
   }, []);
 
-  // ---- Fetch IG: account header + account insights + media list (first page)
+  // 2) load IG data (account + insights) with capability caching
   useEffect(() => {
-    if (!igConnected || !igAuth?.accessToken) return;
+    if (!igConnected) {
+      setIgAccount(null);
+      setIgInsights(null);
+      setIgError(null);
+      return;
+    }
 
-    const accessToken = igAuth.accessToken;
-    const headers = { Authorization: `Bearer ${accessToken}` };
+    const auth = readIgAuth();
+    if (!auth) {
+      setIgConnected(false);
+      localStorage.removeItem("ig_auth");
+      return;
+    }
 
-    setIgLoading(true);
-    setIgError(null);
+    const ac = new AbortController();
+    const accessToken = auth.accessToken;
 
-    // reset data on (re)connect
-    setIgAccount(null);
-    setIgAccountInsights(null);
-    setMedia([]);
-    setMediaAfter(null);
-    setSelectedMediaId(null);
+    (async () => {
+      setIgLoading(true);
+      setIgError(null);
 
-    const p1 = fetch("/api/instagram/account", { headers, cache: "no-store" })
-      .then(async (res) => {
-        const payload = await readPayload(res);
-        if (!res.ok)
-          throw new Error(
-            `${extractErrorMessage(payload, "Failed to load account")} (HTTP ${
-              res.status
-            })`
-          );
-        return payload as IgAccount;
-      })
-      .then(setIgAccount);
+      // A) account (potřebujeme accountId pro caps key)
+      const accountRes = await fetchJson<AccountResponse>(
+        "/api/instagram/account",
+        accessToken,
+        ac.signal
+      );
+      const account = accountRes.normalized;
+      setIgAccount(account);
 
-    const p2 = fetch("/api/instagram/account/insights", {
-      headers,
-      cache: "no-store",
-    })
-      .then(async (res) => {
-        const payload = await readPayload(res);
-        if (!res.ok)
-          throw new Error(
-            `${extractErrorMessage(
-              payload,
-              "Failed to load account insights"
-            )} (HTTP ${res.status})`
-          );
-        // očekávám { insights: [...] }, ale toleruju i čisté pole
-        const insights = Array.isArray(payload) ? payload : payload?.insights;
-        setIgAccountInsights(
-          Array.isArray(insights) ? (insights as IgInsightMetric[]) : null
+      const accountId = account.id;
+      const caps = readCaps(accountId);
+
+      // B) insights
+      if (caps) {
+        // rychlá cesta – voláme jen to, co už víme, že funguje
+        const perfQs = new URLSearchParams({
+          kind: "performance",
+          period: "day",
+          metric: caps.performance.join(","),
+        });
+
+        const audQs = new URLSearchParams({
+          kind: "audience",
+          audienceMetric: caps.audience.join(","),
+        });
+
+        const [perfRes, audRes] = await Promise.all([
+          fetchJson<AccountInsightsResponse>(
+            `/api/instagram/account/insights?${perfQs.toString()}`,
+            accessToken,
+            ac.signal
+          ),
+          fetchJson<AccountInsightsResponse>(
+            `/api/instagram/account/insights?${audQs.toString()}`,
+            accessToken,
+            ac.signal
+          ),
+        ]);
+
+        const perf = perfRes.performance;
+        const aud = audRes.audience;
+
+        const perfInsights = perf?.ok ? perf.insights ?? [] : [];
+        const audInsights = aud?.ok ? aud.insights ?? [] : [];
+
+        setIgInsights([...perfInsights, ...audInsights]);
+
+        // refresh caps timestamp (a případně update metricsUsed)
+        const nextCaps: IgCaps = {
+          checkedAt: Date.now(),
+          performance:
+            (perf?.metricsUsed && perf.metricsUsed.length > 0
+              ? perf.metricsUsed
+              : caps.performance) ?? [],
+          audience:
+            (aud?.metricsUsed && aud.metricsUsed.length > 0
+              ? aud.metricsUsed
+              : caps.audience) ?? [],
+        };
+        writeCaps(accountId, nextCaps);
+      } else {
+        // první běh – discovery (max) bez tlačítka
+        const allRes = await fetchJson<AccountInsightsResponse>(
+          "/api/instagram/account/insights?kind=all&period=day",
+          accessToken,
+          ac.signal
         );
-      })
-      .catch((e) => {
-        // Account insights mohou být někdy nedostupné dle účtu/permissions — nechci tím shodit celý dashboard.
-        console.warn("Account insights not available:", e);
-        setIgAccountInsights(null);
-      });
 
-    const p3 = fetch("/api/instagram/media?limit=10", {
-      headers,
-      cache: "no-store",
-    })
-      .then(async (res) => {
-        const payload = await readPayload(res);
-        if (!res.ok)
-          throw new Error(
-            `${extractErrorMessage(payload, "Failed to load media")} (HTTP ${
-              res.status
-            })`
-          );
-        return payload as MediaResponse;
-      })
-      .then((data) => {
-        setMedia(Array.isArray(data.media) ? data.media : []);
-        const after = data?.paging?.cursors?.after ?? null;
-        const hasNext = Boolean(data?.paging?.next);
-        setMediaAfter(hasNext ? after : null);
-      });
+        const perf = allRes.performance;
+        const aud = allRes.audience;
 
-    Promise.all([p1, p2, p3])
+        const perfInsights = perf?.ok ? perf.insights ?? [] : [];
+        const audInsights = aud?.ok ? aud.insights ?? [] : [];
+
+        setIgInsights([...perfInsights, ...audInsights]);
+
+        const perfCaps =
+          (perf?.metricsUsed && perf.metricsUsed.length > 0
+            ? perf.metricsUsed
+            : perfInsights.map((x) => x.name)) ?? [];
+
+        const audCaps =
+          (aud?.metricsUsed && aud.metricsUsed.length > 0
+            ? aud.metricsUsed
+            : audInsights.map((x) => x.name)) ?? [];
+
+        writeCaps(accountId, {
+          checkedAt: Date.now(),
+          performance: perfCaps,
+          audience: audCaps,
+        });
+      }
+    })()
       .catch((err) => {
         console.error(err);
         setIgError(
-          err instanceof Error ? err.message : "Instagram load failed"
+          err instanceof Error ? err.message : "Failed to load Instagram"
         );
       })
       .finally(() => setIgLoading(false));
-  }, [igConnected, igAuth?.accessToken]);
 
-  // ---- Load more media (expects your /api/instagram/media to accept ?after= cursor)
-  const loadMoreMedia = async () => {
-    if (!igConnected || !igAuth?.accessToken) return;
-    if (!mediaAfter) return;
+    return () => ac.abort();
+  }, [igConnected]);
 
-    setMediaLoadingMore(true);
-    setIgError(null);
-
-    try {
-      const res = await fetch(
-        `/api/instagram/media?limit=10&after=${encodeURIComponent(mediaAfter)}`,
-        {
-          headers: { Authorization: `Bearer ${igAuth.accessToken}` },
-          cache: "no-store",
-        }
-      );
-      const payload = await readPayload(res);
-      if (!res.ok)
-        throw new Error(
-          `${extractErrorMessage(payload, "Failed to load more media")} (HTTP ${
-            res.status
-          })`
-        );
-
-      const data = payload as MediaResponse;
-      const nextItems = Array.isArray(data.media) ? data.media : [];
-      setMedia((prev) => [...prev, ...nextItems]);
-
-      const after = data?.paging?.cursors?.after ?? null;
-      const hasNext = Boolean(data?.paging?.next);
-      setMediaAfter(hasNext ? after : null);
-    } catch (e) {
-      console.error(e);
-      setIgError(e instanceof Error ? e.message : "Failed to load more media");
-    } finally {
-      setMediaLoadingMore(false);
-    }
-  };
-
-  // ---- Open media details and fetch its insights (cached per mediaId)
-  const openMedia = async (mediaId: string) => {
-    setSelectedMediaId((prev) => (prev === mediaId ? null : mediaId));
-
-    if (!igConnected || !igAuth?.accessToken) return;
-    if (mediaInsightsById[mediaId]) return; // cached
-    if (selectedMediaId === mediaId) return; // closing
-
-    setMediaDetailLoading(true);
-    setIgError(null);
-
-    try {
-      const res = await fetch(
-        `/api/instagram/media/${encodeURIComponent(mediaId)}/insights`,
-        {
-          headers: { Authorization: `Bearer ${igAuth.accessToken}` },
-          cache: "no-store",
-        }
-      );
-      const payload = await readPayload(res);
-      if (!res.ok)
-        throw new Error(
-          `${extractErrorMessage(
-            payload,
-            "Failed to load media insights"
-          )} (HTTP ${res.status})`
-        );
-
-      const insights = Array.isArray(payload) ? payload : payload?.insights;
-      const normalized = Array.isArray(insights)
-        ? (insights as IgInsightMetric[])
-        : [];
-      setMediaInsightsById((prev) => ({ ...prev, [mediaId]: normalized }));
-    } catch (e) {
-      console.error(e);
-      setIgError(
-        e instanceof Error ? e.message : "Failed to load media insights"
-      );
-    } finally {
-      setMediaDetailLoading(false);
-    }
-  };
-
-  // ---- Video metadata effect
+  // video metadata
   useEffect(() => {
     if (!videoData?.url) return;
 
-    const v = document.createElement("video");
-    v.src = videoData.url;
-
-    v.onloadedmetadata = () => {
-      const resolution = `${v.videoWidth} × ${v.videoHeight}`;
-      setVideoDuration(v.duration);
+    const video = document.createElement("video");
+    video.src = videoData.url;
+    video.onloadedmetadata = () => {
+      const resolution = `${video.videoWidth} × ${video.videoHeight}`;
+      setVideoDuration(video.duration);
       setVideoData((prev) =>
-        prev ? { ...prev, duration: v.duration, resolution } : null
+        prev ? { ...prev, duration: video.duration, resolution } : null
       );
     };
 
     return () => {
-      v.src = "";
-      v.load();
+      video.src = "";
+      video.load();
       URL.revokeObjectURL(videoData.url);
     };
   }, [videoData?.url]);
-
-  const pageClass = isDark
-    ? "bg-black text-white"
-    : "bg-gradient-to-b from-white via-slate-50 to-white text-slate-900";
-
-  const cardClass = `rounded-2xl border ${palette.border} ${palette.card} backdrop-blur`;
 
   return (
     <div
       className={`relative overflow-hidden min-h-screen ${pageClass} transition-colors`}
     >
-      {/* background */}
-      {!isDark && (
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(99,102,241,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px)",
-            backgroundSize: "120px 120px",
-          }}
-        />
-      )}
-      <div
-        className="absolute -top-1/2 left-1/2 -translate-x-1/2 w-[140%] h-[120%] rounded-full blur-[160px] opacity-70 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 40%, rgba(79,70,229,0.22), rgba(14,165,233,0.08), transparent 60%)",
+      <div style={{ marginBottom: 12 }}>
+        Instagram: <b>{igConnected ? "Connected" : "Not connected"}</b>
+      </div>
+
+      <button
+        onClick={() => {
+          window.location.href = "/api/instagram/login";
         }}
-      />
+      >
+        {igConnected ? "Reconnect Instagram" : "Connect Instagram"}
+      </button>
 
-      <div className="relative max-w-6xl mx-auto px-4 py-10 space-y-10">
-        {/* Instagram section */}
-        <section className={`p-5 ${cardClass}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm opacity-70">Instagram</div>
-              <div className="text-lg font-semibold">
-                {igConnected ? "Connected" : "Not connected"}
-              </div>
-            </div>
+      {igConnected && (
+        <div className="mt-4 space-y-3">
+          {igLoading && <div>Loading Instagram data…</div>}
+          {igError && <div className="text-red-500">{igError}</div>}
 
-            <button
-              className={`px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
-              onClick={() => {
-                window.location.href = "/api/instagram/login";
-              }}
-            >
-              {igConnected ? "Reconnect" : "Connect Instagram"}
-            </button>
-          </div>
+          {igAccount && (
+            <div className={`p-4 rounded-xl border ${palette.border}`}>
+              <div className="flex items-start gap-4">
+                <div className="h-14 w-14 rounded-full bg-slate-200 overflow-hidden">
+                  {igAccount.profilePictureUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={igAccount.profilePictureUrl}
+                      alt="Profile"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+                </div>
 
-          {igLoading && (
-            <div className="mt-4 text-sm opacity-70">
-              Loading Instagram data…
-            </div>
-          )}
-          {igError && (
-            <div className="mt-4 text-sm text-red-500">{igError}</div>
-          )}
-
-          {igConnected && !igLoading && (
-            <div className="mt-6 space-y-6">
-              {/* Header */}
-              <div className="flex items-center gap-4">
-                {igAccount?.profilePicture ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={igAccount.profilePicture}
-                    alt=""
-                    className="w-12 h-12 rounded-full border"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full border flex items-center justify-center text-xs opacity-70">
-                    —
-                  </div>
-                )}
-
-                <div className="min-w-0">
-                  <div className="font-semibold truncate">
-                    {igAccount?.username ? `@${igAccount.username}` : "—"}
+                <div className="flex-1">
+                  <div className="text-lg font-semibold">
+                    {igAccount.name ?? igAccount.username}
                   </div>
                   <div className="text-sm opacity-70">
-                    Followers: {igAccount?.followersCount ?? "—"}
+                    @{igAccount.username}
+                  </div>
+
+                  {igAccount.biography && (
+                    <div className="mt-2 text-sm whitespace-pre-wrap">
+                      {igAccount.biography}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex gap-4 text-sm">
+                    <div>
+                      <b>{igAccount.followersCount ?? "—"}</b> followers
+                    </div>
+                    <div>
+                      <b>{igAccount.followsCount ?? "—"}</b> following
+                    </div>
+                    <div>
+                      <b>{igAccount.mediaCount ?? "—"}</b> posts
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Account insights */}
-              <div>
-                <div className="text-sm font-semibold mb-2">
-                  Account insights
-                </div>
-                {igAccountInsights && igAccountInsights.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {igAccountInsights.map((m) => {
-                      const label =
-                        IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
-                      const last = m.values?.at(-1)?.value;
-                      const value =
-                        typeof last === "number"
-                          ? last
-                          : last && typeof last === "object"
-                          ? JSON.stringify(last)
-                          : "—";
-
-                      return (
-                        <div key={m.name} className={`p-3 ${cardClass}`}>
-                          <div className="text-xs opacity-70">{label}</div>
-                          <div className="text-lg font-semibold break-words">
-                            {value}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-sm opacity-70">
-                    No account insights available.
-                  </div>
-                )}
-              </div>
-
-              {/* Media list */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-semibold">Posts</div>
-                  <button
-                    className={`px-3 py-1.5 text-xs rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
-                    onClick={loadMoreMedia}
-                    disabled={!mediaAfter || mediaLoadingMore}
-                    title={!mediaAfter ? "No more posts" : "Load more"}
+          {igInsights && (
+            <div className="grid grid-cols-2 gap-4">
+              {igInsights.map((metric) => {
+                const last = metric.values?.at(-1)?.value ?? null;
+                return (
+                  <div
+                    key={`${metric.name}:${metric.period}`}
+                    className="p-3 rounded-lg border"
                   >
-                    {mediaLoadingMore ? "Loading…" : "Load more"}
-                  </button>
-                </div>
-
-                {media.length === 0 ? (
-                  <div className="text-sm opacity-70">No media loaded.</div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {media.map((item) => {
-                      const isOpen = selectedMediaId === item.id;
-                      return (
-                        <div key={item.id} className={`p-4 ${cardClass}`}>
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-xs opacity-70">
-                                {item.media_type ?? "MEDIA"} •{" "}
-                                {item.timestamp
-                                  ? new Date(item.timestamp).toLocaleString()
-                                  : "—"}
-                              </div>
-                              <div className="text-sm font-semibold truncate">
-                                {item.caption ?? item.permalink ?? item.id}
-                              </div>
-                            </div>
-
-                            <button
-                              className={`px-3 py-1.5 text-xs rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
-                              onClick={() => openMedia(item.id)}
-                            >
-                              {isOpen ? "Hide" : "Insights"}
-                            </button>
-                          </div>
-
-                          {isOpen && (
-                            <div className="mt-4">
-                              {mediaDetailLoading &&
-                                !mediaInsightsById[item.id] && (
-                                  <div className="text-sm opacity-70">
-                                    Loading media insights…
-                                  </div>
-                                )}
-
-                              {mediaInsightsById[item.id] ? (
-                                mediaInsightsById[item.id].length > 0 ? (
-                                  <div className="grid grid-cols-2 gap-3">
-                                    {mediaInsightsById[item.id].map((m) => {
-                                      const label =
-                                        IG_METRIC_LABELS[m.name] ??
-                                        m.title ??
-                                        m.name;
-                                      const last = m.values?.at(-1)?.value;
-                                      const value =
-                                        typeof last === "number"
-                                          ? last
-                                          : last && typeof last === "object"
-                                          ? JSON.stringify(last)
-                                          : "—";
-
-                                      return (
-                                        <div
-                                          key={m.name}
-                                          className={`p-3 ${cardClass}`}
-                                        >
-                                          <div className="text-xs opacity-70">
-                                            {label}
-                                          </div>
-                                          <div className="text-lg font-semibold break-words">
-                                            {value}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <div className="text-sm opacity-70">
-                                    No insights for this media.
-                                  </div>
-                                )
-                              ) : null}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    <div className="text-sm opacity-70">
+                      {IG_METRIC_LABELS[metric.name] ??
+                        metric.title ??
+                        metric.name}
+                    </div>
+                    <div className="text-xl font-semibold">
+                      {formatValue(last)}
+                    </div>
                   </div>
-                )}
-              </div>
+                );
+              })}
             </div>
           )}
-        </section>
+        </div>
+      )}
 
-        {/* Video section (unchanged from your flow) */}
-        <section className="space-y-8">
-          {!videoData && (
-            <VideoUploader onVideoUploaded={handleVideoUploaded} />
-          )}
+      {/* zbytek dashboardu (video) ponechán */}
+      <div className="relative max-w-6xl mx-auto px-4 py-12 space-y-8">
+        {!videoData && <VideoUploader onVideoUploaded={handleVideoUploaded} />}
 
-          {videoData && (
-            <div className="space-y-6">
-              <div className="flex justify-end">
-                <button
-                  onClick={handleReset}
-                  className={`px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
-                >
-                  ← Nahrát nové video
-                </button>
+        {videoData && (
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <button
+                onClick={handleReset}
+                className={`px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`}
+              >
+                ← Nahrát nové video
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <VideoPlayer src={videoData.url} />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <VideoPlayer src={videoData.url} />
-                </div>
+              <div className="space-y-6">
+                <VideoInfo
+                  fileName={videoData.file.name}
+                  fileSize={videoData.file.size}
+                  duration={videoDuration}
+                  resolution={videoData.resolution}
+                  uploadDate={videoData.uploadDate}
+                  status={processingStatus}
+                />
 
-                <div className="space-y-6">
-                  <VideoInfo
-                    fileName={videoData.file.name}
-                    fileSize={videoData.file.size}
-                    duration={videoDuration}
-                    resolution={videoData.resolution}
-                    uploadDate={videoData.uploadDate}
-                    status={processingStatus}
-                  />
-
-                  <SubtitleGenerator
-                    videoFile={videoData.file}
-                    onSuccess={handleSubtitlesSuccess}
-                    onError={handleSubtitlesError}
-                  />
-                </div>
+                <SubtitleGenerator
+                  videoFile={videoData.file}
+                  onSuccess={handleSubtitlesSuccess}
+                  onError={handleSubtitlesError}
+                />
               </div>
             </div>
-          )}
-        </section>
+          </div>
+        )}
       </div>
     </div>
   );
