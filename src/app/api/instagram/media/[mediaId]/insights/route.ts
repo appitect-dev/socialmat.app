@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const NO_STORE = { cache: "no-store" as const };
 const IG_BASE = "https://graph.instagram.com";
 
-// Default metriky – některé se můžou lišit podle typu média (POST/REEL/STORY).
-// Když IG vrátí error “Unsupported metric”, pošli do query paramu jen ty, co chceš.
 const DEFAULT_METRICS = [
   "impressions",
   "reach",
@@ -16,7 +14,7 @@ const DEFAULT_METRICS = [
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { mediaId: string } }
+  { params }: { params: Promise<{ mediaId: string }> }
 ) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) {
@@ -24,7 +22,8 @@ export async function GET(
   }
   const accessToken = auth.slice("Bearer ".length);
 
-  const mediaId = params.mediaId;
+  const { mediaId } = await params;
+
   if (!mediaId) {
     return NextResponse.json({ error: "Missing mediaId" }, { status: 400 });
   }
