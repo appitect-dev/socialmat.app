@@ -3,11 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 const NO_STORE = { cache: "no-store" as const };
 const IG_BASE = "https://graph.instagram.com";
 
-type IGMediaProductType = "FEED" | "REELS" | "STORY" | string;
+type JsonObject = Record<string, unknown>;
+type InsightItem = Record<string, unknown>;
 
-const DEPRECATED_METRICS = ["impressions", "video_views", "plays"];
+function isObject(v: unknown): v is JsonObject {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
 
-// Default "max" kandidáti – reálně se část vyfiltruje podle typu média / dostupnosti v API.
+function getErrorMessage(data: unknown): string | undefined {
+  if (!isObject(data)) return undefined;
+  const err = data.error;
+  if (!isObject(err)) return undefined;
+  const msg = err.message;
+  return typeof msg === "string" ? msg : undefined;
+}
+
+const DEPRECATED_METRICS = ["impressions", "video_views", "plays"] as const;
+
 const DEFAULT_METRICS_BY_TYPE: Record<string, string[]> = {
   FEED: [
     "views",
@@ -55,13 +67,12 @@ function parseCsv(param: string | null): string[] {
     .filter(Boolean);
 }
 
-function unique(arr: string[]) {
+function unique(arr: string[]): string[] {
   return Array.from(new Set(arr));
 }
 
 function extractAllowedMetrics(msg?: string): string[] | null {
   if (!msg) return null;
-  // e.g. "metric[2] must be one of the following values: impressions, reach, ..."
   const m = msg.match(/must be one of the following values:\s*(.+)$/i);
   if (!m?.[1]) return null;
   return m[1]
@@ -72,15 +83,37 @@ function extractAllowedMetrics(msg?: string): string[] | null {
 
 function extractUnsupportedMetric(msg?: string): string | null {
   if (!msg) return null;
-  // e.g. "does not support the impressions metric"
   const m = msg.match(/does not support the ([a-z0-9_]+) metric/i);
   return m?.[1]?.trim() ?? null;
 }
 
-async function fetchJson(url: string) {
+async function fetchJson(
+  url: string
+): Promise<{ res: Response; data: unknown }> {
   const res = await fetch(url, NO_STORE);
   const data = await res.json().catch(() => null);
   return { res, data };
+}
+
+type MediaMeta = {
+  id: string;
+  media_type: string | null;
+  media_product_type: string | null;
+};
+
+function parseMediaMeta(data: unknown): MediaMeta | null {
+  if (!isObject(data)) return null;
+  const id = data.id;
+  if (typeof id !== "string" || !id) return null;
+
+  const media_type =
+    typeof data.media_type === "string" ? data.media_type : null;
+  const media_product_type =
+    typeof data.media_product_type === "string"
+      ? data.media_product_type
+      : null;
+
+  return { id, media_type, media_product_type };
 }
 
 async function fetchMediaMeta(accessToken: string, mediaId: string) {
@@ -91,28 +124,41 @@ async function fetchMediaMeta(accessToken: string, mediaId: string) {
       access_token: accessToken,
     }).toString();
 
-  const out = await fetchJson(url);
-  return out;
+  return fetchJson(url);
 }
+
+type InsightsOk = {
+  ok: true;
+  insights: InsightItem[];
+  metricsUsed: string[];
+  dropped: string[];
+  note: string | null;
+};
+
+type InsightsErr = {
+  ok: false;
+  error: unknown;
+  dropped: string[];
+};
 
 async function fetchInsightsWithAutoFilter(args: {
   accessToken: string;
   mediaId: string;
   metrics: string[];
   breakdown?: string;
-}) {
+}): Promise<InsightsOk | InsightsErr> {
   const { accessToken, mediaId, breakdown } = args;
 
   let metrics = unique(args.metrics);
   const dropped: string[] = [];
-  let lastError: any = null;
+  let lastError: unknown = null;
 
   for (let attempt = 0; attempt < 5; attempt++) {
     if (metrics.length === 0) {
       return {
-        ok: true as const,
-        insights: [] as any[],
-        metricsUsed: [] as string[],
+        ok: true,
+        insights: [],
+        metricsUsed: [],
         dropped,
         note: "No supported metrics left after filtering.",
       };
@@ -130,19 +176,23 @@ async function fetchInsightsWithAutoFilter(args: {
     const out = await fetchJson(url);
 
     if (out.res.ok) {
+      const itemsRaw = isObject(out.data) ? out.data.data : null;
+      const insights: InsightItem[] = Array.isArray(itemsRaw)
+        ? (itemsRaw.filter(isObject) as InsightItem[])
+        : [];
+
       return {
-        ok: true as const,
-        insights: out.data?.data ?? [],
+        ok: true,
+        insights,
         metricsUsed: metrics,
         dropped,
-        note: null as string | null,
+        note: null,
       };
     }
 
     lastError = out.data;
-    const msg: string | undefined = out.data?.error?.message;
+    const msg = getErrorMessage(out.data);
 
-    // 1) "metric must be one of" → filtruj na allowed list
     const allowed = extractAllowedMetrics(msg);
     if (allowed?.length) {
       const next = metrics.filter((m) => allowed.includes(m));
@@ -151,7 +201,6 @@ async function fetchInsightsWithAutoFilter(args: {
       continue;
     }
 
-    // 2) "does not support the X metric" → vyhoď X
     const unsupported = extractUnsupportedMetric(msg);
     if (unsupported) {
       const next = metrics.filter((m) => m !== unsupported);
@@ -160,20 +209,32 @@ async function fetchInsightsWithAutoFilter(args: {
       continue;
     }
 
-    // 3) Neznámá chyba → stop
     break;
   }
 
-  return {
-    ok: false as const,
-    error: lastError,
-    dropped,
-  };
+  return { ok: false, error: lastError, dropped };
 }
+
+type BreakdownOk = {
+  kind: "breakdown";
+  metric: string;
+  breakdown: string;
+  insights: InsightItem[];
+  dropped: string[];
+};
+
+type BreakdownErr = {
+  kind: "breakdown_error";
+  metric: string;
+  breakdown: string;
+  error: unknown;
+};
+
+type BreakdownResult = BreakdownOk | BreakdownErr;
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { mediaId: string } }
+  { params }: { params: Promise<{ mediaId: string }> }
 ) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) {
@@ -181,7 +242,7 @@ export async function GET(
   }
   const accessToken = auth.slice("Bearer ".length).trim();
 
-  const mediaId = params.mediaId;
+  const { mediaId } = await params;
   if (!mediaId) {
     return NextResponse.json({ error: "Missing mediaId" }, { status: 400 });
   }
@@ -193,44 +254,42 @@ export async function GET(
   const includeDeprecated =
     (searchParams.get("includeDeprecated") ?? "0") === "1";
 
-  // 1) zjisti typ média (FEED/REELS/STORY)
+  // 1) media meta
   const metaOut = await fetchMediaMeta(accessToken, mediaId);
-  if (!metaOut.res.ok || !metaOut.data?.id) {
+  const meta = parseMediaMeta(metaOut.data);
+
+  if (!metaOut.res.ok || !meta) {
     return NextResponse.json(
       { error: "Failed to load media meta", details: metaOut.data },
       { status: metaOut.res.status || 500 }
     );
   }
 
-  const mediaProductType: IGMediaProductType =
-    metaOut.data.media_product_type ?? "FEED";
+  const mediaProductType = meta.media_product_type ?? "FEED";
   const typeDefaults =
     DEFAULT_METRICS_BY_TYPE[mediaProductType] ?? DEFAULT_METRICS_BY_TYPE.FEED;
 
-  // 2) vyber metriky: buď user param, nebo default dle typu
+  // 2) metrics
   let requestedMetrics = metricParam
     ? parseCsv(metricParam)
     : [...typeDefaults];
 
   if (!includeDeprecated) {
     requestedMetrics = requestedMetrics.filter(
-      (m) => !DEPRECATED_METRICS.includes(m)
+      (m) =>
+        !DEPRECATED_METRICS.includes(m as (typeof DEPRECATED_METRICS)[number])
     );
   }
-
   requestedMetrics = unique(requestedMetrics);
 
-  // 3) breakdown metriky řeš separátně (jinak by breakdown rozbil ostatní metriky)
   const wantNavigation =
     includeBreakdowns && requestedMetrics.includes("navigation");
   const wantProfileActivityBreakdown =
     includeBreakdowns && requestedMetrics.includes("profile_activity");
 
-  const baseMetrics = requestedMetrics.filter(
-    (m) => m !== "navigation" // navigation jen s breakdownem
-  );
+  const baseMetrics = requestedMetrics.filter((m) => m !== "navigation");
 
-  // 4) base insights (bez breakdown)
+  // 3) base insights
   const base = await fetchInsightsWithAutoFilter({
     accessToken,
     mediaId,
@@ -244,10 +303,10 @@ export async function GET(
     );
   }
 
-  const extraCalls: any[] = [];
+  const breakdowns: BreakdownResult[] = [];
   const droppedMetrics = [...base.dropped];
 
-  // 5) STORY navigation breakdown
+  // 4) navigation breakdown (story)
   if (wantNavigation) {
     const nav = await fetchInsightsWithAutoFilter({
       accessToken,
@@ -257,7 +316,7 @@ export async function GET(
     });
 
     if (nav.ok) {
-      extraCalls.push({
+      breakdowns.push({
         kind: "breakdown",
         metric: "navigation",
         breakdown: "story_navigation_action_type",
@@ -266,7 +325,7 @@ export async function GET(
       });
       droppedMetrics.push(...nav.dropped);
     } else {
-      extraCalls.push({
+      breakdowns.push({
         kind: "breakdown_error",
         metric: "navigation",
         breakdown: "story_navigation_action_type",
@@ -275,7 +334,7 @@ export async function GET(
     }
   }
 
-  // 6) profile_activity breakdown (action_type)
+  // 5) profile_activity breakdown
   if (wantProfileActivityBreakdown) {
     const pa = await fetchInsightsWithAutoFilter({
       accessToken,
@@ -285,7 +344,7 @@ export async function GET(
     });
 
     if (pa.ok) {
-      extraCalls.push({
+      breakdowns.push({
         kind: "breakdown",
         metric: "profile_activity",
         breakdown: "action_type",
@@ -294,7 +353,7 @@ export async function GET(
       });
       droppedMetrics.push(...pa.dropped);
     } else {
-      extraCalls.push({
+      breakdowns.push({
         kind: "breakdown_error",
         metric: "profile_activity",
         breakdown: "action_type",
@@ -305,9 +364,9 @@ export async function GET(
 
   return NextResponse.json({
     media: {
-      id: metaOut.data.id,
-      media_type: metaOut.data.media_type ?? null,
-      media_product_type: metaOut.data.media_product_type ?? null,
+      id: meta.id,
+      media_type: meta.media_type,
+      media_product_type: meta.media_product_type,
     },
     requested: {
       metrics: requestedMetrics,
@@ -316,10 +375,10 @@ export async function GET(
     },
     result: {
       baseInsights: base.insights,
-      breakdowns: extraCalls,
+      breakdowns,
       metricsUsed: base.metricsUsed,
       droppedMetrics: unique(droppedMetrics),
-      note: base.note ?? null,
+      note: base.note,
     },
   });
 }
