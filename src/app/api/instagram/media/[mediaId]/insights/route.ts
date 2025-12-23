@@ -292,7 +292,7 @@ export async function GET(
   }
   requestedMetrics = unique(requestedMetrics);
 
-  const wantNavigation =
+  const requestedHasNavigation =
     includeBreakdowns && requestedMetrics.includes("navigation");
 
   const baseMetrics = requestedMetrics.filter((m) => m !== "navigation");
@@ -312,7 +312,11 @@ export async function GET(
   }
 
   const wantProfileActivityBreakdown =
-    includeBreakdowns && base.metricsUsed.includes("profile_activity");
+    includeBreakdowns &&
+    mediaProductType === "STORY" &&
+    base.metricsUsed.includes("profile_activity");
+
+  const wantNavigation = requestedHasNavigation && mediaProductType === "STORY";
 
   const breakdowns: BreakdownResult[] = [];
   const droppedMetrics = [...base.dropped];
