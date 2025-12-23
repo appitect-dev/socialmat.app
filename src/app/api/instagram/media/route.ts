@@ -1,38 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const NO_STORE = { cache: "no-store" as const };
+const IG_BASE = "https://graph.instagram.com";
+
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
-
   if (!auth?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Missing token" }, { status: 401 });
   }
+  const accessToken = auth.slice("Bearer ".length);
 
-  const accessToken = auth.replace("Bearer ", "");
-  const noStore = { cache: "no-store" as const };
+  const { searchParams } = new URL(req.url);
+  const limit = searchParams.get("limit") ?? "10";
+  const after = searchParams.get("after"); // cursor z paging.cursors.after
 
-  // 1️⃣ Get IG user
+  // 1) Get IG user
   const meRes = await fetch(
-    `https://graph.instagram.com/me?fields=id,username&access_token=${encodeURIComponent(
+    `${IG_BASE}/me?fields=id,username&access_token=${encodeURIComponent(
       accessToken
     )}`,
-    noStore
+    NO_STORE
   );
   const meData = await meRes.json();
 
-  if (!meRes.ok || !meData.id) {
+  if (!meRes.ok || !meData?.id) {
     return NextResponse.json(
       { error: "Invalid token", details: meData },
       { status: 401 }
     );
   }
 
-  // 2️⃣ Get last 10 media items
+  // 2) Get media list (supports paging via "after")
+  const params = new URLSearchParams({
+    fields: "id,media_type,media_url,permalink,timestamp,caption,thumbnail_url",
+    limit,
+    access_token: accessToken,
+  });
+  if (after) params.set("after", after);
+
   const mediaRes = await fetch(
-    `https://graph.instagram.com/${meData.id}/media` +
-      `?fields=id,media_type,media_url,permalink,timestamp` +
-      `&limit=10` +
-      `&access_token=${encodeURIComponent(accessToken)}`,
-    noStore
+    `${IG_BASE}/${encodeURIComponent(meData.id)}/media?${params.toString()}`,
+    NO_STORE
   );
 
   const mediaData = await mediaRes.json();
@@ -40,16 +48,13 @@ export async function GET(req: NextRequest) {
   if (!mediaRes.ok) {
     return NextResponse.json(
       { error: "Failed to load media", details: mediaData },
-      { status: 500 }
+      { status: mediaRes.status }
     );
   }
 
   return NextResponse.json({
-    user: {
-      id: meData.id,
-      username: meData.username,
-    },
-    media: mediaData.data,
-    paging: mediaData.paging ?? null,
+    user: { id: meData.id, username: meData.username },
+    media: mediaData?.data ?? [],
+    paging: mediaData?.paging ?? null,
   });
 }
