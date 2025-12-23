@@ -3,14 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const NO_STORE = { cache: "no-store" as const };
 const IG_BASE = "https://graph.instagram.com";
 
-const DEFAULT_METRICS = [
-  "impressions",
-  "reach",
-  "engagement",
-  "saved",
-  "video_views",
-  "plays",
-];
+const DEFAULT_METRICS = ["impressions", "reach", "saved", "shares"];
 
 export async function GET(
   req: NextRequest,
