@@ -294,8 +294,6 @@ export async function GET(
 
   const wantNavigation =
     includeBreakdowns && requestedMetrics.includes("navigation");
-  const wantProfileActivityBreakdown =
-    includeBreakdowns && requestedMetrics.includes("profile_activity");
 
   const baseMetrics = requestedMetrics.filter((m) => m !== "navigation");
 
@@ -312,6 +310,9 @@ export async function GET(
       { status: 400 }
     );
   }
+
+  const wantProfileActivityBreakdown =
+    includeBreakdowns && base.metricsUsed.includes("profile_activity");
 
   const breakdowns: BreakdownResult[] = [];
   const droppedMetrics = [...base.dropped];
