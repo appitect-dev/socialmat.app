@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
 
   // 2) Get media list (supports paging via "after")
   const params = new URLSearchParams({
-    fields: "id,media_type,media_url,permalink,timestamp,caption,thumbnail_url",
+    fields:
+      "id,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp,caption,like_count,comments_count",
     limit,
     access_token: accessToken,
   });
