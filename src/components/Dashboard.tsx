@@ -241,6 +241,13 @@ function formatInsightValue(v: InsightValue): string {
   return "—";
 }
 
+function getHttpStatus(err: unknown): number | null {
+  if (!err || typeof err !== "object") return null;
+  if (!("status" in err)) return null;
+  const status = (err as { status?: unknown }).status;
+  return typeof status === "number" ? status : null;
+}
+
 async function fetchJson<T>(
   url: string,
   accessToken: string,
@@ -262,7 +269,9 @@ async function fetchJson<T>(
       typeof payload === "string"
         ? payload
         : pickErrorMessage(payload) ?? "Request failed";
-    throw new Error(`${msg} (HTTP ${res.status})`);
+    const error = new Error(`${msg} (HTTP ${res.status})`);
+    (error as Error & { status: number }).status = res.status;
+    throw error;
   }
 
   return payload as T;
@@ -314,6 +323,17 @@ export function Dashboard() {
   const softCardClass = `rounded-2xl border ${palette.border} ${palette.card}`;
 
   const connectButtonClass = `px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`;
+
+  const handleIgAuthFailure = (err: unknown) => {
+    const status = getHttpStatus(err);
+    if (status === 401 || status === 403) {
+      localStorage.removeItem("ig_auth");
+      setIgConnected(false);
+      setIgError("Instagram session expired. Please reconnect.");
+      return true;
+    }
+    return false;
+  };
 
   const detailsRef = useRef<HTMLDivElement | null>(null);
 
@@ -465,6 +485,7 @@ export function Dashboard() {
     })()
       .catch((err) => {
         console.error(err);
+        if (handleIgAuthFailure(err)) return;
         setIgError(
           err instanceof Error ? err.message : "Failed to load Instagram data"
         );
@@ -498,6 +519,7 @@ export function Dashboard() {
       setMediaPaging(out.paging ?? null);
     } catch (e) {
       console.error(e);
+      if (handleIgAuthFailure(e)) return;
       setMediaError(
         e instanceof Error ? e.message : "Failed to load more media"
       );
@@ -528,6 +550,7 @@ export function Dashboard() {
       setSelectedInsights(out);
     } catch (e) {
       console.error(e);
+      if (handleIgAuthFailure(e)) return;
       setSelectedError(
         e instanceof Error ? e.message : "Failed to load media insights"
       );

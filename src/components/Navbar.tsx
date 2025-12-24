@@ -64,7 +64,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
   return (
     <nav
-      className={`backdrop-blur-xl absolute top-0 left-0 right-0 z-[60] ${palette.nav.container}`}
+      className={`backdrop-blur-xl fixed top-0 left-0 right-0 z-[60] ${palette.nav.container}`}
     >
       <div className="w-full px-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
