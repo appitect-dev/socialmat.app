@@ -67,6 +67,7 @@ export default async function middleware(req: NextRequest) {
     path.startsWith(route)
   );
   const isPublicRoute = publicRoutes.includes(path);
+  const isAuthRoute = path === "/login" || path === "/signup";
 
   const rawSession = req.cookies.get(SESSION_COOKIE)?.value;
   const session = parseSession(rawSession);
@@ -94,7 +95,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Public auth routes when already logged in -> dashboard
-  if (isPublicRoute && session?.token && !path.startsWith("/dashboard")) {
+  if (isAuthRoute && session?.token && !path.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 

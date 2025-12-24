@@ -17,6 +17,9 @@ import {
   ChevronDown,
   Menu,
   X,
+  Brain,
+  Film,
+  Calendar,
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { logout as apiLogout } from "@/lib/api";
@@ -37,8 +40,24 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/titulky", label: "Titulky", icon: FolderKanban },
+    { href: "/dashboard/editor", label: "Video Editor", icon: Film },
+    { href: "/dashboard/calendar", label: "Kalendář", icon: Calendar },
+    { href: "/dashboard/aicontent", label: "AI Content", icon: Brain },
+    { href: "/dashboard/projects", label: "Projekty", icon: FolderKanban },
+    {
+      href: "/dashboard/instagram-connect",
+      label: "Instagram Connect",
+      icon: LayoutDashboard,
+    },
     { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
   ];
+  const exactMatch = navLinks.find((link) => pathname === link.href);
+  const nestedMatch =
+    exactMatch ||
+    navLinks
+      .filter((link) => pathname.startsWith(`${link.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0];
+  const currentPageLabel = nestedMatch?.label || "Dashboard";
 
   // Zavřít mobile menu při změně routy
   useEffect(() => {
@@ -68,7 +87,7 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
     >
       <div className="w-full px-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo + sidebar toggle */}
+          {/* Page title + sidebar toggle */}
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -85,19 +104,17 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                 <ChevronsRight className="w-5 h-5" />
               )}
             </button>
-            <Link href="/" className="flex items-center space-x-2">
-              <span
-                className={`text-xl font-bold ${
-                  isDark ? "text-white" : "text-slate-900"
-                }`}
-                style={{
-                  fontFamily:
-                    "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
-                }}
-              >
-                SocialMat
-              </span>
-            </Link>
+            <span
+              className={`text-lg font-semibold ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+              style={{
+                fontFamily:
+                  "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
+              }}
+            >
+              {currentPageLabel}
+            </span>
           </div>
 
           {/* Desktop actions */}
@@ -135,6 +152,19 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                 }`}
               />
             </button>
+            <Link href="/" className="flex items-center space-x-2 mr-3">
+              <span
+                className={`text-lg font-bold ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
+                style={{
+                  fontFamily:
+                    "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
+                }}
+              >
+                SocialMat
+              </span>
+            </Link>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
