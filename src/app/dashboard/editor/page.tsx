@@ -37,9 +37,11 @@ interface VideoSource {
 interface VideoClip {
     id: string;
     sourceId: string; // Reference to VideoSource
-    start: number;
-    end: number;
-    duration: number;
+    sourceStart: number; // Start time in source video
+    sourceEnd: number; // End time in source video
+    timelineStart: number; // Start position on timeline
+    timelineEnd: number; // End position on timeline
+    duration: number; // Duration of clip
     thumbnails?: string[];
 }
 
@@ -56,7 +58,7 @@ type DragMode = 'move' | 'trim-start' | 'trim-end' | null;
 
 export default function VideoEditorPage() {
     const { isDark, palette } = useDashboardTheme();
-    
+
     const [videoSources, setVideoSources] = useState<VideoSource[]>([]);
     const [activeSourceId, setActiveSourceId] = useState<string | null>(null);
     const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -76,11 +78,11 @@ export default function VideoEditorPage() {
     const [dragStartX, setDragStartX] = useState(0);
     const [dragClipId, setDragClipId] = useState<string | null>(null);
     const [hoveredClipId, setHoveredClipId] = useState<string | null>(null);
-    
+
     // History for undo/redo
     const [history, setHistory] = useState<VideoClip[][]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
-    
+
     // Track pending video source change
     const [pendingClipId, setPendingClipId] = useState<string | null>(null);
     const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
@@ -125,7 +127,7 @@ export default function VideoEditorPage() {
         acceptedFiles.forEach(file => {
             const sourceId = Date.now().toString() + Math.random();
             const url = URL.createObjectURL(file);
-            
+
             // Create a temporary video element to get duration
             const tempVideo = document.createElement('video');
             tempVideo.src = url;
@@ -136,10 +138,10 @@ export default function VideoEditorPage() {
                     url,
                     duration: tempVideo.duration,
                 };
-                
+
                 setVideoSources(prev => {
                     const updated = [...prev, newSource];
-                    
+
                     // If this is the first video, set it as active
                     if (prev.length === 0) {
                         setVideoFile(file);
@@ -148,17 +150,24 @@ export default function VideoEditorPage() {
                         setDuration(tempVideo.duration);
                     } else {
                         // Add as new clip at the end of timeline
+                        // Calculate timeline end position from existing clips
+                        const timelineEnd = clips.reduce((max, clip) =>
+                            Math.max(max, clip.timelineEnd), 0
+                        );
+
                         const newClip: VideoClip = {
                             id: Date.now().toString() + Math.random(),
                             sourceId: sourceId,
-                            start: 0, // Start from beginning of this video
-                            end: tempVideo.duration, // Full duration of this video
+                            sourceStart: 0, // Start from beginning of this video
+                            sourceEnd: tempVideo.duration, // Full duration of this video
+                            timelineStart: timelineEnd, // Start after last clip
+                            timelineEnd: timelineEnd + tempVideo.duration, // End based on duration
                             duration: tempVideo.duration,
                         };
-                        
+
                         saveToHistory([...clips, newClip]);
                     }
-                    
+
                     return updated;
                 });
             };
@@ -180,14 +189,36 @@ export default function VideoEditorPage() {
                 setIsPlaying(false);
             } else {
                 // When starting playback, ensure we're at start of a clip
-                const currentTime = videoRef.current.currentTime;
-                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
-                
+                const videoTime = videoRef.current.currentTime;
+                const currentClip = clips.find(c =>
+                    c.sourceId === activeSourceId &&
+                    videoTime >= c.sourceStart &&
+                    videoTime < c.sourceEnd
+                );
+
                 if (!currentClip && clips.length > 0) {
                     // Not in any clip, start from first clip
-                    videoRef.current.currentTime = clips[0].start;
+                    const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                    const firstClip = sortedClips[0];
+
+                    // Check if we need to switch video
+                    if (firstClip.sourceId !== activeSourceId) {
+                        const firstSource = videoSources.find(s => s.id === firstClip.sourceId);
+                        if (firstSource) {
+                            setShouldAutoPlay(true);
+                            setPendingClipId(firstClip.id);
+                            setVideoUrl(firstSource.url);
+                            setVideoFile(firstSource.file);
+                            setActiveSourceId(firstSource.id);
+                            setDuration(firstSource.duration);
+                            setSelectedClipId(firstClip.id);
+                            return;
+                        }
+                    }
+
+                    videoRef.current.currentTime = firstClip.sourceStart;
                 }
-                
+
                 videoRef.current.play();
                 setIsPlaying(true);
             }
@@ -196,70 +227,90 @@ export default function VideoEditorPage() {
 
     const handleTimeUpdate = () => {
         if (videoRef.current) {
-            const time = videoRef.current.currentTime;
-            setCurrentTime(time);
-            
+            const videoTime = videoRef.current.currentTime;
+
             if (!isPlaying) return;
-            
-            // Find current clip that contains this time
-            const currentClip = clips.find(c => time >= c.start && time < c.end);
-            
-            // If we're not in any clip, skip to next clip
-            if (!currentClip) {
-                const nextClip = clips.find(c => c.start > time);
-                if (nextClip) {
-                    // Check if next clip is from different video source
-                    const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
-                    if (nextSource && nextSource.url !== videoUrl) {
-                        setShouldAutoPlay(true);
-                        setPendingClipId(nextClip.id);
-                        setVideoUrl(nextSource.url);
-                        setVideoFile(nextSource.file);
-                        setActiveSourceId(nextSource.id);
-                        setDuration(nextSource.duration);
+
+            // Find current clip based on active source and video time
+            const currentClip = clips.find(c =>
+                c.sourceId === activeSourceId &&
+                videoTime >= c.sourceStart &&
+                videoTime < c.sourceEnd
+            );
+
+            if (currentClip) {
+                // Update timeline current time based on clip position
+                const offsetInClip = videoTime - currentClip.sourceStart;
+                const timelineTime = currentClip.timelineStart + offsetInClip;
+                setCurrentTime(timelineTime);
+
+                // Check if we reached end of current clip
+                if (videoTime >= currentClip.sourceEnd - 0.05) {
+                    // Find next clip on timeline
+                    const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                    const currentIndex = sortedClips.findIndex(c => c.id === currentClip.id);
+                    const nextClip = sortedClips[currentIndex + 1];
+
+                    if (nextClip) {
+                        // Switch to next clip
+                        const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
+
+                        if (nextSource && nextSource.id !== activeSourceId) {
+                            // Different video source - switch video
+                            setShouldAutoPlay(true);
+                            setPendingClipId(nextClip.id);
+                            setVideoUrl(nextSource.url);
+                            setVideoFile(nextSource.file);
+                            setActiveSourceId(nextSource.id);
+                            setDuration(nextSource.duration);
+                        } else {
+                            // Same video source - just jump to next clip start
+                            videoRef.current.currentTime = nextClip.sourceStart;
+                        }
                         setSelectedClipId(nextClip.id);
                     } else {
-                        videoRef.current.currentTime = nextClip.start;
-                        setSelectedClipId(nextClip.id);
+                        // No more clips - stop
+                        videoRef.current.pause();
+                        setIsPlaying(false);
+                        // Go back to first clip
+                        if (sortedClips[0]) {
+                            const firstSource = videoSources.find(s => s.id === sortedClips[0].sourceId);
+                            if (firstSource && firstSource.id !== activeSourceId) {
+                                setVideoUrl(firstSource.url);
+                                setVideoFile(firstSource.file);
+                                setActiveSourceId(firstSource.id);
+                                setDuration(firstSource.duration);
+                            }
+                            setSelectedClipId(sortedClips[0].id);
+                            setCurrentTime(0);
+                        }
                     }
-                    return;
-                } else {
-                    // No more clips, stop playback
-                    videoRef.current.pause();
-                    setIsPlaying(false);
-                    if (clips[0]) {
-                        videoRef.current.currentTime = clips[0].start;
-                    }
-                    return;
                 }
-            }
-            
-            // If we've reached end of current clip, jump to next
-            if (time >= currentClip.end - 0.01) {
-                const currentIndex = clips.indexOf(currentClip);
-                const nextClip = clips[currentIndex + 1];
-                
+            } else {
+                // Not in any clip - find next clip and jump to it
+                const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                const nextClip = sortedClips.find(c => c.sourceId === activeSourceId && c.sourceStart > videoTime);
+
                 if (nextClip) {
-                    // Check if next clip is from different video source
-                    const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
-                    if (nextSource && nextSource.url !== videoUrl) {
-                        setShouldAutoPlay(true);
-                        setPendingClipId(nextClip.id);
-                        setVideoUrl(nextSource.url);
-                        setVideoFile(nextSource.file);
-                        setActiveSourceId(nextSource.id);
-                        setDuration(nextSource.duration);
-                        setSelectedClipId(nextClip.id);
-                    } else {
-                        videoRef.current.currentTime = nextClip.start;
-                        setSelectedClipId(nextClip.id);
-                    }
+                    videoRef.current.currentTime = nextClip.sourceStart;
+                    setSelectedClipId(nextClip.id);
                 } else {
-                    // End of all clips
-                    videoRef.current.pause();
-                    setIsPlaying(false);
-                    if (clips[0]) {
-                        videoRef.current.currentTime = clips[0].start;
+                    // No more clips in this video, check if there's a clip in another video
+                    const nextAnyClip = sortedClips.find(c => c.sourceId !== activeSourceId);
+                    if (nextAnyClip) {
+                        const nextSource = videoSources.find(s => s.id === nextAnyClip.sourceId);
+                        if (nextSource) {
+                            setShouldAutoPlay(true);
+                            setPendingClipId(nextAnyClip.id);
+                            setVideoUrl(nextSource.url);
+                            setVideoFile(nextSource.file);
+                            setActiveSourceId(nextSource.id);
+                            setDuration(nextSource.duration);
+                            setSelectedClipId(nextAnyClip.id);
+                        }
+                    } else {
+                        videoRef.current.pause();
+                        setIsPlaying(false);
                     }
                 }
             }
@@ -270,27 +321,29 @@ export default function VideoEditorPage() {
         if (videoRef.current && activeSourceId) {
             const dur = videoRef.current.duration;
             setDuration(dur);
-            
+
             // Create initial clip with full video duration only if no clips exist
             if (clips.length === 0) {
                 const initialClip: VideoClip = {
                     id: Date.now().toString(),
                     sourceId: activeSourceId,
-                    start: 0,
-                    end: dur,
+                    sourceStart: 0,
+                    sourceEnd: dur,
+                    timelineStart: 0,
+                    timelineEnd: dur,
                     duration: dur,
                 };
                 saveToHistory([initialClip]);
                 setSelectedClipId(initialClip.id);
             }
-            
+
             // Handle pending clip change (from video source switch)
             if (pendingClipId) {
                 const pendingClip = clips.find(c => c.id === pendingClipId);
                 if (pendingClip && videoRef.current) {
-                    videoRef.current.currentTime = pendingClip.start;
-                    setCurrentTime(pendingClip.start);
-                    
+                    videoRef.current.currentTime = pendingClip.sourceStart;
+                    setCurrentTime(pendingClip.timelineStart);
+
                     if (shouldAutoPlay) {
                         videoRef.current.play().then(() => {
                             setIsPlaying(true);
@@ -308,21 +361,51 @@ export default function VideoEditorPage() {
 
     const handleSeek = (value: number[]) => {
         if (videoRef.current) {
-            const targetTime = value[0];
-            // Find which clip contains this time
-            const targetClip = clips.find(c => targetTime >= c.start && targetTime < c.end);
-            
+            const targetTimelineTime = value[0];
+            // Find which clip contains this timeline time
+            const targetClip = clips.find(c =>
+                targetTimelineTime >= c.timelineStart && targetTimelineTime < c.timelineEnd
+            );
+
             if (targetClip) {
-                // Time is within a clip, use it
-                videoRef.current.currentTime = targetTime;
-                setCurrentTime(targetTime);
+                // Calculate position within clip and map to source time
+                const offsetInClip = targetTimelineTime - targetClip.timelineStart;
+                const sourceTime = targetClip.sourceStart + offsetInClip;
+
+                // Check if we need to switch video source
+                const targetSource = videoSources.find(s => s.id === targetClip.sourceId);
+                if (targetSource && targetSource.id !== activeSourceId) {
+                    setVideoUrl(targetSource.url);
+                    setVideoFile(targetSource.file);
+                    setActiveSourceId(targetSource.id);
+                    setDuration(targetSource.duration);
+                    setPendingClipId(targetClip.id);
+                    // Don't auto-play when seeking
+                    setShouldAutoPlay(false);
+                } else {
+                    videoRef.current.currentTime = sourceTime;
+                }
+
+                setCurrentTime(targetTimelineTime);
                 setSelectedClipId(targetClip.id);
             } else {
                 // Time is in a gap, find nearest clip
-                const nextClip = clips.find(c => c.start >= targetTime);
+                const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                const nextClip = sortedClips.find(c => c.timelineStart >= targetTimelineTime);
+
                 if (nextClip) {
-                    videoRef.current.currentTime = nextClip.start;
-                    setCurrentTime(nextClip.start);
+                    const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
+                    if (nextSource && nextSource.id !== activeSourceId) {
+                        setVideoUrl(nextSource.url);
+                        setVideoFile(nextSource.file);
+                        setActiveSourceId(nextSource.id);
+                        setDuration(nextSource.duration);
+                        setPendingClipId(nextClip.id);
+                        setShouldAutoPlay(false);
+                    } else {
+                        videoRef.current.currentTime = nextClip.sourceStart;
+                    }
+                    setCurrentTime(nextClip.timelineStart);
                     setSelectedClipId(nextClip.id);
                 }
             }
@@ -343,37 +426,50 @@ export default function VideoEditorPage() {
     };
 
     const splitClip = () => {
-        if (!selectedClipId) return;
-        
+        if (!selectedClipId || !videoRef.current) return;
+
         const clip = clips.find(c => c.id === selectedClipId);
-        if (!clip || currentTime <= clip.start || currentTime >= clip.end) return;
+        if (!clip) return;
+
+        // Current time is timeline time, need to convert to source time
+        const videoTime = videoRef.current.currentTime;
+
+        // Check if we're within the clip bounds
+        if (videoTime <= clip.sourceStart || videoTime >= clip.sourceEnd) return;
 
         // Pause video during split
-        if (videoRef.current && isPlaying) {
+        if (isPlaying) {
             videoRef.current.pause();
             setIsPlaying(false);
         }
 
+        // Calculate where we are in the clip
+        const offsetInClip = videoTime - clip.sourceStart;
+        const timelineSplitPoint = clip.timelineStart + offsetInClip;
+
         const newClip1: VideoClip = {
             ...clip,
             id: clip.id,
-            end: currentTime,
-            duration: currentTime - clip.start,
+            sourceEnd: videoTime,
+            timelineEnd: timelineSplitPoint,
+            duration: videoTime - clip.sourceStart,
         };
 
         const newClip2: VideoClip = {
             id: Date.now().toString(),
             sourceId: clip.sourceId,
-            start: currentTime,
-            end: clip.end,
-            duration: clip.end - currentTime,
+            sourceStart: videoTime,
+            sourceEnd: clip.sourceEnd,
+            timelineStart: timelineSplitPoint,
+            timelineEnd: clip.timelineEnd,
+            duration: clip.sourceEnd - videoTime,
         };
 
         const clipIndex = clips.findIndex(c => c.id === selectedClipId);
         const newClips = [...clips];
         newClips[clipIndex] = newClip1;
         newClips.splice(clipIndex + 1, 0, newClip2);
-        
+
         saveToHistory(newClips);
         setSelectedClipId(newClip2.id);
     };
@@ -424,18 +520,18 @@ export default function VideoEditorPage() {
                 if (source && source.url !== videoUrl) {
                     const wasPlaying = isPlaying;
                     const currentClipTime = currentTime;
-                    
+
                     // Switch video source
                     setVideoUrl(source.url);
                     setVideoFile(source.file);
                     setActiveSourceId(source.id);
                     setDuration(source.duration);
-                    
+
                     // Wait for video to load then restore playback state
                     videoRef.current.onloadedmetadata = () => {
                         if (videoRef.current) {
-                            videoRef.current.currentTime = selectedClip.start;
-                            setCurrentTime(selectedClip.start);
+                            videoRef.current.currentTime = selectedClip.sourceStart;
+                            setCurrentTime(selectedClip.timelineStart);
                             if (wasPlaying) {
                                 videoRef.current.play();
                             }
@@ -456,7 +552,7 @@ export default function VideoEditorPage() {
                 return;
             }
             // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z = Redo
-            if (((e.ctrlKey || e.metaKey) && e.code === 'KeyY') || 
+            if (((e.ctrlKey || e.metaKey) && e.code === 'KeyY') ||
                 ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyZ')) {
                 e.preventDefault();
                 redo();
@@ -475,34 +571,36 @@ export default function VideoEditorPage() {
             // Arrow keys = seek within current clip or jump to next/prev clip
             if (e.code === 'ArrowLeft') {
                 e.preventDefault();
-                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                const currentClip = clips.find(c => currentTime >= c.timelineStart && currentTime < c.timelineEnd);
                 if (currentClip) {
-                    const newTime = Math.max(currentClip.start, currentTime - 0.5);
-                    if (newTime > currentClip.start) {
+                    const newTime = Math.max(currentClip.timelineStart, currentTime - 0.5);
+                    if (newTime > currentClip.timelineStart) {
                         handleSeek([newTime]);
                     } else {
                         // Jump to previous clip
-                        const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+                        const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                        const currentIndex = sortedClips.findIndex(c => c.id === currentClip.id);
                         if (currentIndex > 0) {
-                            const prevClip = clips[currentIndex - 1];
-                            handleSeek([prevClip.end - 0.1]);
+                            const prevClip = sortedClips[currentIndex - 1];
+                            handleSeek([prevClip.timelineEnd - 0.1]);
                         }
                     }
                 }
             }
             if (e.code === 'ArrowRight') {
                 e.preventDefault();
-                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                const currentClip = clips.find(c => currentTime >= c.timelineStart && currentTime < c.timelineEnd);
                 if (currentClip) {
-                    const newTime = Math.min(currentClip.end - 0.01, currentTime + 0.5);
-                    if (newTime < currentClip.end - 0.01) {
+                    const newTime = Math.min(currentClip.timelineEnd - 0.01, currentTime + 0.5);
+                    if (newTime < currentClip.timelineEnd - 0.01) {
                         handleSeek([newTime]);
                     } else {
                         // Jump to next clip
-                        const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+                        const sortedClips = [...clips].sort((a, b) => a.timelineStart - b.timelineStart);
+                        const currentIndex = sortedClips.findIndex(c => c.id === currentClip.id);
                         if (currentIndex < clips.length - 1) {
-                            const nextClip = clips[currentIndex + 1];
-                            handleSeek([nextClip.start]);
+                            const nextClip = sortedClips[currentIndex + 1];
+                            handleSeek([nextClip.timelineStart]);
                         }
                     }
                 }
@@ -521,7 +619,7 @@ export default function VideoEditorPage() {
     // Generate thumbnails for clip
     const generateThumbnails = async (clip: VideoClip): Promise<string[]> => {
         if (!videoRef.current || !canvasRef.current) return [];
-        
+
         const video = videoRef.current;
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -532,11 +630,11 @@ export default function VideoEditorPage() {
 
         const thumbnails: string[] = [];
         const numThumbs = Math.min(Math.ceil(clip.duration), 20); // Max 20 thumbnails
-        
+
         for (let i = 0; i < numThumbs; i++) {
-            const time = clip.start + (i / numThumbs) * clip.duration;
+            const time = clip.sourceStart + (i / numThumbs) * clip.duration;
             video.currentTime = time;
-            
+
             await new Promise(resolve => {
                 video.onseeked = resolve;
             });
@@ -550,49 +648,59 @@ export default function VideoEditorPage() {
 
     const getTimelineWidth = () => {
         if (clips.length === 0) return 2000;
-        
-        // Calculate total duration of all clips combined
-        const totalDuration = clips.reduce((sum, clip) => sum + (clip.end - clip.start), 0);
+
+        // Calculate total timeline duration (max timelineEnd)
+        const totalDuration = clips.reduce((max, clip) => Math.max(max, clip.timelineEnd), 0);
         return Math.max(totalDuration * zoom * 100, 2000); // minimum 2000px
     };
 
     const getClipPosition = (clip: VideoClip, index: number, allClips: VideoClip[]) => {
         const pixelsPerSecond = 100 * zoom;
-        
-        // Calculate position based on order in array, not timestamps
-        let leftPosition = 0;
-        for (let i = 0; i < index; i++) {
-            leftPosition += (allClips[i].end - allClips[i].start) * pixelsPerSecond;
-        }
-        
+
+        // Position based on timeline start/end
         return {
-            left: leftPosition,
-            width: Math.max((clip.end - clip.start) * pixelsPerSecond, 50), // minimum 50px
+            left: clip.timelineStart * pixelsPerSecond,
+            width: Math.max((clip.timelineEnd - clip.timelineStart) * pixelsPerSecond, 50), // minimum 50px
         };
     };
 
     const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!timelineRef.current || selectedTool !== "split" || dragMode) return;
-        
+
         const rect = timelineRef.current.getBoundingClientRect();
         const clickX = e.clientX - rect.left + timelineRef.current.scrollLeft;
-        
-        // Find which clip was clicked based on sequential positions
+
+        // Find which clip was clicked
         for (let i = 0; i < clips.length; i++) {
             const clip = clips[i];
             const pos = getClipPosition(clip, i, clips);
-            
+
             if (clickX >= pos.left && clickX <= pos.left + pos.width) {
                 // Clicked inside this clip
                 const relativeX = clickX - pos.left;
                 const pixelsPerSecond = 100 * zoom;
                 const relativeTime = relativeX / pixelsPerSecond;
-                const clickTime = clip.start + relativeTime;
-                
-                if (videoRef.current) {
-                    videoRef.current.currentTime = clickTime;
-                    setCurrentTime(clickTime);
+                const timelineTime = clip.timelineStart + relativeTime;
+                const sourceTime = clip.sourceStart + relativeTime;
+
+                // Switch video if needed
+                if (clip.sourceId !== activeSourceId) {
+                    const clipSource = videoSources.find(s => s.id === clip.sourceId);
+                    if (clipSource) {
+                        setVideoUrl(clipSource.url);
+                        setVideoFile(clipSource.file);
+                        setActiveSourceId(clipSource.id);
+                        setDuration(clipSource.duration);
+                        setPendingClipId(clip.id);
+                        setShouldAutoPlay(false);
+                    }
                 }
+
+                if (videoRef.current) {
+                    videoRef.current.currentTime = sourceTime;
+                    setCurrentTime(timelineTime);
+                }
+                setSelectedClipId(clip.id);
                 break;
             }
         }
@@ -634,19 +742,37 @@ export default function VideoEditorPage() {
         if (!clip) return;
 
         if (dragMode === 'trim-start') {
-            const newStart = Math.max(0, Math.min(clip.end - 0.1, clip.start + deltaTime));
-            const newClips = clips.map(c => 
-                c.id === dragClipId 
-                    ? { ...c, start: newStart, duration: c.end - newStart }
+            const newSourceStart = Math.max(0, Math.min(clip.sourceEnd - 0.1, clip.sourceStart + deltaTime));
+            const newDuration = clip.sourceEnd - newSourceStart;
+            const timelineDiff = newSourceStart - clip.sourceStart;
+
+            const newClips = clips.map(c =>
+                c.id === dragClipId
+                    ? {
+                        ...c,
+                        sourceStart: newSourceStart,
+                        timelineStart: c.timelineStart + timelineDiff,
+                        duration: newDuration
+                    }
                     : c
             );
             setClips(newClips);
             setDragStartX(e.clientX);
         } else if (dragMode === 'trim-end') {
-            const newEnd = Math.min(duration, Math.max(clip.start + 0.1, clip.end + deltaTime));
-            const newClips = clips.map(c => 
-                c.id === dragClipId 
-                    ? { ...c, end: newEnd, duration: newEnd - c.start }
+            const source = videoSources.find(s => s.id === clip.sourceId);
+            const maxEnd = source ? source.duration : duration;
+            const newSourceEnd = Math.min(maxEnd, Math.max(clip.sourceStart + 0.1, clip.sourceEnd + deltaTime));
+            const newDuration = newSourceEnd - clip.sourceStart;
+            const timelineDiff = newSourceEnd - clip.sourceEnd;
+
+            const newClips = clips.map(c =>
+                c.id === dragClipId
+                    ? {
+                        ...c,
+                        sourceEnd: newSourceEnd,
+                        timelineEnd: c.timelineEnd + timelineDiff,
+                        duration: newDuration
+                    }
                     : c
             );
             setClips(newClips);
@@ -655,13 +781,13 @@ export default function VideoEditorPage() {
             // For reordering, we'll detect when mouse is over another clip
             const rect = timelineRef.current?.getBoundingClientRect();
             if (!rect) return;
-            
+
             const clickX = e.clientX - rect.left + (timelineRef.current?.scrollLeft || 0);
             const hoveredClipIndex = clips.findIndex((c, idx) => {
                 const pos = getClipPosition(c, idx, clips);
                 return clickX >= pos.left && clickX <= pos.left + pos.width;
             });
-            
+
             if (hoveredClipIndex !== -1) {
                 const draggedIndex = clips.findIndex(c => c.id === dragClipId);
                 if (draggedIndex !== hoveredClipIndex && draggedIndex !== -1) {
@@ -703,7 +829,7 @@ export default function VideoEditorPage() {
                             ⌨️ Space=Play | S=Split | Del=Remove | ←→=Seek
                         </span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                         {videoFile && (
                             <div {...getRootProps()} className="inline-block">
@@ -842,11 +968,10 @@ export default function VideoEditorPage() {
                             <Card className={`max-w-2xl w-full p-12 ${palette.card}`}>
                                 <div
                                     {...getRootProps()}
-                                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${
-                                        isDragActive
+                                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${isDragActive
                                             ? `border-indigo-500 ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'}`
                                             : `${palette.border} hover:border-indigo-500/50`
-                                    }`}
+                                        }`}
                                 >
                                     <input {...getInputProps()} />
                                     <Upload className={`h-16 w-16 mx-auto mb-4 ${palette.muted}`} />
@@ -897,10 +1022,10 @@ export default function VideoEditorPage() {
                                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-mono flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
                                     <span>
-                                        {formatTime(currentTime)} / {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))}
+                                        {formatTime(currentTime)} / {formatTime(clips.reduce((max, c) => Math.max(max, c.timelineEnd), 0))}
                                     </span>
                                     {(() => {
-                                        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                                        const currentClip = clips.find(c => currentTime >= c.timelineStart && currentTime < c.timelineEnd);
                                         if (currentClip) {
                                             const clipIndex = clips.indexOf(currentClip);
                                             return <span className="text-xs opacity-75">• Clip {clipIndex + 1}/{clips.length}</span>;
@@ -918,9 +1043,9 @@ export default function VideoEditorPage() {
                             <div className="max-w-5xl mx-auto">
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <Button 
-                                            size="icon" 
-                                            variant="ghost" 
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
                                             onClick={undo}
                                             disabled={historyIndex <= 0}
                                             className={isDark ? 'text-white hover:bg-white/10 disabled:opacity-30' : 'text-slate-900 hover:bg-slate-100 disabled:opacity-30'}
@@ -928,8 +1053,8 @@ export default function VideoEditorPage() {
                                         >
                                             <SkipBack className="h-5 w-5" />
                                         </Button>
-                                        <Button 
-                                            size="icon" 
+                                        <Button
+                                            size="icon"
                                             onClick={togglePlayPause}
                                             className={`${palette.accentButton} ${palette.accentButtonHover}`}
                                         >
@@ -939,9 +1064,9 @@ export default function VideoEditorPage() {
                                                 <Play className="h-5 w-5 ml-0.5" />
                                             )}
                                         </Button>
-                                        <Button 
-                                            size="icon" 
-                                            variant="ghost" 
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
                                             onClick={redo}
                                             disabled={historyIndex >= history.length - 1}
                                             className={isDark ? 'text-white hover:bg-white/10 disabled:opacity-30' : 'text-slate-900 hover:bg-slate-100 disabled:opacity-30'}
@@ -961,7 +1086,7 @@ export default function VideoEditorPage() {
                                             className="flex-1"
                                         />
                                         <span className="text-sm font-mono w-16">
-                                            {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))}
+                                            {formatTime(clips.reduce((max, c) => Math.max(max, c.timelineEnd), 0))}
                                         </span>
                                     </div>
 
@@ -996,8 +1121,8 @@ export default function VideoEditorPage() {
                         {/* Timeline Controls */}
                         <div className={`flex items-center justify-between px-4 py-2 border-b ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
                             <div className="flex items-center gap-3">
-                                <Button 
-                                    variant="ghost" 
+                                <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}
                                     className={`h-8 ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
@@ -1007,8 +1132,8 @@ export default function VideoEditorPage() {
                                 <span className="text-sm font-mono w-20 text-center font-semibold">
                                     {Math.round(zoom * 100)}% zoom
                                 </span>
-                                <Button 
-                                    variant="ghost" 
+                                <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => setZoom(Math.min(5, zoom + 0.5))}
                                     className={`h-8 ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
@@ -1023,14 +1148,14 @@ export default function VideoEditorPage() {
                                     </span>
                                 )}
                                 <span className={`text-sm font-medium ${palette.muted}`}>
-                                    {clips.length} {clips.length === 1 ? 'úsek' : clips.length < 5 ? 'úseky' : 'úseků'} • {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))} celkem
+                                    {clips.length} {clips.length === 1 ? 'úsek' : clips.length < 5 ? 'úseky' : 'úseků'} • {formatTime(clips.reduce((max, c) => Math.max(max, c.timelineEnd), 0))} celkem
                                 </span>
                             </div>
                         </div>
 
                         {/* Timeline Tracks */}
-                        <div 
-                            ref={timelineRef} 
+                        <div
+                            ref={timelineRef}
                             className="flex-1 overflow-x-auto overflow-y-hidden cursor-crosshair"
                             onClick={handleTimelineClick}
                             onMouseMove={handleMouseMove}
@@ -1065,17 +1190,16 @@ export default function VideoEditorPage() {
                                             return (
                                                 <div
                                                     key={clip.id}
-                                                    className={`absolute h-full rounded cursor-move transition-all overflow-hidden group ${
-                                                        isSelected
+                                                    className={`absolute h-full rounded cursor-move transition-all overflow-hidden group ${isSelected
                                                             ? 'ring-2 ring-indigo-400 shadow-lg z-10'
-                                                            : isHovered 
-                                                            ? 'ring-2 ring-indigo-400/50' 
-                                                            : ''
-                                                    } ${isDragging ? 'opacity-70' : ''}`}
+                                                            : isHovered
+                                                                ? 'ring-2 ring-indigo-400/50'
+                                                                : ''
+                                                        } ${isDragging ? 'opacity-70' : ''}`}
                                                     style={{
                                                         left: `${pos.left}px`,
                                                         width: `${pos.width}px`,
-                                                        background: isSelected 
+                                                        background: isSelected
                                                             ? 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
                                                             : 'linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(59, 130, 246, 0.85) 100%)',
                                                     }}
@@ -1101,7 +1225,7 @@ export default function VideoEditorPage() {
                                                         <div className="flex flex-col flex-1 min-w-0">
                                                             <span className="font-semibold text-sm truncate">Clip {index + 1}</span>
                                                             <span className="text-xs opacity-90 font-mono">
-                                                                {formatTime(clip.start)} - {formatTime(clip.end)}
+                                                                {formatTime(clip.sourceStart)} - {formatTime(clip.sourceEnd)}
                                                             </span>
                                                         </div>
                                                         {clips.length > 1 && (
@@ -1143,26 +1267,12 @@ export default function VideoEditorPage() {
                                 {/* Playhead */}
                                 <div
                                     className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-50"
-                                    style={{ 
+                                    style={{
                                         left: `${(() => {
-                                            // Calculate playhead position in sequential timeline
-                                            let position = 0;
-                                            const sortedClips = [...clips].sort((a, b) => a.start - b.start);
-                                            
-                                            for (const clip of sortedClips) {
-                                                if (currentTime >= clip.start && currentTime <= clip.end) {
-                                                    // Inside this clip
-                                                    const clipIndex = clips.findIndex(c => c.id === clip.id);
-                                                    const clipPos = getClipPosition(clip, clipIndex, clips);
-                                                    const relativeTime = currentTime - clip.start;
-                                                    const pixelsPerSecond = 100 * zoom;
-                                                    position = clipPos.left + (relativeTime * pixelsPerSecond);
-                                                    break;
-                                                }
-                                            }
-                                            
-                                            return position;
-                                        })()}px` 
+                                            // Calculate playhead position in timeline
+                                            const pixelsPerSecond = 100 * zoom;
+                                            return currentTime * pixelsPerSecond;
+                                        })()}px`
                                     }}
                                 >
                                     <div className="absolute -top-1 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-lg" />
