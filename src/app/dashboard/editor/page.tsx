@@ -76,10 +76,46 @@ export default function VideoEditorPage() {
     const [dragStartX, setDragStartX] = useState(0);
     const [dragClipId, setDragClipId] = useState<string | null>(null);
     const [hoveredClipId, setHoveredClipId] = useState<string | null>(null);
+    
+    // History for undo/redo
+    const [history, setHistory] = useState<VideoClip[][]>([]);
+    const [historyIndex, setHistoryIndex] = useState(-1);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Save current state to history
+    const saveToHistory = (newClips: VideoClip[]) => {
+        setHistory(prev => {
+            const newHistory = prev.slice(0, historyIndex + 1);
+            newHistory.push(JSON.parse(JSON.stringify(newClips)));
+            // Keep max 50 history states
+            if (newHistory.length > 50) {
+                newHistory.shift();
+                return newHistory;
+            }
+            return newHistory;
+        });
+        setHistoryIndex(prev => Math.min(prev + 1, 49));
+        setClips(newClips);
+    };
+
+    // Undo function
+    const undo = () => {
+        if (historyIndex > 0) {
+            setHistoryIndex(prev => prev - 1);
+            setClips(JSON.parse(JSON.stringify(history[historyIndex - 1])));
+        }
+    };
+
+    // Redo function
+    const redo = () => {
+        if (historyIndex < history.length - 1) {
+            setHistoryIndex(prev => prev + 1);
+            setClips(JSON.parse(JSON.stringify(history[historyIndex + 1])));
+        }
+    };
 
     const onDrop = (acceptedFiles: File[]) => {
         acceptedFiles.forEach(file => {
@@ -116,7 +152,7 @@ export default function VideoEditorPage() {
                             duration: tempVideo.duration,
                         };
                         
-                        setClips(prev => [...prev, newClip]);
+                        saveToHistory([...clips, newClip]);
                     }
                     
                     return updated;
@@ -132,97 +168,6 @@ export default function VideoEditorPage() {
         },
         multiple: true,
     });
-
-    const skipToPreviousClip = () => {
-        if (!videoRef.current || clips.length === 0) return;
-        
-        const currentTime = videoRef.current.currentTime;
-        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
-        
-        if (currentClip) {
-            const currentIndex = clips.findIndex(c => c.id === currentClip.id);
-            if (currentIndex > 0) {
-                const prevClip = clips[currentIndex - 1];
-                const prevSource = videoSources.find(s => s.id === prevClip.sourceId);
-                
-                if (prevSource && prevSource.url !== videoUrl) {
-                    setVideoUrl(prevSource.url);
-                    setVideoFile(prevSource.file);
-                    setActiveSourceId(prevSource.id);
-                    setDuration(prevSource.duration);
-                    setSelectedClipId(prevClip.id);
-                    
-                    videoRef.current.onloadedmetadata = () => {
-                        if (videoRef.current) {
-                            videoRef.current.currentTime = prevClip.start;
-                            setCurrentTime(prevClip.start);
-                        }
-                    };
-                } else {
-                    videoRef.current.currentTime = prevClip.start;
-                    setCurrentTime(prevClip.start);
-                    setSelectedClipId(prevClip.id);
-                }
-            }
-        }
-    };
-
-    const skipToNextClip = () => {
-        if (!videoRef.current || clips.length === 0) return;
-        
-        const currentTime = videoRef.current.currentTime;
-        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
-        
-        if (currentClip) {
-            const currentIndex = clips.findIndex(c => c.id === currentClip.id);
-            if (currentIndex < clips.length - 1) {
-                const nextClip = clips[currentIndex + 1];
-                const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
-                
-                if (nextSource && nextSource.url !== videoUrl) {
-                    setVideoUrl(nextSource.url);
-                    setVideoFile(nextSource.file);
-                    setActiveSourceId(nextSource.id);
-                    setDuration(nextSource.duration);
-                    setSelectedClipId(nextClip.id);
-                    
-                    videoRef.current.onloadedmetadata = () => {
-                        if (videoRef.current) {
-                            videoRef.current.currentTime = nextClip.start;
-                            setCurrentTime(nextClip.start);
-                        }
-                    };
-                } else {
-                    videoRef.current.currentTime = nextClip.start;
-                    setCurrentTime(nextClip.start);
-                    setSelectedClipId(nextClip.id);
-                }
-            }
-        } else if (clips.length > 0) {
-            // Not in any clip, jump to first clip
-            const firstClip = clips[0];
-            const firstSource = videoSources.find(s => s.id === firstClip.sourceId);
-            
-            if (firstSource && firstSource.url !== videoUrl) {
-                setVideoUrl(firstSource.url);
-                setVideoFile(firstSource.file);
-                setActiveSourceId(firstSource.id);
-                setDuration(firstSource.duration);
-                setSelectedClipId(firstClip.id);
-                
-                videoRef.current.onloadedmetadata = () => {
-                    if (videoRef.current) {
-                        videoRef.current.currentTime = firstClip.start;
-                        setCurrentTime(firstClip.start);
-                    }
-                };
-            } else {
-                videoRef.current.currentTime = firstClip.start;
-                setCurrentTime(firstClip.start);
-                setSelectedClipId(firstClip.id);
-            }
-        }
-    };
 
     const togglePlayPause = () => {
         if (videoRef.current) {
@@ -347,7 +292,7 @@ export default function VideoEditorPage() {
                     end: dur,
                     duration: dur,
                 };
-                setClips([initialClip]);
+                saveToHistory([initialClip]);
                 setSelectedClipId(initialClip.id);
             }
         }
@@ -421,12 +366,13 @@ export default function VideoEditorPage() {
         newClips[clipIndex] = newClip1;
         newClips.splice(clipIndex + 1, 0, newClip2);
         
-        setClips(newClips);
+        saveToHistory(newClips);
         setSelectedClipId(newClip2.id);
     };
 
     const deleteClip = (clipId: string) => {
-        setClips(clips.filter(c => c.id !== clipId));
+        const newClips = clips.filter(c => c.id !== clipId);
+        saveToHistory(newClips);
         if (selectedClipId === clipId) {
             setSelectedClipId(null);
         }
@@ -495,6 +441,19 @@ export default function VideoEditorPage() {
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Ctrl/Cmd + Z = Undo
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey) {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z = Redo
+            if (((e.ctrlKey || e.metaKey) && e.code === 'KeyY') || 
+                ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyZ')) {
+                e.preventDefault();
+                redo();
+                return;
+            }
             // Space = play/pause
             if (e.code === 'Space' && e.target === document.body) {
                 e.preventDefault();
@@ -668,19 +627,21 @@ export default function VideoEditorPage() {
 
         if (dragMode === 'trim-start') {
             const newStart = Math.max(0, Math.min(clip.end - 0.1, clip.start + deltaTime));
-            setClips(clips.map(c => 
+            const newClips = clips.map(c => 
                 c.id === dragClipId 
                     ? { ...c, start: newStart, duration: c.end - newStart }
                     : c
-            ));
+            );
+            setClips(newClips);
             setDragStartX(e.clientX);
         } else if (dragMode === 'trim-end') {
             const newEnd = Math.min(duration, Math.max(clip.start + 0.1, clip.end + deltaTime));
-            setClips(clips.map(c => 
+            const newClips = clips.map(c => 
                 c.id === dragClipId 
                     ? { ...c, end: newEnd, duration: newEnd - c.start }
                     : c
-            ));
+            );
+            setClips(newClips);
             setDragStartX(e.clientX);
         } else if (dragMode === 'move') {
             // For reordering, we'll detect when mouse is over another clip
@@ -707,6 +668,10 @@ export default function VideoEditorPage() {
     };
 
     const handleMouseUp = () => {
+        // Save to history on mouse up after dragging
+        if (dragMode && dragClipId) {
+            saveToHistory(clips);
+        }
         setDragMode(null);
         setDragClipId(null);
     };
@@ -948,9 +913,10 @@ export default function VideoEditorPage() {
                                         <Button 
                                             size="icon" 
                                             variant="ghost" 
-                                            onClick={skipToPreviousClip}
-                                            disabled={clips.length === 0}
-                                            className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}
+                                            onClick={undo}
+                                            disabled={historyIndex <= 0}
+                                            className={isDark ? 'text-white hover:bg-white/10 disabled:opacity-30' : 'text-slate-900 hover:bg-slate-100 disabled:opacity-30'}
+                                            title="Undo (Ctrl+Z)"
                                         >
                                             <SkipBack className="h-5 w-5" />
                                         </Button>
@@ -968,9 +934,10 @@ export default function VideoEditorPage() {
                                         <Button 
                                             size="icon" 
                                             variant="ghost" 
-                                            onClick={skipToNextClip}
-                                            disabled={clips.length === 0}
-                                            className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}
+                                            onClick={redo}
+                                            disabled={historyIndex >= history.length - 1}
+                                            className={isDark ? 'text-white hover:bg-white/10 disabled:opacity-30' : 'text-slate-900 hover:bg-slate-100 disabled:opacity-30'}
+                                            title="Redo (Ctrl+Y)"
                                         >
                                             <SkipForward className="h-5 w-5" />
                                         </Button>
