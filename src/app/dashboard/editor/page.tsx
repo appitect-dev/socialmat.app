@@ -659,12 +659,14 @@ export default function VideoEditorPage() {
                                 {/* Playhead indicator */}
                                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-mono flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
-                                    <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                    <span>
+                                        {formatTime(currentTime)} / {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))}
+                                    </span>
                                     {(() => {
                                         const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
                                         if (currentClip) {
                                             const clipIndex = clips.indexOf(currentClip);
-                                            return <span className="text-xs opacity-75">• Clip {clipIndex + 1}</span>;
+                                            return <span className="text-xs opacity-75">• Clip {clipIndex + 1}/{clips.length}</span>;
                                         }
                                         return null;
                                     })()}
@@ -707,7 +709,9 @@ export default function VideoEditorPage() {
                                             onValueChange={handleSeek}
                                             className="flex-1"
                                         />
-                                        <span className="text-sm font-mono w-16">{formatTime(duration)}</span>
+                                        <span className="text-sm font-mono w-16">
+                                            {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))}
+                                        </span>
                                     </div>
 
                                     <div className="flex items-center gap-2">
