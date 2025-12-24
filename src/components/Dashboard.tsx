@@ -1,10 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { VideoUploader } from "@/components/VideoUploader";
-import { VideoPlayer } from "@/components/VideoPlayer";
-import { VideoInfo } from "@/components/VideoInfo";
-import { SubtitleGenerator } from "@/components/SubtitleGenerator";
 import { useDashboardTheme } from "./dashboard-theme";
 
 type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
@@ -279,19 +275,6 @@ function metricLabel(m: InsightItem): string {
 export function Dashboard() {
   const { isDark, palette } = useDashboardTheme();
 
-  // video tools state (ponecháno)
-  const [videoData, setVideoData] = useState<{
-    file: File;
-    url: string;
-    uploadDate: Date;
-    duration: number;
-    resolution?: string;
-  } | null>(null);
-  const [videoDuration, setVideoDuration] = useState(0);
-  const [processingStatus, setProcessingStatus] = useState<
-    "uploaded" | "processing" | "ready"
-  >("uploaded");
-
   // instagram state
   const [igConnected, setIgConnected] = useState(false);
   const [igAccount, setIgAccount] = useState<IgAccountNormalized | null>(null);
@@ -331,30 +314,6 @@ export function Dashboard() {
   const softCardClass = `rounded-2xl border ${palette.border} ${palette.card}`;
 
   const connectButtonClass = `px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`;
-
-  // ---- video handlers ----
-  const handleVideoUploaded = (data: { file: File; url: string }) => {
-    setVideoData({
-      file: data.file,
-      url: data.url,
-      uploadDate: new Date(),
-      duration: 0,
-    });
-    setProcessingStatus("uploaded");
-  };
-
-  const handleReset = () => {
-    if (videoData?.url) URL.revokeObjectURL(videoData.url);
-    setVideoData(null);
-    setVideoDuration(0);
-    setProcessingStatus("uploaded");
-  };
-
-  const handleSubtitlesSuccess = () => setProcessingStatus("ready");
-  const handleSubtitlesError = (error: string) => {
-    console.error("Subtitle generation error:", error);
-    setProcessingStatus("uploaded");
-  };
 
   const detailsRef = useRef<HTMLDivElement | null>(null);
 
@@ -576,27 +535,6 @@ export function Dashboard() {
       setSelectedLoading(false);
     }
   }
-
-  // video metadata
-  useEffect(() => {
-    if (!videoData?.url) return;
-
-    const video = document.createElement("video");
-    video.src = videoData.url;
-    video.onloadedmetadata = () => {
-      const resolution = `${video.videoWidth} × ${video.videoHeight}`;
-      setVideoDuration(video.duration);
-      setVideoData((prev) =>
-        prev ? { ...prev, duration: video.duration, resolution } : null
-      );
-    };
-
-    return () => {
-      video.src = "";
-      video.load();
-      URL.revokeObjectURL(videoData.url);
-    };
-  }, [videoData?.url]);
 
   const combinedInsightCards = useMemo(() => {
     const perf = igPerf ?? [];
@@ -1039,45 +977,6 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Video tools (původní část) */}
-        <div className={`${panelClass} p-6 space-y-6`}>
-          {!videoData && (
-            <VideoUploader onVideoUploaded={handleVideoUploaded} />
-          )}
-
-          {videoData && (
-            <div className="space-y-6">
-              <div className="flex justify-end">
-                <button onClick={handleReset} className={connectButtonClass}>
-                  ← Nahrát nové video
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <VideoPlayer src={videoData.url} />
-                </div>
-
-                <div className="space-y-6">
-                  <VideoInfo
-                    fileName={videoData.file.name}
-                    fileSize={videoData.file.size}
-                    duration={videoDuration}
-                    resolution={videoData.resolution}
-                    uploadDate={videoData.uploadDate}
-                    status={processingStatus}
-                  />
-
-                  <SubtitleGenerator
-                    videoFile={videoData.file}
-                    onSuccess={handleSubtitlesSuccess}
-                    onError={handleSubtitlesError}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
