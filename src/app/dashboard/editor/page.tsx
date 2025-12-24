@@ -32,6 +32,7 @@ interface VideoClip {
     start: number;
     end: number;
     duration: number;
+    thumbnails?: string[];
 }
 
 interface TextOverlay {
@@ -42,6 +43,8 @@ interface TextOverlay {
     fontSize: number;
     color: string;
 }
+
+type DragMode = 'move' | 'trim-start' | 'trim-end' | null;
 
 export default function VideoEditorPage() {
     const { isDark, palette } = useDashboardTheme();
@@ -59,9 +62,14 @@ export default function VideoEditorPage() {
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
     const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+    const [dragMode, setDragMode] = useState<DragMode>(null);
+    const [dragStartX, setDragStartX] = useState(0);
+    const [dragClipId, setDragClipId] = useState<string | null>(null);
+    const [hoveredClipId, setHoveredClipId] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const onDrop = (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
@@ -197,6 +205,69 @@ export default function VideoEditorPage() {
         }
     }, [playbackSpeed]);
 
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Space = play/pause
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                togglePlayPause();
+            }
+            // Delete = delete selected clip
+            if ((e.code === 'Delete' || e.code === 'Backspace') && selectedClipId && clips.length > 1) {
+                e.preventDefault();
+                deleteClip(selectedClipId);
+            }
+            // Arrow keys = seek
+            if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                handleSeek([Math.max(0, currentTime - 0.1)]);
+            }
+            if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                handleSeek([Math.min(duration, currentTime + 0.1)]);
+            }
+            // S = split
+            if (e.code === 'KeyS' && selectedClipId) {
+                e.preventDefault();
+                splitClip();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentTime, duration, selectedClipId, clips]);
+
+    // Generate thumbnails for clip
+    const generateThumbnails = async (clip: VideoClip): Promise<string[]> => {
+        if (!videoRef.current || !canvasRef.current) return [];
+        
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return [];
+
+        canvas.width = 160;
+        canvas.height = 90;
+
+        const thumbnails: string[] = [];
+        const numThumbs = Math.min(Math.ceil(clip.duration), 20); // Max 20 thumbnails
+        
+        for (let i = 0; i < numThumbs; i++) {
+            const time = clip.start + (i / numThumbs) * clip.duration;
+            video.currentTime = time;
+            
+            await new Promise(resolve => {
+                video.onseeked = resolve;
+            });
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            thumbnails.push(canvas.toDataURL('image/jpeg', 0.5));
+        }
+
+        return thumbnails;
+    };
+
     const getTimelineWidth = () => {
         if (duration === 0) return 0;
         return Math.max(duration * zoom * 100, 2000); // minimum 2000px
@@ -211,7 +282,7 @@ export default function VideoEditorPage() {
     };
 
     const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!timelineRef.current || selectedTool !== "split") return;
+        if (!timelineRef.current || selectedTool !== "split" || dragMode) return;
         
         const rect = timelineRef.current.getBoundingClientRect();
         const clickX = e.clientX - rect.left + timelineRef.current.scrollLeft;
@@ -224,6 +295,64 @@ export default function VideoEditorPage() {
         }
     };
 
+    const handleTrimStart = (clipId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setDragMode('trim-start');
+        setDragClipId(clipId);
+        setDragStartX(e.clientX);
+        setSelectedClipId(clipId);
+    };
+
+    const handleTrimEnd = (clipId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setDragMode('trim-end');
+        setDragClipId(clipId);
+        setDragStartX(e.clientX);
+        setSelectedClipId(clipId);
+    };
+
+    const handleClipDragStart = (clipId: string, e: React.MouseEvent) => {
+        if ((e.target as HTMLElement).classList.contains('trim-handle')) return;
+        setDragMode('move');
+        setDragClipId(clipId);
+        setDragStartX(e.clientX);
+        setSelectedClipId(clipId);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!dragMode || !dragClipId) return;
+
+        const deltaX = e.clientX - dragStartX;
+        const pixelsPerSecond = 100 * zoom;
+        const deltaTime = deltaX / pixelsPerSecond;
+
+        const clip = clips.find(c => c.id === dragClipId);
+        if (!clip) return;
+
+        if (dragMode === 'trim-start') {
+            const newStart = Math.max(0, Math.min(clip.end - 0.1, clip.start + deltaTime));
+            setClips(clips.map(c => 
+                c.id === dragClipId 
+                    ? { ...c, start: newStart, duration: c.end - newStart }
+                    : c
+            ));
+            setDragStartX(e.clientX);
+        } else if (dragMode === 'trim-end') {
+            const newEnd = Math.min(duration, Math.max(clip.start + 0.1, clip.end + deltaTime));
+            setClips(clips.map(c => 
+                c.id === dragClipId 
+                    ? { ...c, end: newEnd, duration: newEnd - c.start }
+                    : c
+            ));
+            setDragStartX(e.clientX);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setDragMode(null);
+        setDragClipId(null);
+    };
+
     return (
         <div className={`min-h-screen ${palette.page}`}>
             {/* Top Toolbar */}
@@ -231,12 +360,15 @@ export default function VideoEditorPage() {
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                         <h1 className="text-xl font-bold">Video Editor</h1>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                             <Undo className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                             <Redo className="h-4 w-4" />
                         </Button>
+                        <span className={`text-xs ${palette.subtle} ml-4`}>
+                            ⌨️ Space=Play | S=Split | Delete=Remove | ←→=Seek
+                        </span>
                     </div>
                     
                     <div className="flex items-center gap-2">
@@ -393,6 +525,9 @@ export default function VideoEditorPage() {
                                     onLoadedMetadata={handleLoadedMetadata}
                                 />
 
+                                {/* Hidden canvas for thumbnail generation */}
+                                <canvas ref={canvasRef} className="hidden" />
+
                                 {/* Text Overlays */}
                                 {textOverlays.map((overlay) => (
                                     <div
@@ -524,6 +659,9 @@ export default function VideoEditorPage() {
                             ref={timelineRef} 
                             className="flex-1 overflow-x-auto overflow-y-hidden cursor-crosshair"
                             onClick={handleTimelineClick}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onMouseLeave={handleMouseUp}
                         >
                             <div className="relative h-full min-w-full" style={{ width: `${getTimelineWidth()}px` }}>
                                 {/* Time markers */}
@@ -548,30 +686,46 @@ export default function VideoEditorPage() {
                                         {clips.map((clip, index) => {
                                             const pos = getClipPosition(clip);
                                             const isSelected = selectedClipId === clip.id;
+                                            const isHovered = hoveredClipId === clip.id;
                                             return (
                                                 <div
                                                     key={clip.id}
-                                                    className={`absolute h-full rounded cursor-pointer transition-all overflow-hidden ${
+                                                    className={`absolute h-full rounded cursor-move transition-all overflow-hidden group ${
                                                         isSelected
-                                                            ? 'ring-2 ring-indigo-400 shadow-lg'
-                                                            : 'hover:ring-2 hover:ring-indigo-400/50'
+                                                            ? 'ring-2 ring-indigo-400 shadow-lg z-10'
+                                                            : isHovered 
+                                                            ? 'ring-2 ring-indigo-400/50' 
+                                                            : ''
                                                     }`}
                                                     style={{
                                                         left: `${pos.left}px`,
                                                         width: `${pos.width}px`,
                                                         background: isSelected 
                                                             ? 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
-                                                            : 'linear-gradient(135deg, rgba(99, 102, 241, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%)',
+                                                            : 'linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(59, 130, 246, 0.85) 100%)',
                                                     }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setSelectedClipId(clip.id);
                                                     }}
+                                                    onMouseDown={(e) => handleClipDragStart(clip.id, e)}
+                                                    onMouseEnter={() => setHoveredClipId(clip.id)}
+                                                    onMouseLeave={() => setHoveredClipId(null)}
                                                 >
-                                                    <div className="px-3 h-full flex items-center justify-between text-white">
+                                                    {/* Trim handle - START */}
+                                                    <div
+                                                        className="trim-handle absolute left-0 top-0 bottom-0 w-2 bg-yellow-400 cursor-ew-resize hover:w-3 transition-all z-20 opacity-0 group-hover:opacity-100"
+                                                        onMouseDown={(e) => handleTrimStart(clip.id, e)}
+                                                        style={{ touchAction: 'none' }}
+                                                    >
+                                                        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-yellow-600" />
+                                                    </div>
+
+                                                    {/* Clip content */}
+                                                    <div className="px-3 h-full flex items-center justify-between text-white pointer-events-none">
                                                         <div className="flex flex-col flex-1 min-w-0">
                                                             <span className="font-semibold text-sm truncate">Clip {index + 1}</span>
-                                                            <span className="text-xs opacity-90">
+                                                            <span className="text-xs opacity-90 font-mono">
                                                                 {formatTime(clip.start)} - {formatTime(clip.end)}
                                                             </span>
                                                         </div>
@@ -579,7 +733,7 @@ export default function VideoEditorPage() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-7 w-7 hover:bg-white/20 flex-shrink-0 ml-2"
+                                                                className="h-7 w-7 hover:bg-white/20 flex-shrink-0 ml-2 pointer-events-auto"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     deleteClip(clip.id);
@@ -589,6 +743,22 @@ export default function VideoEditorPage() {
                                                             </Button>
                                                         )}
                                                     </div>
+
+                                                    {/* Trim handle - END */}
+                                                    <div
+                                                        className="trim-handle absolute right-0 top-0 bottom-0 w-2 bg-yellow-400 cursor-ew-resize hover:w-3 transition-all z-20 opacity-0 group-hover:opacity-100"
+                                                        onMouseDown={(e) => handleTrimEnd(clip.id, e)}
+                                                        style={{ touchAction: 'none' }}
+                                                    >
+                                                        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-yellow-600" />
+                                                    </div>
+
+                                                    {/* Duration indicator on hover */}
+                                                    {isHovered && (
+                                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/90 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap pointer-events-none">
+                                                            {formatTime(clip.duration)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
