@@ -69,16 +69,6 @@ export default function VideoEditorPage() {
             setVideoFile(file);
             const url = URL.createObjectURL(file);
             setVideoUrl(url);
-            
-            // Create initial clip with full video
-            const newClip: VideoClip = {
-                id: Date.now().toString(),
-                start: 0,
-                end: 0,
-                duration: 0,
-            };
-            setClips([newClip]);
-            setSelectedClipId(newClip.id);
         }
     };
 
@@ -112,15 +102,15 @@ export default function VideoEditorPage() {
             const dur = videoRef.current.duration;
             setDuration(dur);
             
-            // Update first clip with actual duration
-            if (clips.length > 0) {
-                const updatedClips = clips.map(clip => ({
-                    ...clip,
-                    end: dur,
-                    duration: dur,
-                }));
-                setClips(updatedClips);
-            }
+            // Create initial clip with full video duration
+            const initialClip: VideoClip = {
+                id: Date.now().toString(),
+                start: 0,
+                end: dur,
+                duration: dur,
+            };
+            setClips([initialClip]);
+            setSelectedClipId(initialClip.id);
         }
     };
 
@@ -208,15 +198,30 @@ export default function VideoEditorPage() {
     }, [playbackSpeed]);
 
     const getTimelineWidth = () => {
-        return duration * zoom * 100; // pixels per second * zoom
+        if (duration === 0) return 0;
+        return Math.max(duration * zoom * 100, 2000); // minimum 2000px
     };
 
     const getClipPosition = (clip: VideoClip) => {
         const pixelsPerSecond = 100 * zoom;
         return {
             left: clip.start * pixelsPerSecond,
-            width: (clip.end - clip.start) * pixelsPerSecond,
+            width: Math.max((clip.end - clip.start) * pixelsPerSecond, 50), // minimum 50px
         };
+    };
+
+    const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!timelineRef.current || selectedTool !== "split") return;
+        
+        const rect = timelineRef.current.getBoundingClientRect();
+        const clickX = e.clientX - rect.left + timelineRef.current.scrollLeft;
+        const pixelsPerSecond = 100 * zoom;
+        const clickTime = clickX / pixelsPerSecond;
+        
+        if (clickTime >= 0 && clickTime <= duration && videoRef.current) {
+            videoRef.current.currentTime = clickTime;
+            setCurrentTime(clickTime);
+        }
     };
 
     return (
@@ -253,10 +258,10 @@ export default function VideoEditorPage() {
                 <div className={`w-64 border-r ${palette.border} p-4 overflow-y-auto`}>
                     <div className="space-y-4">
                         <div>
-                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>NÁSTROJE</h3>
+                            <h3 className={`text-sm font-semibold mb-3 uppercase ${palette.muted}`}>Nástroje</h3>
                             <div className="space-y-1">
                                 <Button
-                                    variant={selectedTool === "select" ? "secondary" : "ghost"}
+                                    variant={selectedTool === "select" ? "default" : "ghost"}
                                     className="w-full justify-start"
                                     onClick={() => setSelectedTool("select")}
                                 >
@@ -264,7 +269,7 @@ export default function VideoEditorPage() {
                                     Výběr
                                 </Button>
                                 <Button
-                                    variant={selectedTool === "split" ? "secondary" : "ghost"}
+                                    variant={selectedTool === "split" ? "default" : "ghost"}
                                     className="w-full justify-start"
                                     onClick={() => setSelectedTool("split")}
                                 >
@@ -272,7 +277,7 @@ export default function VideoEditorPage() {
                                     Střih
                                 </Button>
                                 <Button
-                                    variant={selectedTool === "text" ? "secondary" : "ghost"}
+                                    variant={selectedTool === "text" ? "default" : "ghost"}
                                     className="w-full justify-start"
                                     onClick={() => setSelectedTool("text")}
                                 >
@@ -283,7 +288,7 @@ export default function VideoEditorPage() {
                         </div>
 
                         <div>
-                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>EFEKTY</h3>
+                            <h3 className={`text-sm font-semibold mb-3 uppercase ${palette.muted}`}>Efekty</h3>
                             <div className="grid grid-cols-2 gap-2">
                                 {effects.slice(0, 6).map((effect) => (
                                     <Button
@@ -291,7 +296,7 @@ export default function VideoEditorPage() {
                                         variant={selectedEffect === effect.id ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setSelectedEffect(effect.id)}
-                                        className="text-xs"
+                                        className="text-xs h-8"
                                     >
                                         {effect.name}
                                     </Button>
@@ -300,7 +305,7 @@ export default function VideoEditorPage() {
                         </div>
 
                         <div>
-                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>RYCHLOST</h3>
+                            <h3 className={`text-sm font-semibold mb-3 uppercase ${palette.muted}`}>Rychlost</h3>
                             <div className="grid grid-cols-3 gap-2">
                                 {[0.5, 1, 2].map((speed) => (
                                     <Button
@@ -308,6 +313,7 @@ export default function VideoEditorPage() {
                                         variant={playbackSpeed === speed ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setPlaybackSpeed(speed)}
+                                        className="h-8"
                                     >
                                         {speed}x
                                     </Button>
@@ -317,7 +323,7 @@ export default function VideoEditorPage() {
 
                         {selectedTool === "text" && (
                             <div>
-                                <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>TEXTOVÉ VRSTVY</h3>
+                                <h3 className={`text-sm font-semibold mb-3 uppercase ${palette.muted}`}>Textové vrstvy</h3>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -331,11 +337,11 @@ export default function VideoEditorPage() {
                                     {textOverlays.map((overlay) => (
                                         <Card key={overlay.id} className="p-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs truncate">{overlay.text}</span>
+                                                <span className="text-xs truncate flex-1">{overlay.text}</span>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-6 w-6"
+                                                    className="h-6 w-6 flex-shrink-0"
                                                     onClick={() => setTextOverlays(textOverlays.filter(t => t.id !== overlay.id))}
                                                 >
                                                     <Trash2 className="h-3 w-3" />
@@ -480,32 +486,55 @@ export default function VideoEditorPage() {
                     <div className="h-full flex flex-col">
                         {/* Timeline Controls */}
                         <div className={`flex items-center justify-between px-4 py-2 border-b ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
-                            <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}>
+                            <div className="flex items-center gap-3">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}
+                                    className="h-8"
+                                >
                                     <ZoomOut className="h-4 w-4" />
                                 </Button>
-                                <span className="text-sm font-mono w-16 text-center">{Math.round(zoom * 100)}%</span>
-                                <Button variant="ghost" size="icon" onClick={() => setZoom(Math.min(5, zoom + 0.5))}>
+                                <span className="text-sm font-mono w-20 text-center font-semibold">
+                                    {Math.round(zoom * 100)}% zoom
+                                </span>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setZoom(Math.min(5, zoom + 0.5))}
+                                    className="h-8"
+                                >
                                     <ZoomIn className="h-4 w-4" />
                                 </Button>
                             </div>
-                            <div className="text-sm">
-                                <span className={palette.muted}>{clips.length} úsek{clips.length !== 1 ? 'y' : ''}</span>
+                            <div className="flex items-center gap-3">
+                                {selectedTool === "split" && (
+                                    <span className={`text-xs ${palette.muted} italic`}>
+                                        💡 Klikni na timeline pro pozici střihu
+                                    </span>
+                                )}
+                                <span className={`text-sm font-medium ${palette.muted}`}>
+                                    {clips.length} {clips.length === 1 ? 'úsek' : clips.length < 5 ? 'úseky' : 'úseků'}
+                                </span>
                             </div>
                         </div>
 
                         {/* Timeline Tracks */}
-                        <div ref={timelineRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+                        <div 
+                            ref={timelineRef} 
+                            className="flex-1 overflow-x-auto overflow-y-hidden cursor-crosshair"
+                            onClick={handleTimelineClick}
+                        >
                             <div className="relative h-full min-w-full" style={{ width: `${getTimelineWidth()}px` }}>
                                 {/* Time markers */}
                                 <div className={`absolute top-0 left-0 right-0 h-8 border-b ${isDark ? 'border-white/5' : 'border-slate-200'} flex`}>
-                                    {Array.from({ length: Math.ceil(duration) }).map((_, i) => (
+                                    {Array.from({ length: Math.ceil(duration) + 1 }).map((_, i) => (
                                         <div
                                             key={i}
                                             className={`relative border-l ${isDark ? 'border-white/10' : 'border-slate-300'}`}
                                             style={{ width: `${100 * zoom}px` }}
                                         >
-                                            <span className={`absolute top-1 left-1 text-xs ${palette.subtle}`}>
+                                            <span className={`absolute top-1 left-1 text-xs font-mono ${palette.subtle}`}>
                                                 {formatTime(i)}
                                             </span>
                                         </div>
@@ -513,37 +542,52 @@ export default function VideoEditorPage() {
                                 </div>
 
                                 {/* Video track */}
-                                <div className="absolute top-8 left-0 right-0 h-16 px-2 py-2">
-                                    <div className="relative h-full">
-                                        {clips.map((clip) => {
+                                <div className="absolute top-10 left-0 right-0 h-20 px-2">
+                                    <div className={`text-xs font-medium mb-1 ${palette.muted}`}>Video Track</div>
+                                    <div className="relative h-16">
+                                        {clips.map((clip, index) => {
                                             const pos = getClipPosition(clip);
+                                            const isSelected = selectedClipId === clip.id;
                                             return (
                                                 <div
                                                     key={clip.id}
-                                                    className={`absolute h-full rounded-lg cursor-pointer transition-all ${
-                                                        selectedClipId === clip.id
-                                                            ? 'ring-2 ring-indigo-500 bg-gradient-to-r from-indigo-600 to-blue-600'
-                                                            : 'bg-gradient-to-r from-indigo-700/80 to-blue-700/80 hover:from-indigo-600/90 hover:to-blue-600/90'
+                                                    className={`absolute h-full rounded cursor-pointer transition-all overflow-hidden ${
+                                                        isSelected
+                                                            ? 'ring-2 ring-indigo-400 shadow-lg'
+                                                            : 'hover:ring-2 hover:ring-indigo-400/50'
                                                     }`}
                                                     style={{
                                                         left: `${pos.left}px`,
                                                         width: `${pos.width}px`,
+                                                        background: isSelected 
+                                                            ? 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
+                                                            : 'linear-gradient(135deg, rgba(99, 102, 241, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%)',
                                                     }}
-                                                    onClick={() => setSelectedClipId(clip.id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedClipId(clip.id);
+                                                    }}
                                                 >
-                                                    <div className="px-3 py-2 h-full flex items-center justify-between text-white text-sm">
-                                                        <span className="font-medium truncate">Video clip</span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 hover:bg-white/20"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                deleteClip(clip.id);
-                                                            }}
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </Button>
+                                                    <div className="px-3 h-full flex items-center justify-between text-white">
+                                                        <div className="flex flex-col flex-1 min-w-0">
+                                                            <span className="font-semibold text-sm truncate">Clip {index + 1}</span>
+                                                            <span className="text-xs opacity-90">
+                                                                {formatTime(clip.start)} - {formatTime(clip.end)}
+                                                            </span>
+                                                        </div>
+                                                        {clips.length > 1 && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 hover:bg-white/20 flex-shrink-0 ml-2"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    deleteClip(clip.id);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -556,7 +600,8 @@ export default function VideoEditorPage() {
                                     className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-50"
                                     style={{ left: `${currentTime * 100 * zoom}px` }}
                                 >
-                                    <div className="absolute -top-1 -left-2 w-4 h-4 bg-red-500 rounded-full" />
+                                    <div className="absolute -top-1 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-lg" />
+                                    <div className="absolute top-3 -left-3 w-6 h-6 bg-red-500/20 rounded-full animate-ping" />
                                 </div>
                             </div>
                         </div>
