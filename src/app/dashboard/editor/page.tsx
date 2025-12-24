@@ -499,24 +499,27 @@ export default function VideoEditorPage() {
                             <div className="space-y-1">
                                 <Button
                                     variant={selectedTool === "select" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
+                                    className={`w-full justify-start font-medium ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("select")}
+                                    style={!isDark && selectedTool !== "select" ? { color: '#0f172a' } : undefined}
                                 >
                                     <Layers className="h-4 w-4 mr-2" />
                                     Výběr
                                 </Button>
                                 <Button
                                     variant={selectedTool === "split" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
+                                    className={`w-full justify-start font-medium ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("split")}
+                                    style={!isDark && selectedTool !== "split" ? { color: '#0f172a' } : undefined}
                                 >
                                     <Scissors className="h-4 w-4 mr-2" />
                                     Střih
                                 </Button>
                                 <Button
                                     variant={selectedTool === "text" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
+                                    className={`w-full justify-start font-medium ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("text")}
+                                    style={!isDark && selectedTool !== "text" ? { color: '#0f172a' } : undefined}
                                 >
                                     <Type className="h-4 w-4 mr-2" />
                                     Text
@@ -533,7 +536,8 @@ export default function VideoEditorPage() {
                                         variant={selectedEffect === effect.id ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setSelectedEffect(effect.id)}
-                                        className={`text-xs h-8 ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}`}
+                                        className={`text-xs h-8 font-medium ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 bg-white hover:bg-slate-100'}`}
+                                        style={!isDark && selectedEffect !== effect.id ? { color: '#0f172a', borderColor: '#cbd5e1' } : undefined}
                                     >
                                         {effect.name}
                                     </Button>
@@ -550,7 +554,8 @@ export default function VideoEditorPage() {
                                         variant={playbackSpeed === speed ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setPlaybackSpeed(speed)}
-                                        className={`h-8 ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}`}
+                                        className={`h-8 font-medium ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 bg-white hover:bg-slate-100'}`}
+                                        style={!isDark && playbackSpeed !== speed ? { color: '#0f172a', borderColor: '#cbd5e1' } : undefined}
                                     >
                                         {speed}x
                                     </Button>
