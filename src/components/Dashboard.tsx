@@ -359,12 +359,16 @@ export function Dashboard() {
   const detailsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (selected) {
+    if (!selected) return;
+
+    const id = window.setTimeout(() => {
       detailsRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    }
+    }, 0);
+
+    return () => window.clearTimeout(id);
   }, [selected]);
 
   // initial connected check
@@ -832,7 +836,7 @@ export function Dashboard() {
               </div>
             )}
 
-            {mediaPaging?.cursors?.after ? (
+            {mediaPaging?.next ? (
               <div>
                 <button
                   className={connectButtonClass}
@@ -843,184 +847,195 @@ export function Dashboard() {
                 </button>
               </div>
             ) : null}
-          </div>
-        )}
-        {/* Inline media details (instead of modal) */}
-        {selected && (
-          <div ref={detailsRef} className={`${softCardClass} p-5 space-y-4`}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-lg font-semibold">Media details</div>
-                <div className="text-xs opacity-70">
-                  {selected.media_product_type ??
-                    selected.media_type ??
-                    "MEDIA"}{" "}
-                  • {formatTimestamp(selected.timestamp)}
-                </div>
-              </div>
-
-              <button
-                className={`px-3 py-2 text-sm rounded-full border ${palette.border}`}
-                onClick={() => {
-                  setSelected(null);
-                  setSelectedInsights(null);
-                  setSelectedError(null);
-                }}
+            {/* Inline media details (instead of modal) */}
+            {selected && (
+              <div
+                ref={detailsRef}
+                className={`${softCardClass} p-5 space-y-4`}
+                style={{ scrollMarginTop: 24 }}
               >
-                Close
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* left: preview + caption */}
-              <div className={`${softCardClass} p-3 space-y-3`}>
-                <div className="rounded-xl overflow-hidden bg-slate-200/40">
-                  {selected.media_url ? (
-                    selected.media_type === "VIDEO" ||
-                    selected.media_product_type === "REELS" ? (
-                      <video
-                        controls
-                        className="w-full h-auto"
-                        src={selected.media_url}
-                      />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={selected.media_url}
-                        alt={selected.id}
-                        className="w-full h-auto object-cover"
-                      />
-                    )
-                  ) : selected.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={selected.thumbnail_url}
-                      alt={selected.id}
-                      className="w-full h-auto object-cover"
-                    />
-                  ) : null}
-                </div>
-
-                {selected.caption ? (
-                  <div className="text-sm whitespace-pre-wrap">
-                    {selected.caption}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-lg font-semibold">Media details</div>
+                    <div className="text-xs opacity-70">
+                      {selected.media_product_type ??
+                        selected.media_type ??
+                        "MEDIA"}{" "}
+                      • {formatTimestamp(selected.timestamp)}
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-sm opacity-60">No caption</div>
-                )}
 
-                {selected.permalink ? (
-                  <a
-                    href={selected.permalink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm opacity-80 break-all underline"
+                  <button
+                    className={`px-3 py-2 text-sm rounded-full border ${palette.border}`}
+                    onClick={() => {
+                      setSelected(null);
+                      setSelectedInsights(null);
+                      setSelectedError(null);
+                    }}
                   >
-                    Open on Instagram
-                  </a>
-                ) : null}
-              </div>
-
-              {/* right: insights */}
-              <div className={`${softCardClass} p-3 space-y-3`}>
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">Insights</div>
-                  {selectedLoading ? (
-                    <div className="text-sm opacity-70">Loading…</div>
-                  ) : null}
+                    Close
+                  </button>
                 </div>
 
-                {selectedError && (
-                  <div className="text-red-500">{selectedError}</div>
-                )}
-
-                {selectedInsights && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {selectedInsights.result.baseInsights.map((m) => {
-                        const last = m.values?.at(-1)?.value ?? null;
-                        return (
-                          <div
-                            key={`${m.name}:${m.period}`}
-                            className={`rounded-xl border ${palette.border} p-3`}
-                          >
-                            <div className="text-xs opacity-70">
-                              {metricLabel(m)}
-                            </div>
-                            <div className="text-lg font-semibold">
-                              {formatInsightValue(last)}
-                            </div>
-                          </div>
-                        );
-                      })}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* left: preview + caption */}
+                  <div className={`${softCardClass} p-3 space-y-3`}>
+                    <div className="rounded-xl overflow-hidden bg-slate-200/40">
+                      {selected.media_url ? (
+                        selected.media_type === "VIDEO" ||
+                        selected.media_product_type === "REELS" ? (
+                          <video
+                            controls
+                            className="w-full h-auto"
+                            src={selected.media_url}
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={selected.media_url}
+                            alt={selected.id}
+                            className="w-full h-auto object-cover"
+                          />
+                        )
+                      ) : selected.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={selected.thumbnail_url}
+                          alt={selected.id}
+                          className="w-full h-auto object-cover"
+                        />
+                      ) : null}
                     </div>
 
-                    {selectedInsights.result.breakdowns.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="text-sm font-semibold">Breakdowns</div>
-
-                        {selectedInsights.result.breakdowns.map((b, idx) => {
-                          if (b.kind === "breakdown_error") {
-                            const msg =
-                              typeof b.error === "string"
-                                ? b.error
-                                : pickErrorMessage(b.error) ??
-                                  "Breakdown failed";
-                            return (
-                              <div key={idx} className="text-sm text-red-500">
-                                {b.metric} ({b.breakdown}): {msg}
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <div
-                              key={idx}
-                              className={`rounded-xl border ${palette.border} p-3`}
-                            >
-                              <div className="text-xs opacity-70">
-                                {b.metric} • {b.breakdown}
-                              </div>
-
-                              {b.insights.length === 0 ? (
-                                <div className="text-sm opacity-60">
-                                  No breakdown data
-                                </div>
-                              ) : (
-                                <div className="mt-2 space-y-2">
-                                  {b.insights.map((m) => {
-                                    const last =
-                                      m.values?.at(-1)?.value ?? null;
-                                    return (
-                                      <div
-                                        key={`${m.name}:${m.period}`}
-                                        className="flex items-center justify-between gap-3 text-sm"
-                                      >
-                                        <span className="opacity-80">
-                                          {metricLabel(m)}
-                                        </span>
-                                        <b>{formatInsightValue(last)}</b>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                    {selected.caption ? (
+                      <div className="text-sm whitespace-pre-wrap">
+                        {selected.caption}
                       </div>
+                    ) : (
+                      <div className="text-sm opacity-60">No caption</div>
                     )}
 
-                    {selectedInsights.result.droppedMetrics.length > 0 ? (
-                      <div className="text-xs opacity-70">
-                        Dropped metrics:{" "}
-                        {selectedInsights.result.droppedMetrics.join(", ")}
-                      </div>
+                    {selected.permalink ? (
+                      <a
+                        href={selected.permalink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm opacity-80 break-all underline"
+                      >
+                        Open on Instagram
+                      </a>
                     ) : null}
                   </div>
-                )}
+
+                  {/* right: insights */}
+                  <div className={`${softCardClass} p-3 space-y-3`}>
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold">Insights</div>
+                      {selectedLoading ? (
+                        <div className="text-sm opacity-70">Loading…</div>
+                      ) : null}
+                    </div>
+
+                    {selectedError && (
+                      <div className="text-red-500">{selectedError}</div>
+                    )}
+
+                    {selectedInsights && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {selectedInsights.result.baseInsights.map((m) => {
+                            const last = m.values?.at(-1)?.value ?? null;
+                            return (
+                              <div
+                                key={`${m.name}:${m.period}`}
+                                className={`rounded-xl border ${palette.border} p-3`}
+                              >
+                                <div className="text-xs opacity-70">
+                                  {metricLabel(m)}
+                                </div>
+                                <div className="text-lg font-semibold">
+                                  {formatInsightValue(last)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {selectedInsights.result.breakdowns.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-sm font-semibold">
+                              Breakdowns
+                            </div>
+
+                            {selectedInsights.result.breakdowns.map(
+                              (b, idx) => {
+                                if (b.kind === "breakdown_error") {
+                                  const msg =
+                                    typeof b.error === "string"
+                                      ? b.error
+                                      : pickErrorMessage(b.error) ??
+                                        "Breakdown failed";
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="text-sm text-red-500"
+                                    >
+                                      {b.metric} ({b.breakdown}): {msg}
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`rounded-xl border ${palette.border} p-3`}
+                                  >
+                                    <div className="text-xs opacity-70">
+                                      {b.metric} • {b.breakdown}
+                                    </div>
+
+                                    {b.insights.length === 0 ? (
+                                      <div className="text-sm opacity-60">
+                                        No breakdown data
+                                      </div>
+                                    ) : (
+                                      <div className="mt-2 space-y-2">
+                                        {b.insights.map((m) => {
+                                          const last =
+                                            m.values?.at(-1)?.value ?? null;
+                                          return (
+                                            <div
+                                              key={`${m.name}:${m.period}`}
+                                              className="flex items-center justify-between gap-3 text-sm"
+                                            >
+                                              <span className="opacity-80">
+                                                {metricLabel(m)}
+                                              </span>
+                                              <b>{formatInsightValue(last)}</b>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        )}
+
+                        {selectedInsights.result.droppedMetrics.length > 0 ? (
+                          <div className="text-xs opacity-70">
+                            Dropped metrics:{" "}
+                            {selectedInsights.result.droppedMetrics.join(", ")}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
