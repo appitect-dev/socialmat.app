@@ -64,13 +64,13 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
 
   return (
     <nav
-      className={`backdrop-blur-xl sticky top-0 z-50 ${palette.nav.container}`}
+      className={`backdrop-blur-xl absolute top-0 left-0 right-0 z-[60] ${palette.nav.container}`}
     >
       <div className="max-w-7xl mx-auto px-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo + sidebar toggle */}
           <div className="flex items-center space-x-3">
-            {!sidebarOpen && (
+            <Link href="/" className="flex items-center space-x-2">
               <span
                 className={`text-xl font-bold ${
                   isDark ? "text-white" : "text-slate-900"
@@ -82,26 +82,22 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
               >
                 SocialMat
               </span>
-            )}
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Zobrazit sidebar"
-                className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-md  transition-colors ${
-                  isDark
-                    ? "text-white border-white/15 bg-black/60 hover:bg-white/10"
-                    : "text-slate-800 border-slate-200 bg-white/90 hover:bg-slate-100"
-                }`}
-              >
-                <ChevronsRight className="w-5 h-5" />
-              </button>
-            )}
-            <Link
-              href="/"
-              className={`flex items-center space-x-2 transition-all duration-300 ease-in-out ${
-                sidebarOpen ? "md:opacity-0 md:pointer-events-none" : ""
+            </Link>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? "Skrýt sidebar" : "Zobrazit sidebar"}
+              className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-md transition-colors ${
+                isDark
+                  ? "text-white border-white/15 bg-black/60 hover:bg-white/10"
+                  : "text-slate-800 border-slate-200 bg-white/90 hover:bg-slate-100"
               }`}
-            ></Link>
+            >
+              {sidebarOpen ? (
+                <ChevronsLeft className="w-5 h-5" />
+              ) : (
+                <ChevronsRight className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
           {/* Desktop actions */}

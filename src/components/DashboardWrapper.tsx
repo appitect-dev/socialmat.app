@@ -2,6 +2,7 @@
 
 import { useState, useEffect, createContext, useContext } from "react";
 import { Sidebar } from "./Sidebar";
+import { useDashboardTheme } from "./dashboard-theme";
 
 const SIDEBAR_STORAGE_KEY = "dashboard-sidebar-open";
 
@@ -21,6 +22,7 @@ export function useSidebar() {
 }
 
 export function DashboardWrapper({ children }: { children: React.ReactNode }) {
+  const { isDark } = useDashboardTheme();
   const [isOpen, setIsOpen] = useState(true);
 
   // Load sidebar state from localStorage on mount
@@ -37,15 +39,17 @@ export function DashboardWrapper({ children }: { children: React.ReactNode }) {
   }, [isOpen]);
 
   const sidebarWidth = isOpen ? "md:pl-64" : "md:pl-0";
-  const contentTransition = isOpen
-    ? "transition-[padding] duration-300 ease-in-out"
-    : "";
+  const contentTransition = "transition-[padding] duration-300 ease-in-out";
+
+  const wrapperBg = isDark ? "bg-black" : "bg-white";
 
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
-      <Sidebar />
-      <div className={`${sidebarWidth} ${contentTransition}`}>
-        {children}
+      <div className={`${wrapperBg} min-h-screen`}>
+        <Sidebar />
+        <div className={`${sidebarWidth} ${contentTransition} pt-16`}>
+          {children}
+        </div>
       </div>
     </SidebarContext.Provider>
   );

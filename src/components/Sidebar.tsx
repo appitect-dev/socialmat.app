@@ -7,8 +7,6 @@ import {
   LayoutDashboard,
   FolderKanban,
   Settings,
-  ChevronsLeft,
-  ChevronsRight,
   Brain,
   Film,
   Calendar,
@@ -28,7 +26,7 @@ const navLinks = [
 export function Sidebar() {
   const pathname = usePathname();
   const { isDark } = useDashboardTheme();
-  const { isOpen, setIsOpen } = useSidebar();
+  const { isOpen } = useSidebar();
 
   const sidebarWidth = "w-64";
   const sidebarBg = isDark ? "bg-black/70" : "bg-white";
@@ -45,50 +43,14 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`${sidebarWidth} ${sidebarBg} ${sidebarChrome} overflow-hidden backdrop-blur-xl fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out hidden md:flex flex-col ${
-        isOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+      className={`${sidebarWidth} ${sidebarBg} ${sidebarChrome} overflow-hidden backdrop-blur-xl fixed left-0 top-16 h-[calc(100vh-4rem)] z-40 transition-[transform,opacity] duration-300 ease-in-out hidden md:flex flex-col ${
+        isOpen
+          ? "translate-x-0 opacity-100"
+          : "-translate-x-full opacity-0 pointer-events-none"
       }`}
     >
-      {/* Logo + toggle */}
-      <div className="flex items-center h-16 border-inherit pl-6 pr-6 gap-3">
-        {isOpen ? (
-          <Link href="/" className="flex items-center space-x-2">
-            <span
-              className={`text-xl font-bold transition-opacity duration-200 ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
-              style={{
-                fontFamily:
-                  "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
-              }}
-            >
-              SocialMat
-            </span>
-          </Link>
-        ) : null}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? "Skrýt sidebar" : "Zobrazit sidebar"}
-          className={`inline-flex items-center justify-center w-9 h-9 rounded-md  transition-colors ml-auto ${
-            isDark
-              ? "text-white border-white/15 bg-black/50 hover:bg-white/10"
-              : "text-slate-800 border-slate-200 bg-white/90 hover:bg-slate-100"
-          }`}
-        >
-          {isOpen ? (
-            <ChevronsLeft className="w-5 h-5" />
-          ) : (
-            <ChevronsRight className="w-5 h-5" />
-          )}
-        </button>
-      </div>
-
       {/* Navigation Links */}
-      <nav
-        className={`flex-1 px-6 py-4 space-y-1 overflow-y-auto transition-opacity duration-200 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
+      <nav className="flex-1 px-6 py-6 space-y-1 overflow-y-auto">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
