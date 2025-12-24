@@ -45,7 +45,7 @@ export function DashboardWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
-      <div className={`${wrapperBg} min-h-screen`}>
+      <div className={`${wrapperBg} min-h-screen relative`}>
         <Sidebar />
         <div className={`${sidebarWidth} ${contentTransition} pt-16`}>
           {children}
