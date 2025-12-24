@@ -240,11 +240,11 @@ export default function VideoEditorPage() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className={isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}>
                             <Settings className="h-4 w-4 mr-2" />
                             Nastavení
                         </Button>
-                        <Button className={palette.accentButton}>
+                        <Button className={`${palette.accentButton} ${palette.accentButtonHover}`}>
                             <Download className="h-4 w-4 mr-2" />
                             Export
                         </Button>
@@ -262,7 +262,7 @@ export default function VideoEditorPage() {
                             <div className="space-y-1">
                                 <Button
                                     variant={selectedTool === "select" ? "default" : "ghost"}
-                                    className="w-full justify-start"
+                                    className={`w-full justify-start ${selectedTool !== "select" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
                                     onClick={() => setSelectedTool("select")}
                                 >
                                     <Layers className="h-4 w-4 mr-2" />
@@ -270,7 +270,7 @@ export default function VideoEditorPage() {
                                 </Button>
                                 <Button
                                     variant={selectedTool === "split" ? "default" : "ghost"}
-                                    className="w-full justify-start"
+                                    className={`w-full justify-start ${selectedTool !== "split" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
                                     onClick={() => setSelectedTool("split")}
                                 >
                                     <Scissors className="h-4 w-4 mr-2" />
@@ -278,7 +278,7 @@ export default function VideoEditorPage() {
                                 </Button>
                                 <Button
                                     variant={selectedTool === "text" ? "default" : "ghost"}
-                                    className="w-full justify-start"
+                                    className={`w-full justify-start ${selectedTool !== "text" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
                                     onClick={() => setSelectedTool("text")}
                                 >
                                     <Type className="h-4 w-4 mr-2" />
@@ -296,7 +296,7 @@ export default function VideoEditorPage() {
                                         variant={selectedEffect === effect.id ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setSelectedEffect(effect.id)}
-                                        className="text-xs h-8"
+                                        className={`text-xs h-8 ${selectedEffect !== effect.id && (isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100')}`}
                                     >
                                         {effect.name}
                                     </Button>
@@ -313,7 +313,7 @@ export default function VideoEditorPage() {
                                         variant={playbackSpeed === speed ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setPlaybackSpeed(speed)}
-                                        className="h-8"
+                                        className={`h-8 ${playbackSpeed !== speed && (isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100')}`}
                                     >
                                         {speed}x
                                     </Button>
@@ -327,7 +327,7 @@ export default function VideoEditorPage() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full"
+                                    className={`w-full ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}`}
                                     onClick={addTextOverlay}
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
@@ -341,7 +341,7 @@ export default function VideoEditorPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-6 w-6 flex-shrink-0"
+                                                    className={`h-6 w-6 flex-shrink-0 ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                                     onClick={() => setTextOverlays(textOverlays.filter(t => t.id !== overlay.id))}
                                                 >
                                                     <Trash2 className="h-3 w-3" />
@@ -425,13 +425,13 @@ export default function VideoEditorPage() {
                             <div className="max-w-5xl mx-auto">
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <Button size="icon" variant="ghost">
+                                        <Button size="icon" variant="ghost" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                                             <SkipBack className="h-5 w-5" />
                                         </Button>
                                         <Button 
                                             size="icon" 
                                             onClick={togglePlayPause}
-                                            className={palette.accentButton}
+                                            className={`${palette.accentButton} ${palette.accentButtonHover}`}
                                         >
                                             {isPlaying ? (
                                                 <Pause className="h-5 w-5" />
@@ -439,7 +439,7 @@ export default function VideoEditorPage() {
                                                 <Play className="h-5 w-5 ml-0.5" />
                                             )}
                                         </Button>
-                                        <Button size="icon" variant="ghost">
+                                        <Button size="icon" variant="ghost" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                                             <SkipForward className="h-5 w-5" />
                                         </Button>
                                     </div>
@@ -468,7 +468,7 @@ export default function VideoEditorPage() {
                                     </div>
 
                                     {selectedTool === "split" && (
-                                        <Button onClick={splitClip} variant="outline">
+                                        <Button onClick={splitClip} variant="outline" className={isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}>
                                             <Split className="h-4 w-4 mr-2" />
                                             Rozdělit
                                         </Button>
@@ -491,7 +491,7 @@ export default function VideoEditorPage() {
                                     variant="ghost" 
                                     size="sm"
                                     onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}
-                                    className="h-8"
+                                    className={`h-8 ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                 >
                                     <ZoomOut className="h-4 w-4" />
                                 </Button>
@@ -502,7 +502,7 @@ export default function VideoEditorPage() {
                                     variant="ghost" 
                                     size="sm"
                                     onClick={() => setZoom(Math.min(5, zoom + 0.5))}
-                                    className="h-8"
+                                    className={`h-8 ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                 >
                                     <ZoomIn className="h-4 w-4" />
                                 </Button>
