@@ -92,10 +92,20 @@ export default function VideoEditorPage() {
         if (videoRef.current) {
             if (isPlaying) {
                 videoRef.current.pause();
+                setIsPlaying(false);
             } else {
+                // When starting playback, ensure we're at start of a clip
+                const currentTime = videoRef.current.currentTime;
+                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                
+                if (!currentClip && clips.length > 0) {
+                    // Not in any clip, start from first clip
+                    videoRef.current.currentTime = clips[0].start;
+                }
+                
                 videoRef.current.play();
+                setIsPlaying(true);
             }
-            setIsPlaying(!isPlaying);
         }
     };
 
@@ -104,33 +114,42 @@ export default function VideoEditorPage() {
             const time = videoRef.current.currentTime;
             setCurrentTime(time);
             
-            // Check if current time is in a gap between clips
-            const sortedClips = [...clips].sort((a, b) => a.start - b.start);
-            const currentClip = sortedClips.find(c => time >= c.start && time <= c.end);
+            if (!isPlaying) return;
             
-            // If not in any clip, skip to next clip
-            if (!currentClip && isPlaying) {
-                const nextClip = sortedClips.find(c => c.start > time);
+            // Find current clip that contains this time
+            const currentClip = clips.find(c => time >= c.start && time < c.end);
+            
+            // If we're not in any clip, skip to next clip
+            if (!currentClip) {
+                const nextClip = clips.find(c => c.start > time);
+                if (nextClip) {
+                    videoRef.current.currentTime = nextClip.start;
+                    return;
+                } else {
+                    // No more clips, stop playback
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                    if (clips[0]) {
+                        videoRef.current.currentTime = clips[0].start;
+                    }
+                    return;
+                }
+            }
+            
+            // If we've reached end of current clip, jump to next
+            if (time >= currentClip.end - 0.01) {
+                const currentIndex = clips.indexOf(currentClip);
+                const nextClip = clips[currentIndex + 1];
+                
                 if (nextClip) {
                     videoRef.current.currentTime = nextClip.start;
                 } else {
                     // End of all clips
                     videoRef.current.pause();
                     setIsPlaying(false);
-                    videoRef.current.currentTime = sortedClips[0]?.start || 0;
-                }
-            }
-            
-            // If reached end of current clip, go to next
-            if (currentClip && time >= currentClip.end && isPlaying) {
-                const currentIndex = sortedClips.findIndex(c => c.id === currentClip.id);
-                const nextClip = sortedClips[currentIndex + 1];
-                if (nextClip) {
-                    videoRef.current.currentTime = nextClip.start;
-                } else {
-                    videoRef.current.pause();
-                    setIsPlaying(false);
-                    videoRef.current.currentTime = sortedClips[0]?.start || 0;
+                    if (clips[0]) {
+                        videoRef.current.currentTime = clips[0].start;
+                    }
                 }
             }
         }
@@ -179,8 +198,15 @@ export default function VideoEditorPage() {
         const clip = clips.find(c => c.id === selectedClipId);
         if (!clip || currentTime <= clip.start || currentTime >= clip.end) return;
 
+        // Pause video during split
+        if (videoRef.current && isPlaying) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+        }
+
         const newClip1: VideoClip = {
             ...clip,
+            id: clip.id,
             end: currentTime,
             duration: currentTime - clip.start,
         };
@@ -192,9 +218,10 @@ export default function VideoEditorPage() {
             duration: clip.end - currentTime,
         };
 
-        const newClips = clips.map(c => c.id === selectedClipId ? newClip1 : c);
-        const index = newClips.findIndex(c => c.id === selectedClipId);
-        newClips.splice(index + 1, 0, newClip2);
+        const clipIndex = clips.findIndex(c => c.id === selectedClipId);
+        const newClips = [...clips];
+        newClips[clipIndex] = newClip1;
+        newClips.splice(clipIndex + 1, 0, newClip2);
         
         setClips(newClips);
         setSelectedClipId(newClip2.id);
@@ -625,8 +652,17 @@ export default function VideoEditorPage() {
                                 ))}
 
                                 {/* Playhead indicator */}
-                                <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-mono">
-                                    {formatTime(currentTime)} / {formatTime(duration)}
+                                <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-mono flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+                                    <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                    {(() => {
+                                        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                                        if (currentClip) {
+                                            const clipIndex = clips.indexOf(currentClip);
+                                            return <span className="text-xs opacity-75">• Clip {clipIndex + 1}</span>;
+                                        }
+                                        return null;
+                                    })()}
                                 </div>
                             </div>
                         )}
@@ -723,11 +759,11 @@ export default function VideoEditorPage() {
                             <div className="flex items-center gap-3">
                                 {selectedTool === "split" && (
                                     <span className={`text-xs ${palette.muted} italic`}>
-                                        💡 Klikni na timeline pro pozici střihu
+                                        💡 Klikni na clip a stiskni S pro rozdělení
                                     </span>
                                 )}
                                 <span className={`text-sm font-medium ${palette.muted}`}>
-                                    {clips.length} {clips.length === 1 ? 'úsek' : clips.length < 5 ? 'úseky' : 'úseků'}
+                                    {clips.length} {clips.length === 1 ? 'úsek' : clips.length < 5 ? 'úseky' : 'úseků'} • {formatTime(clips.reduce((sum, c) => sum + (c.end - c.start), 0))} celkem
                                 </span>
                             </div>
                         </div>
