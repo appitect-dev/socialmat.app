@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Play,
     Pause,
@@ -13,58 +12,73 @@ import {
     Volume2,
     Download,
     Scissors,
-    Wand2,
     Type,
-    Image as ImageIcon,
-    Sparkles,
     Upload,
     Plus,
     Trash2,
-    Copy,
-    MoveUp,
-    MoveDown,
+    Undo,
+    Redo,
+    ZoomIn,
+    ZoomOut,
+    Settings,
+    Layers,
+    Split,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
+import { useDashboardTheme } from "@/components/dashboard-theme";
 
 interface VideoClip {
     id: string;
     start: number;
     end: number;
-    order: number;
+    duration: number;
+}
+
+interface TextOverlay {
+    id: string;
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    color: string;
 }
 
 export default function VideoEditorPage() {
+    const { isDark, palette } = useDashboardTheme();
+    
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState<string>("");
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [trimStart, setTrimStart] = useState(0);
-    const [trimEnd, setTrimEnd] = useState(100);
-    const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
+    const [selectedTool, setSelectedTool] = useState<string>("select");
     const [clips, setClips] = useState<VideoClip[]>([]);
     const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
+    const [zoom, setZoom] = useState(1);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
-    const [textOverlays, setTextOverlays] = useState<Array<{
-        id: string;
-        text: string;
-        x: number;
-        y: number;
-        fontSize: number;
-        color: string;
-        fontFamily: string;
-    }>>([]);
+    const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
+    const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const timelineRef = useRef<HTMLDivElement>(null);
 
     const onDrop = (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
-        if (file && file.type.startsWith("video/")) {
+        if (file) {
             setVideoFile(file);
             const url = URL.createObjectURL(file);
             setVideoUrl(url);
+            
+            // Create initial clip with full video
+            const newClip: VideoClip = {
+                id: Date.now().toString(),
+                start: 0,
+                end: 0,
+                duration: 0,
+            };
+            setClips([newClip]);
+            setSelectedClipId(newClip.id);
         }
     };
 
@@ -73,7 +87,7 @@ export default function VideoEditorPage() {
         accept: {
             "video/*": [".mp4", ".mov", ".avi", ".webm"],
         },
-        multiple: false,
+        maxFiles: 1,
     });
 
     const togglePlayPause = () => {
@@ -95,8 +109,18 @@ export default function VideoEditorPage() {
 
     const handleLoadedMetadata = () => {
         if (videoRef.current) {
-            setDuration(videoRef.current.duration);
-            setTrimEnd(videoRef.current.duration);
+            const dur = videoRef.current.duration;
+            setDuration(dur);
+            
+            // Update first clip with actual duration
+            if (clips.length > 0) {
+                const updatedClips = clips.map(clip => ({
+                    ...clip,
+                    end: dur,
+                    duration: dur,
+                }));
+                setClips(updatedClips);
+            }
         }
     };
 
@@ -114,99 +138,67 @@ export default function VideoEditorPage() {
         }
     };
 
-    const applyEffect = (effect: string) => {
-        setSelectedEffect(effect);
-    };
-
-    const addTextOverlay = () => {
-        const newText = {
-            id: Date.now().toString(),
-            text: "Přidat text",
-            x: 50,
-            y: 50,
-            fontSize: 32,
-            color: "#ffffff",
-            fontFamily: "Arial",
-        };
-        setTextOverlays([...textOverlays, newText]);
-    };
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const addClip = () => {
-        const newClip: VideoClip = {
-            id: Date.now().toString(),
-            start: trimStart,
-            end: trimEnd,
-            order: clips.length,
+    const splitClip = () => {
+        if (!selectedClipId) return;
+        
+        const clip = clips.find(c => c.id === selectedClipId);
+        if (!clip || currentTime <= clip.start || currentTime >= clip.end) return;
+
+        const newClip1: VideoClip = {
+            ...clip,
+            end: currentTime,
+            duration: currentTime - clip.start,
         };
-        setClips([...clips, newClip]);
-        setSelectedClipId(newClip.id);
+
+        const newClip2: VideoClip = {
+            id: Date.now().toString(),
+            start: currentTime,
+            end: clip.end,
+            duration: clip.end - currentTime,
+        };
+
+        const newClips = clips.map(c => c.id === selectedClipId ? newClip1 : c);
+        const index = newClips.findIndex(c => c.id === selectedClipId);
+        newClips.splice(index + 1, 0, newClip2);
+        
+        setClips(newClips);
+        setSelectedClipId(newClip2.id);
     };
 
     const deleteClip = (clipId: string) => {
-        setClips(clips.filter((c) => c.id !== clipId));
+        setClips(clips.filter(c => c.id !== clipId));
         if (selectedClipId === clipId) {
             setSelectedClipId(null);
         }
     };
 
-    const duplicateClip = (clipId: string) => {
-        const clip = clips.find((c) => c.id === clipId);
-        if (clip) {
-            const newClip: VideoClip = {
-                ...clip,
-                id: Date.now().toString(),
-                order: clips.length,
-            };
-            setClips([...clips, newClip]);
-        }
-    };
+    const effects = [
+        { id: "none", name: "Žádný", filter: "none" },
+        { id: "grayscale", name: "Černobílá", filter: "grayscale(100%)" },
+        { id: "sepia", name: "Sepia", filter: "sepia(100%)" },
+        { id: "blur", name: "Rozmazání", filter: "blur(5px)" },
+        { id: "brightness", name: "Světlost", filter: "brightness(1.5)" },
+        { id: "contrast", name: "Kontrast", filter: "contrast(1.5)" },
+        { id: "saturate", name: "Sytost", filter: "saturate(2)" },
+        { id: "vintage", name: "Vintage", filter: "sepia(50%) contrast(1.2) brightness(0.9)" },
+    ];
 
-    const moveClipUp = (clipId: string) => {
-        const index = clips.findIndex((c) => c.id === clipId);
-        if (index > 0) {
-            const newClips = [...clips];
-            [newClips[index - 1], newClips[index]] = [newClips[index], newClips[index - 1]];
-            newClips.forEach((clip, i) => (clip.order = i));
-            setClips(newClips);
-        }
-    };
-
-    const moveClipDown = (clipId: string) => {
-        const index = clips.findIndex((c) => c.id === clipId);
-        if (index < clips.length - 1) {
-            const newClips = [...clips];
-            [newClips[index], newClips[index + 1]] = [newClips[index + 1], newClips[index]];
-            newClips.forEach((clip, i) => (clip.order = i));
-            setClips(newClips);
-        }
-    };
-
-    const selectClip = (clipId: string) => {
-        const clip = clips.find((c) => c.id === clipId);
-        if (clip) {
-            setTrimStart(clip.start);
-            setTrimEnd(clip.end);
-            setSelectedClipId(clipId);
-            if (videoRef.current) {
-                videoRef.current.currentTime = clip.start;
-            }
-        }
-    };
-
-    const updateSelectedClip = () => {
-        if (selectedClipId) {
-            setClips(
-                clips.map((c) =>
-                    c.id === selectedClipId ? { ...c, start: trimStart, end: trimEnd } : c
-                )
-            );
-        }
+    const addTextOverlay = () => {
+        const newOverlay: TextOverlay = {
+            id: Date.now().toString(),
+            text: "Nový text",
+            x: 50,
+            y: 50,
+            fontSize: 32,
+            color: "#ffffff",
+        };
+        setTextOverlays([...textOverlays, newOverlay]);
     };
 
     useEffect(() => {
@@ -215,433 +207,362 @@ export default function VideoEditorPage() {
         }
     }, [playbackSpeed]);
 
-    const getTotalDuration = () => {
-        return clips.reduce((total, clip) => total + (clip.end - clip.start), 0);
+    const getTimelineWidth = () => {
+        return duration * zoom * 100; // pixels per second * zoom
     };
 
-    const effects = [
-        { id: "none", name: "Žádný", filter: "none" },
-        { id: "grayscale", name: "Černobílé", filter: "grayscale(100%)" },
-        { id: "sepia", name: "Sepia", filter: "sepia(100%)" },
-        { id: "blur", name: "Rozmazání", filter: "blur(5px)" },
-        { id: "brightness", name: "Jas", filter: "brightness(1.3)" },
-        { id: "contrast", name: "Kontrast", filter: "contrast(1.5)" },
-        { id: "saturate", name: "Saturace", filter: "saturate(2)" },
-        { id: "vintage", name: "Vintage", filter: "sepia(0.5) contrast(1.2)" },
-    ];
+    const getClipPosition = (clip: VideoClip) => {
+        const pixelsPerSecond = 100 * zoom;
+        return {
+            left: clip.start * pixelsPerSecond,
+            width: (clip.end - clip.start) * pixelsPerSecond,
+        };
+    };
 
     return (
-        <div className="h-full w-full p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Video Editor</h1>
-                    <p className="text-muted-foreground">
-                        Nahrát, střihat a upravit video profesionálně
-                    </p>
+        <div className={`min-h-screen ${palette.page}`}>
+            {/* Top Toolbar */}
+            <div className={`sticky top-0 z-50 ${isDark ? 'bg-black/90' : 'bg-white/90'} backdrop-blur-xl border-b ${palette.border}`}>
+                <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-xl font-bold">Video Editor</h1>
+                        <Button variant="ghost" size="icon">
+                            <Undo className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                            <Redo className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Nastavení
+                        </Button>
+                        <Button className={palette.accentButton}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export
+                        </Button>
+                    </div>
                 </div>
-                <Button size="lg" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Exportovat video
-                </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Video Area */}
-                <div className="lg:col-span-2 space-y-4">
-                    {/* Video Preview */}
-                    <Card className="p-6">
-                        {!videoUrl ? (
-                            <div
-                                {...getRootProps()}
-                                className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive
-                                        ? "border-primary bg-primary/5"
-                                        : "border-muted-foreground/25 hover:border-primary/50"
-                                    }`}
-                            >
-                                <input {...getInputProps()} />
-                                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                                <h3 className="text-lg font-semibold mb-2">
-                                    Nahrát video
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Přetáhněte video sem nebo klikněte pro výběr
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    Podporované formáty: MP4, MOV, AVI, WebM
-                                </p>
+            {/* Main Content */}
+            <div className="flex h-[calc(100vh-73px)]">
+                {/* Left Sidebar - Tools */}
+                <div className={`w-64 border-r ${palette.border} p-4 overflow-y-auto`}>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>NÁSTROJE</h3>
+                            <div className="space-y-1">
+                                <Button
+                                    variant={selectedTool === "select" ? "secondary" : "ghost"}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedTool("select")}
+                                >
+                                    <Layers className="h-4 w-4 mr-2" />
+                                    Výběr
+                                </Button>
+                                <Button
+                                    variant={selectedTool === "split" ? "secondary" : "ghost"}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedTool("split")}
+                                >
+                                    <Scissors className="h-4 w-4 mr-2" />
+                                    Střih
+                                </Button>
+                                <Button
+                                    variant={selectedTool === "text" ? "secondary" : "ghost"}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedTool("text")}
+                                >
+                                    <Type className="h-4 w-4 mr-2" />
+                                    Text
+                                </Button>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                                    <video
-                                        ref={videoRef}
-                                        src={videoUrl}
-                                        className="w-full h-full"
-                                        style={{
-                                            filter: effects.find((e) => e.id === selectedEffect)
-                                                ?.filter || "none",
-                                        }}
-                                        onTimeUpdate={handleTimeUpdate}
-                                        onLoadedMetadata={handleLoadedMetadata}
-                                    />
-                                    <canvas
-                                        ref={canvasRef}
-                                        className="absolute inset-0 pointer-events-none"
-                                    />
+                        </div>
 
-                                    {/* Text Overlays */}
+                        <div>
+                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>EFEKTY</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {effects.slice(0, 6).map((effect) => (
+                                    <Button
+                                        key={effect.id}
+                                        variant={selectedEffect === effect.id ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setSelectedEffect(effect.id)}
+                                        className="text-xs"
+                                    >
+                                        {effect.name}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>RYCHLOST</h3>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[0.5, 1, 2].map((speed) => (
+                                    <Button
+                                        key={speed}
+                                        variant={playbackSpeed === speed ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setPlaybackSpeed(speed)}
+                                    >
+                                        {speed}x
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {selectedTool === "text" && (
+                            <div>
+                                <h3 className={`text-sm font-semibold mb-3 ${palette.muted}`}>TEXTOVÉ VRSTVY</h3>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={addTextOverlay}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Přidat text
+                                </Button>
+                                <div className="mt-3 space-y-2">
                                     {textOverlays.map((overlay) => (
-                                        <div
-                                            key={overlay.id}
-                                            className="absolute"
-                                            style={{
-                                                left: `${overlay.x}%`,
-                                                top: `${overlay.y}%`,
-                                                fontSize: `${overlay.fontSize}px`,
-                                                color: overlay.color,
-                                                fontFamily: overlay.fontFamily,
-                                                textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                                                cursor: "move",
-                                            }}
-                                        >
-                                            {overlay.text}
-                                        </div>
+                                        <Card key={overlay.id} className="p-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs truncate">{overlay.text}</span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6"
+                                                    onClick={() => setTextOverlays(textOverlays.filter(t => t.id !== overlay.id))}
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        </Card>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                                {/* Timeline */}
-                                <div className="space-y-2">
-                                    <Slider
-                                        value={[currentTime]}
-                                        max={duration}
-                                        step={0.1}
-                                        onValueChange={handleSeek}
-                                        className="w-full"
-                                    />
-                                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                        <span>{formatTime(currentTime)}</span>
-                                        <span>{formatTime(duration)}</span>
-                                    </div>
+                {/* Center - Preview */}
+                <div className="flex-1 flex flex-col">
+                    {/* Preview Area */}
+                    <div className={`flex-1 flex items-center justify-center p-8 ${isDark ? 'bg-gradient-to-b from-black/20 to-black/40' : 'bg-gradient-to-b from-slate-50 to-slate-100'}`}>
+                        {!videoUrl ? (
+                            <Card className={`max-w-2xl w-full p-12 ${palette.card}`}>
+                                <div
+                                    {...getRootProps()}
+                                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${
+                                        isDragActive
+                                            ? `border-indigo-500 ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'}`
+                                            : `${palette.border} hover:border-indigo-500/50`
+                                    }`}
+                                >
+                                    <input {...getInputProps()} />
+                                    <Upload className={`h-16 w-16 mx-auto mb-4 ${palette.muted}`} />
+                                    <h3 className="text-2xl font-bold mb-2">Nahrajte video</h3>
+                                    <p className={`${palette.muted} mb-4`}>
+                                        Přetáhněte video sem nebo klikněte pro výběr
+                                    </p>
+                                    <p className={`text-sm ${palette.subtle}`}>
+                                        Podporované formáty: MP4, MOV, AVI, WebM
+                                    </p>
                                 </div>
+                            </Card>
+                        ) : (
+                            <div className="relative w-full max-w-5xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+                                <video
+                                    ref={videoRef}
+                                    src={videoUrl}
+                                    className="w-full h-full object-contain"
+                                    style={{
+                                        filter: effects.find((e) => e.id === selectedEffect)?.filter || "none",
+                                    }}
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onLoadedMetadata={handleLoadedMetadata}
+                                />
 
-                                {/* Controls */}
-                                <div className="flex items-center justify-between">
+                                {/* Text Overlays */}
+                                {textOverlays.map((overlay) => (
+                                    <div
+                                        key={overlay.id}
+                                        className="absolute pointer-events-none"
+                                        style={{
+                                            left: `${overlay.x}%`,
+                                            top: `${overlay.y}%`,
+                                            fontSize: `${overlay.fontSize}px`,
+                                            color: overlay.color,
+                                            textShadow: "2px 2px 8px rgba(0,0,0,0.8)",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {overlay.text}
+                                    </div>
+                                ))}
+
+                                {/* Playhead indicator */}
+                                <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-mono">
+                                    {formatTime(currentTime)} / {formatTime(duration)}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Transport Controls */}
+                    {videoUrl && (
+                        <div className={`border-t ${palette.border} p-4 ${isDark ? 'bg-black/50' : 'bg-white/50'} backdrop-blur-sm`}>
+                            <div className="max-w-5xl mx-auto">
+                                <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <Button size="icon" variant="outline">
-                                            <SkipBack className="h-4 w-4" />
+                                        <Button size="icon" variant="ghost">
+                                            <SkipBack className="h-5 w-5" />
                                         </Button>
-                                        <Button size="icon" onClick={togglePlayPause}>
+                                        <Button 
+                                            size="icon" 
+                                            onClick={togglePlayPause}
+                                            className={palette.accentButton}
+                                        >
                                             {isPlaying ? (
-                                                <Pause className="h-4 w-4" />
+                                                <Pause className="h-5 w-5" />
                                             ) : (
-                                                <Play className="h-4 w-4" />
+                                                <Play className="h-5 w-5 ml-0.5" />
                                             )}
                                         </Button>
-                                        <Button size="icon" variant="outline">
-                                            <SkipForward className="h-4 w-4" />
+                                        <Button size="icon" variant="ghost">
+                                            <SkipForward className="h-5 w-5" />
                                         </Button>
                                     </div>
 
+                                    <div className="flex-1 flex items-center gap-3">
+                                        <span className="text-sm font-mono w-16 text-right">{formatTime(currentTime)}</span>
+                                        <Slider
+                                            value={[currentTime]}
+                                            max={duration}
+                                            step={0.01}
+                                            onValueChange={handleSeek}
+                                            className="flex-1"
+                                        />
+                                        <span className="text-sm font-mono w-16">{formatTime(duration)}</span>
+                                    </div>
+
                                     <div className="flex items-center gap-2">
-                                        <Volume2 className="h-4 w-4" />
+                                        <Volume2 className="h-5 w-5" />
                                         <Slider
                                             value={[volume]}
                                             max={1}
-                                            step={0.1}
+                                            step={0.01}
                                             onValueChange={handleVolumeChange}
                                             className="w-24"
                                         />
                                     </div>
-                                </div>
-                            </div>
-                        )}
-                    </Card>
 
-                    {/* Trim Timeline */}
-                    {videoUrl && (
-                        <Card className="p-6">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Scissors className="h-5 w-5" />
-                                        <h3 className="font-semibold">Střih videa</h3>
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                        {formatTime(trimStart)} - {formatTime(trimEnd)}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Začátek</label>
-                                    <Slider
-                                        value={[trimStart]}
-                                        max={duration}
-                                        step={0.1}
-                                        onValueChange={(v: number[]) => setTrimStart(v[0])}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Konec</label>
-                                    <Slider
-                                        value={[trimEnd]}
-                                        max={duration}
-                                        step={0.1}
-                                        onValueChange={(v: number[]) => setTrimEnd(v[0])}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button onClick={addClip} className="flex-1">
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Přidat úsek
-                                    </Button>
-                                    {selectedClipId && (
-                                        <Button onClick={updateSelectedClip} variant="outline">
-                                            Aktualizovat
+                                    {selectedTool === "split" && (
+                                        <Button onClick={splitClip} variant="outline">
+                                            <Split className="h-4 w-4 mr-2" />
+                                            Rozdělit
                                         </Button>
                                     )}
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Rychlost přehrávání</label>
-                                    <div className="flex gap-2">
-                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                                            <Button
-                                                key={speed}
-                                                size="sm"
-                                                variant={playbackSpeed === speed ? "default" : "outline"}
-                                                onClick={() => setPlaybackSpeed(speed)}
-                                            >
-                                                {speed}x
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
                             </div>
-                        </Card>
-                    )}
-
-                    {/* Clips List */}
-                    {videoUrl && clips.length > 0 && (
-                        <Card className="p-6">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="font-semibold">Úseky videa ({clips.length})</h3>
-                                    <div className="text-sm text-muted-foreground">
-                                        Celkem: {formatTime(getTotalDuration())}
-                                    </div>
-                                </div>
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
-                                    {clips.map((clip, index) => (
-                                        <Card
-                                            key={clip.id}
-                                            className={`p-3 cursor-pointer transition-all ${selectedClipId === clip.id
-                                                    ? "ring-2 ring-primary"
-                                                    : "hover:bg-muted/50"
-                                                }`}
-                                            onClick={() => selectClip(clip.id)}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-sm">
-                                                        Úsek #{index + 1}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {formatTime(clip.start)} -{" "}
-                                                        {formatTime(clip.end)} (
-                                                        {formatTime(clip.end - clip.start)})
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            duplicateClip(clip.id);
-                                                        }}
-                                                    >
-                                                        <Copy className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        disabled={index === 0}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            moveClipUp(clip.id);
-                                                        }}
-                                                    >
-                                                        <MoveUp className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        disabled={index === clips.length - 1}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            moveClipDown(clip.id);
-                                                        }}
-                                                    >
-                                                        <MoveDown className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteClip(clip.id);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-                </div>
-
-                {/* Tools Panel */}
-                <div className="space-y-4">
-                    <Card className="p-6">
-                        <Tabs defaultValue="effects" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="effects">
-                                    <Wand2 className="h-4 w-4 mr-2" />
-                                    Efekty
-                                </TabsTrigger>
-                                <TabsTrigger value="text">
-                                    <Type className="h-4 w-4 mr-2" />
-                                    Text
-                                </TabsTrigger>
-                                <TabsTrigger value="media">
-                                    <ImageIcon className="h-4 w-4 mr-2" />
-                                    Média
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="effects" className="space-y-3 mt-4">
-                                <h3 className="text-sm font-semibold mb-3">Video filtry</h3>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {effects.map((effect) => (
-                                        <Button
-                                            key={effect.id}
-                                            variant={
-                                                selectedEffect === effect.id ? "default" : "outline"
-                                            }
-                                            className="w-full"
-                                            onClick={() => applyEffect(effect.id)}
-                                        >
-                                            {effect.name}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="text" className="space-y-3 mt-4">
-                                <h3 className="text-sm font-semibold mb-3">Textové prvky</h3>
-                                <Button className="w-full" onClick={addTextOverlay}>
-                                    <Type className="h-4 w-4 mr-2" />
-                                    Přidat text
-                                </Button>
-                                <div className="space-y-2">
-                                    {textOverlays.map((overlay, index) => (
-                                        <Card key={overlay.id} className="p-3">
-                                            <div className="space-y-2">
-                                                <input
-                                                    type="text"
-                                                    value={overlay.text}
-                                                    onChange={(e) => {
-                                                        const newOverlays = [...textOverlays];
-                                                        newOverlays[index].text = e.target.value;
-                                                        setTextOverlays(newOverlays);
-                                                    }}
-                                                    className="w-full px-2 py-1 text-sm border rounded"
-                                                />
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={overlay.color}
-                                                        onChange={(e) => {
-                                                            const newOverlays = [...textOverlays];
-                                                            newOverlays[index].color = e.target.value;
-                                                            setTextOverlays(newOverlays);
-                                                        }}
-                                                        className="w-8 h-8 rounded cursor-pointer"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        value={overlay.fontSize}
-                                                        onChange={(e) => {
-                                                            const newOverlays = [...textOverlays];
-                                                            newOverlays[index].fontSize = parseInt(
-                                                                e.target.value
-                                                            );
-                                                            setTextOverlays(newOverlays);
-                                                        }}
-                                                        className="w-16 px-2 py-1 text-sm border rounded"
-                                                        min="12"
-                                                        max="128"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="media" className="space-y-3 mt-4">
-                                <h3 className="text-sm font-semibold mb-3">Přidat média</h3>
-                                <Button className="w-full" variant="outline">
-                                    <ImageIcon className="h-4 w-4 mr-2" />
-                                    Přidat obrázek
-                                </Button>
-                                <Button className="w-full" variant="outline">
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    AI efekty
-                                </Button>
-                            </TabsContent>
-                        </Tabs>
-                    </Card>
-
-                    {/* Export Settings */}
-                    {videoUrl && (
-                        <Card className="p-6">
-                            <h3 className="font-semibold mb-4">Nastavení exportu</h3>
-                            <div className="space-y-3">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Rozlišení</label>
-                                    <select className="w-full px-3 py-2 border rounded-md">
-                                        <option>1920x1080 (Full HD)</option>
-                                        <option>1280x720 (HD)</option>
-                                        <option>3840x2160 (4K)</option>
-                                        <option>1080x1920 (Instagram Stories)</option>
-                                        <option>1080x1080 (Instagram Post)</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Formát</label>
-                                    <select className="w-full px-3 py-2 border rounded-md">
-                                        <option>MP4 (H.264)</option>
-                                        <option>WebM</option>
-                                        <option>MOV</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Kvalita</label>
-                                    <select className="w-full px-3 py-2 border rounded-md">
-                                        <option>Vysoká</option>
-                                        <option>Střední</option>
-                                        <option>Nízká</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </Card>
+                        </div>
                     )}
                 </div>
             </div>
+
+            {/* Bottom Timeline */}
+            {videoUrl && (
+                <div className={`fixed bottom-0 left-0 right-0 h-48 border-t ${palette.border} ${isDark ? 'bg-black/95' : 'bg-white/95'} backdrop-blur-xl z-40`}>
+                    <div className="h-full flex flex-col">
+                        {/* Timeline Controls */}
+                        <div className={`flex items-center justify-between px-4 py-2 border-b ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}>
+                                    <ZoomOut className="h-4 w-4" />
+                                </Button>
+                                <span className="text-sm font-mono w-16 text-center">{Math.round(zoom * 100)}%</span>
+                                <Button variant="ghost" size="icon" onClick={() => setZoom(Math.min(5, zoom + 0.5))}>
+                                    <ZoomIn className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div className="text-sm">
+                                <span className={palette.muted}>{clips.length} úsek{clips.length !== 1 ? 'y' : ''}</span>
+                            </div>
+                        </div>
+
+                        {/* Timeline Tracks */}
+                        <div ref={timelineRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+                            <div className="relative h-full min-w-full" style={{ width: `${getTimelineWidth()}px` }}>
+                                {/* Time markers */}
+                                <div className={`absolute top-0 left-0 right-0 h-8 border-b ${isDark ? 'border-white/5' : 'border-slate-200'} flex`}>
+                                    {Array.from({ length: Math.ceil(duration) }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`relative border-l ${isDark ? 'border-white/10' : 'border-slate-300'}`}
+                                            style={{ width: `${100 * zoom}px` }}
+                                        >
+                                            <span className={`absolute top-1 left-1 text-xs ${palette.subtle}`}>
+                                                {formatTime(i)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Video track */}
+                                <div className="absolute top-8 left-0 right-0 h-16 px-2 py-2">
+                                    <div className="relative h-full">
+                                        {clips.map((clip) => {
+                                            const pos = getClipPosition(clip);
+                                            return (
+                                                <div
+                                                    key={clip.id}
+                                                    className={`absolute h-full rounded-lg cursor-pointer transition-all ${
+                                                        selectedClipId === clip.id
+                                                            ? 'ring-2 ring-indigo-500 bg-gradient-to-r from-indigo-600 to-blue-600'
+                                                            : 'bg-gradient-to-r from-indigo-700/80 to-blue-700/80 hover:from-indigo-600/90 hover:to-blue-600/90'
+                                                    }`}
+                                                    style={{
+                                                        left: `${pos.left}px`,
+                                                        width: `${pos.width}px`,
+                                                    }}
+                                                    onClick={() => setSelectedClipId(clip.id)}
+                                                >
+                                                    <div className="px-3 py-2 h-full flex items-center justify-between text-white text-sm">
+                                                        <span className="font-medium truncate">Video clip</span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 hover:bg-white/20"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteClip(clip.id);
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Playhead */}
+                                <div
+                                    className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-50"
+                                    style={{ left: `${currentTime * 100 * zoom}px` }}
+                                >
+                                    <div className="absolute -top-1 -left-2 w-4 h-4 bg-red-500 rounded-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
