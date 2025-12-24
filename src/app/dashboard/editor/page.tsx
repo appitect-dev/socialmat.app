@@ -17,9 +17,21 @@ import {
     Type,
     Image as ImageIcon,
     Sparkles,
-    Upload
+    Upload,
+    Plus,
+    Trash2,
+    Copy,
+    MoveUp,
+    MoveDown,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
+
+interface VideoClip {
+    id: string;
+    start: number;
+    end: number;
+    order: number;
+}
 
 export default function VideoEditorPage() {
     const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -31,6 +43,9 @@ export default function VideoEditorPage() {
     const [trimStart, setTrimStart] = useState(0);
     const [trimEnd, setTrimEnd] = useState(100);
     const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
+    const [clips, setClips] = useState<VideoClip[]>([]);
+    const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [textOverlays, setTextOverlays] = useState<Array<{
         id: string;
         text: string;
@@ -120,6 +135,88 @@ export default function VideoEditorPage() {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    const addClip = () => {
+        const newClip: VideoClip = {
+            id: Date.now().toString(),
+            start: trimStart,
+            end: trimEnd,
+            order: clips.length,
+        };
+        setClips([...clips, newClip]);
+        setSelectedClipId(newClip.id);
+    };
+
+    const deleteClip = (clipId: string) => {
+        setClips(clips.filter((c) => c.id !== clipId));
+        if (selectedClipId === clipId) {
+            setSelectedClipId(null);
+        }
+    };
+
+    const duplicateClip = (clipId: string) => {
+        const clip = clips.find((c) => c.id === clipId);
+        if (clip) {
+            const newClip: VideoClip = {
+                ...clip,
+                id: Date.now().toString(),
+                order: clips.length,
+            };
+            setClips([...clips, newClip]);
+        }
+    };
+
+    const moveClipUp = (clipId: string) => {
+        const index = clips.findIndex((c) => c.id === clipId);
+        if (index > 0) {
+            const newClips = [...clips];
+            [newClips[index - 1], newClips[index]] = [newClips[index], newClips[index - 1]];
+            newClips.forEach((clip, i) => (clip.order = i));
+            setClips(newClips);
+        }
+    };
+
+    const moveClipDown = (clipId: string) => {
+        const index = clips.findIndex((c) => c.id === clipId);
+        if (index < clips.length - 1) {
+            const newClips = [...clips];
+            [newClips[index], newClips[index + 1]] = [newClips[index + 1], newClips[index]];
+            newClips.forEach((clip, i) => (clip.order = i));
+            setClips(newClips);
+        }
+    };
+
+    const selectClip = (clipId: string) => {
+        const clip = clips.find((c) => c.id === clipId);
+        if (clip) {
+            setTrimStart(clip.start);
+            setTrimEnd(clip.end);
+            setSelectedClipId(clipId);
+            if (videoRef.current) {
+                videoRef.current.currentTime = clip.start;
+            }
+        }
+    };
+
+    const updateSelectedClip = () => {
+        if (selectedClipId) {
+            setClips(
+                clips.map((c) =>
+                    c.id === selectedClipId ? { ...c, start: trimStart, end: trimEnd } : c
+                )
+            );
+        }
+    };
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.playbackRate = playbackSpeed;
+        }
+    }, [playbackSpeed]);
+
+    const getTotalDuration = () => {
+        return clips.reduce((total, clip) => total + (clip.end - clip.start), 0);
     };
 
     const effects = [
@@ -280,7 +377,7 @@ export default function VideoEditorPage() {
                                         value={[trimStart]}
                                         max={duration}
                                         step={0.1}
-                                        onValueChange={(v) => setTrimStart(v[0])}
+                                        onValueChange={(v: number[]) => setTrimStart(v[0])}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -289,8 +386,117 @@ export default function VideoEditorPage() {
                                         value={[trimEnd]}
                                         max={duration}
                                         step={0.1}
-                                        onValueChange={(v) => setTrimEnd(v[0])}
+                                        onValueChange={(v: number[]) => setTrimEnd(v[0])}
                                     />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button onClick={addClip} className="flex-1">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Přidat úsek
+                                    </Button>
+                                    {selectedClipId && (
+                                        <Button onClick={updateSelectedClip} variant="outline">
+                                            Aktualizovat
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Rychlost přehrávání</label>
+                                    <div className="flex gap-2">
+                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                                            <Button
+                                                key={speed}
+                                                size="sm"
+                                                variant={playbackSpeed === speed ? "default" : "outline"}
+                                                onClick={() => setPlaybackSpeed(speed)}
+                                            >
+                                                {speed}x
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* Clips List */}
+                    {videoUrl && clips.length > 0 && (
+                        <Card className="p-6">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold">Úseky videa ({clips.length})</h3>
+                                    <div className="text-sm text-muted-foreground">
+                                        Celkem: {formatTime(getTotalDuration())}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {clips.map((clip, index) => (
+                                        <Card
+                                            key={clip.id}
+                                            className={`p-3 cursor-pointer transition-all ${selectedClipId === clip.id
+                                                    ? "ring-2 ring-primary"
+                                                    : "hover:bg-muted/50"
+                                                }`}
+                                            onClick={() => selectClip(clip.id)}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm">
+                                                        Úsek #{index + 1}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {formatTime(clip.start)} -{" "}
+                                                        {formatTime(clip.end)} (
+                                                        {formatTime(clip.end - clip.start)})
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            duplicateClip(clip.id);
+                                                        }}
+                                                    >
+                                                        <Copy className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        disabled={index === 0}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            moveClipUp(clip.id);
+                                                        }}
+                                                    >
+                                                        <MoveUp className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        disabled={index === clips.length - 1}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            moveClipDown(clip.id);
+                                                        }}
+                                                    >
+                                                        <MoveDown className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteClip(clip.id);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))}
                                 </div>
                             </div>
                         </Card>
