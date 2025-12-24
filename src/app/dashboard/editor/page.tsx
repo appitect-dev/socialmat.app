@@ -470,7 +470,7 @@ export default function VideoEditorPage() {
                         <Button variant="ghost" size="icon" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                             <Redo className="h-4 w-4" />
                         </Button>
-                        <div className="h-6 w-px bg-white/10 mx-1" />
+                        <div className={`h-6 w-px mx-1 ${isDark ? 'bg-white/10' : 'bg-slate-300'}`} />
                         <span className={`text-xs ${palette.subtle}`}>
                             ⌨️ Space=Play | S=Split | Del=Remove | ←→=Seek
                         </span>
@@ -499,7 +499,7 @@ export default function VideoEditorPage() {
                             <div className="space-y-1">
                                 <Button
                                     variant={selectedTool === "select" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${selectedTool !== "select" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
+                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("select")}
                                 >
                                     <Layers className="h-4 w-4 mr-2" />
@@ -507,7 +507,7 @@ export default function VideoEditorPage() {
                                 </Button>
                                 <Button
                                     variant={selectedTool === "split" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${selectedTool !== "split" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
+                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("split")}
                                 >
                                     <Scissors className="h-4 w-4 mr-2" />
@@ -515,7 +515,7 @@ export default function VideoEditorPage() {
                                 </Button>
                                 <Button
                                     variant={selectedTool === "text" ? "default" : "ghost"}
-                                    className={`w-full justify-start ${selectedTool !== "text" && (isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100')}`}
+                                    className={`w-full justify-start ${isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
                                     onClick={() => setSelectedTool("text")}
                                 >
                                     <Type className="h-4 w-4 mr-2" />
@@ -533,7 +533,7 @@ export default function VideoEditorPage() {
                                         variant={selectedEffect === effect.id ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setSelectedEffect(effect.id)}
-                                        className={`text-xs h-8 ${selectedEffect !== effect.id && (isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100')}`}
+                                        className={`text-xs h-8 ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}`}
                                     >
                                         {effect.name}
                                     </Button>
@@ -550,7 +550,7 @@ export default function VideoEditorPage() {
                                         variant={playbackSpeed === speed ? "default" : "outline"}
                                         size="sm"
                                         onClick={() => setPlaybackSpeed(speed)}
-                                        className={`h-8 ${playbackSpeed !== speed && (isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100')}`}
+                                        className={`h-8 ${isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}`}
                                     >
                                         {speed}x
                                     </Button>
