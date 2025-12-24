@@ -101,7 +101,38 @@ export default function VideoEditorPage() {
 
     const handleTimeUpdate = () => {
         if (videoRef.current) {
-            setCurrentTime(videoRef.current.currentTime);
+            const time = videoRef.current.currentTime;
+            setCurrentTime(time);
+            
+            // Check if current time is in a gap between clips
+            const sortedClips = [...clips].sort((a, b) => a.start - b.start);
+            const currentClip = sortedClips.find(c => time >= c.start && time <= c.end);
+            
+            // If not in any clip, skip to next clip
+            if (!currentClip && isPlaying) {
+                const nextClip = sortedClips.find(c => c.start > time);
+                if (nextClip) {
+                    videoRef.current.currentTime = nextClip.start;
+                } else {
+                    // End of all clips
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                    videoRef.current.currentTime = sortedClips[0]?.start || 0;
+                }
+            }
+            
+            // If reached end of current clip, go to next
+            if (currentClip && time >= currentClip.end && isPlaying) {
+                const currentIndex = sortedClips.findIndex(c => c.id === currentClip.id);
+                const nextClip = sortedClips[currentIndex + 1];
+                if (nextClip) {
+                    videoRef.current.currentTime = nextClip.start;
+                } else {
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                    videoRef.current.currentTime = sortedClips[0]?.start || 0;
+                }
+            }
         }
     };
 
@@ -269,14 +300,24 @@ export default function VideoEditorPage() {
     };
 
     const getTimelineWidth = () => {
-        if (duration === 0) return 0;
-        return Math.max(duration * zoom * 100, 2000); // minimum 2000px
+        if (clips.length === 0) return 2000;
+        
+        // Calculate total duration of all clips combined
+        const totalDuration = clips.reduce((sum, clip) => sum + (clip.end - clip.start), 0);
+        return Math.max(totalDuration * zoom * 100, 2000); // minimum 2000px
     };
 
-    const getClipPosition = (clip: VideoClip) => {
+    const getClipPosition = (clip: VideoClip, index: number, allClips: VideoClip[]) => {
         const pixelsPerSecond = 100 * zoom;
+        
+        // Calculate position based on order in array, not timestamps
+        let leftPosition = 0;
+        for (let i = 0; i < index; i++) {
+            leftPosition += (allClips[i].end - allClips[i].start) * pixelsPerSecond;
+        }
+        
         return {
-            left: clip.start * pixelsPerSecond,
+            left: leftPosition,
             width: Math.max((clip.end - clip.start) * pixelsPerSecond, 50), // minimum 50px
         };
     };
@@ -286,12 +327,25 @@ export default function VideoEditorPage() {
         
         const rect = timelineRef.current.getBoundingClientRect();
         const clickX = e.clientX - rect.left + timelineRef.current.scrollLeft;
-        const pixelsPerSecond = 100 * zoom;
-        const clickTime = clickX / pixelsPerSecond;
         
-        if (clickTime >= 0 && clickTime <= duration && videoRef.current) {
-            videoRef.current.currentTime = clickTime;
-            setCurrentTime(clickTime);
+        // Find which clip was clicked based on sequential positions
+        for (let i = 0; i < clips.length; i++) {
+            const clip = clips[i];
+            const pos = getClipPosition(clip, i, clips);
+            
+            if (clickX >= pos.left && clickX <= pos.left + pos.width) {
+                // Clicked inside this clip
+                const relativeX = clickX - pos.left;
+                const pixelsPerSecond = 100 * zoom;
+                const relativeTime = relativeX / pixelsPerSecond;
+                const clickTime = clip.start + relativeTime;
+                
+                if (videoRef.current) {
+                    videoRef.current.currentTime = clickTime;
+                    setCurrentTime(clickTime);
+                }
+                break;
+            }
         }
     };
 
@@ -313,6 +367,7 @@ export default function VideoEditorPage() {
 
     const handleClipDragStart = (clipId: string, e: React.MouseEvent) => {
         if ((e.target as HTMLElement).classList.contains('trim-handle')) return;
+        e.stopPropagation();
         setDragMode('move');
         setDragClipId(clipId);
         setDragStartX(e.clientX);
@@ -345,6 +400,27 @@ export default function VideoEditorPage() {
                     : c
             ));
             setDragStartX(e.clientX);
+        } else if (dragMode === 'move') {
+            // For reordering, we'll detect when mouse is over another clip
+            const rect = timelineRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            
+            const clickX = e.clientX - rect.left + (timelineRef.current?.scrollLeft || 0);
+            const hoveredClipIndex = clips.findIndex((c, idx) => {
+                const pos = getClipPosition(c, idx, clips);
+                return clickX >= pos.left && clickX <= pos.left + pos.width;
+            });
+            
+            if (hoveredClipIndex !== -1) {
+                const draggedIndex = clips.findIndex(c => c.id === dragClipId);
+                if (draggedIndex !== hoveredClipIndex && draggedIndex !== -1) {
+                    // Reorder clips
+                    const newClips = [...clips];
+                    const [draggedClip] = newClips.splice(draggedIndex, 1);
+                    newClips.splice(hoveredClipIndex, 0, draggedClip);
+                    setClips(newClips);
+                }
+            }
         }
     };
 
@@ -360,14 +436,16 @@ export default function VideoEditorPage() {
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                         <h1 className="text-xl font-bold">Video Editor</h1>
+                        <div className="h-6 w-px bg-white/10 mx-1" />
                         <Button variant="ghost" size="icon" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                             <Undo className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
                             <Redo className="h-4 w-4" />
                         </Button>
-                        <span className={`text-xs ${palette.subtle} ml-4`}>
-                            ⌨️ Space=Play | S=Split | Delete=Remove | ←→=Seek
+                        <div className="h-6 w-px bg-white/10 mx-1" />
+                        <span className={`text-xs ${palette.subtle}`}>
+                            ⌨️ Space=Play | S=Split | Del=Remove | ←→=Seek
                         </span>
                     </div>
                     
@@ -684,9 +762,10 @@ export default function VideoEditorPage() {
                                     <div className={`text-xs font-medium mb-1 ${palette.muted}`}>Video Track</div>
                                     <div className="relative h-16">
                                         {clips.map((clip, index) => {
-                                            const pos = getClipPosition(clip);
+                                            const pos = getClipPosition(clip, index, clips);
                                             const isSelected = selectedClipId === clip.id;
                                             const isHovered = hoveredClipId === clip.id;
+                                            const isDragging = dragClipId === clip.id && dragMode === 'move';
                                             return (
                                                 <div
                                                     key={clip.id}
@@ -696,7 +775,7 @@ export default function VideoEditorPage() {
                                                             : isHovered 
                                                             ? 'ring-2 ring-indigo-400/50' 
                                                             : ''
-                                                    }`}
+                                                    } ${isDragging ? 'opacity-70' : ''}`}
                                                     style={{
                                                         left: `${pos.left}px`,
                                                         width: `${pos.width}px`,
@@ -768,7 +847,27 @@ export default function VideoEditorPage() {
                                 {/* Playhead */}
                                 <div
                                     className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-50"
-                                    style={{ left: `${currentTime * 100 * zoom}px` }}
+                                    style={{ 
+                                        left: `${(() => {
+                                            // Calculate playhead position in sequential timeline
+                                            let position = 0;
+                                            const sortedClips = [...clips].sort((a, b) => a.start - b.start);
+                                            
+                                            for (const clip of sortedClips) {
+                                                if (currentTime >= clip.start && currentTime <= clip.end) {
+                                                    // Inside this clip
+                                                    const clipIndex = clips.findIndex(c => c.id === clip.id);
+                                                    const clipPos = getClipPosition(clip, clipIndex, clips);
+                                                    const relativeTime = currentTime - clip.start;
+                                                    const pixelsPerSecond = 100 * zoom;
+                                                    position = clipPos.left + (relativeTime * pixelsPerSecond);
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            return position;
+                                        })()}px` 
+                                    }}
                                 >
                                     <div className="absolute -top-1 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-lg" />
                                     <div className="absolute top-3 -left-3 w-6 h-6 bg-red-500/20 rounded-full animate-ping" />
