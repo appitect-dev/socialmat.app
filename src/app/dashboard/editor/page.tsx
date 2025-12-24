@@ -131,8 +131,98 @@ export default function VideoEditorPage() {
             "video/*": [".mp4", ".mov", ".avi", ".webm"],
         },
         multiple: true,
-        noClick: videoFile !== null,
     });
+
+    const skipToPreviousClip = () => {
+        if (!videoRef.current || clips.length === 0) return;
+        
+        const currentTime = videoRef.current.currentTime;
+        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+        
+        if (currentClip) {
+            const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+            if (currentIndex > 0) {
+                const prevClip = clips[currentIndex - 1];
+                const prevSource = videoSources.find(s => s.id === prevClip.sourceId);
+                
+                if (prevSource && prevSource.url !== videoUrl) {
+                    setVideoUrl(prevSource.url);
+                    setVideoFile(prevSource.file);
+                    setActiveSourceId(prevSource.id);
+                    setDuration(prevSource.duration);
+                    setSelectedClipId(prevClip.id);
+                    
+                    videoRef.current.onloadedmetadata = () => {
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = prevClip.start;
+                            setCurrentTime(prevClip.start);
+                        }
+                    };
+                } else {
+                    videoRef.current.currentTime = prevClip.start;
+                    setCurrentTime(prevClip.start);
+                    setSelectedClipId(prevClip.id);
+                }
+            }
+        }
+    };
+
+    const skipToNextClip = () => {
+        if (!videoRef.current || clips.length === 0) return;
+        
+        const currentTime = videoRef.current.currentTime;
+        const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+        
+        if (currentClip) {
+            const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+            if (currentIndex < clips.length - 1) {
+                const nextClip = clips[currentIndex + 1];
+                const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
+                
+                if (nextSource && nextSource.url !== videoUrl) {
+                    setVideoUrl(nextSource.url);
+                    setVideoFile(nextSource.file);
+                    setActiveSourceId(nextSource.id);
+                    setDuration(nextSource.duration);
+                    setSelectedClipId(nextClip.id);
+                    
+                    videoRef.current.onloadedmetadata = () => {
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = nextClip.start;
+                            setCurrentTime(nextClip.start);
+                        }
+                    };
+                } else {
+                    videoRef.current.currentTime = nextClip.start;
+                    setCurrentTime(nextClip.start);
+                    setSelectedClipId(nextClip.id);
+                }
+            }
+        } else if (clips.length > 0) {
+            // Not in any clip, jump to first clip
+            const firstClip = clips[0];
+            const firstSource = videoSources.find(s => s.id === firstClip.sourceId);
+            
+            if (firstSource && firstSource.url !== videoUrl) {
+                setVideoUrl(firstSource.url);
+                setVideoFile(firstSource.file);
+                setActiveSourceId(firstSource.id);
+                setDuration(firstSource.duration);
+                setSelectedClipId(firstClip.id);
+                
+                videoRef.current.onloadedmetadata = () => {
+                    if (videoRef.current) {
+                        videoRef.current.currentTime = firstClip.start;
+                        setCurrentTime(firstClip.start);
+                    }
+                };
+            } else {
+                videoRef.current.currentTime = firstClip.start;
+                setCurrentTime(firstClip.start);
+                setSelectedClipId(firstClip.id);
+            }
+        }
+    };
 
     const togglePlayPause = () => {
         if (videoRef.current) {
@@ -855,7 +945,13 @@ export default function VideoEditorPage() {
                             <div className="max-w-5xl mx-auto">
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <Button size="icon" variant="ghost" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            onClick={skipToPreviousClip}
+                                            disabled={clips.length === 0}
+                                            className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}
+                                        >
                                             <SkipBack className="h-5 w-5" />
                                         </Button>
                                         <Button 
@@ -869,7 +965,13 @@ export default function VideoEditorPage() {
                                                 <Play className="h-5 w-5 ml-0.5" />
                                             )}
                                         </Button>
-                                        <Button size="icon" variant="ghost" className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}>
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            onClick={skipToNextClip}
+                                            disabled={clips.length === 0}
+                                            className={isDark ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}
+                                        >
                                             <SkipForward className="h-5 w-5" />
                                         </Button>
                                     </div>
