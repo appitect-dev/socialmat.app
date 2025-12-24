@@ -80,6 +80,10 @@ export default function VideoEditorPage() {
     // History for undo/redo
     const [history, setHistory] = useState<VideoClip[][]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
+    
+    // Track pending video source change
+    const [pendingClipId, setPendingClipId] = useState<string | null>(null);
+    const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
@@ -207,21 +211,13 @@ export default function VideoEditorPage() {
                     // Check if next clip is from different video source
                     const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
                     if (nextSource && nextSource.url !== videoUrl) {
-                        const wasPlaying = isPlaying;
+                        setShouldAutoPlay(true);
+                        setPendingClipId(nextClip.id);
                         setVideoUrl(nextSource.url);
                         setVideoFile(nextSource.file);
                         setActiveSourceId(nextSource.id);
                         setDuration(nextSource.duration);
                         setSelectedClipId(nextClip.id);
-                        
-                        videoRef.current.onloadedmetadata = () => {
-                            if (videoRef.current) {
-                                videoRef.current.currentTime = nextClip.start;
-                                if (wasPlaying) {
-                                    videoRef.current.play();
-                                }
-                            }
-                        };
                     } else {
                         videoRef.current.currentTime = nextClip.start;
                         setSelectedClipId(nextClip.id);
@@ -247,21 +243,13 @@ export default function VideoEditorPage() {
                     // Check if next clip is from different video source
                     const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
                     if (nextSource && nextSource.url !== videoUrl) {
-                        const wasPlaying = isPlaying;
+                        setShouldAutoPlay(true);
+                        setPendingClipId(nextClip.id);
                         setVideoUrl(nextSource.url);
                         setVideoFile(nextSource.file);
                         setActiveSourceId(nextSource.id);
                         setDuration(nextSource.duration);
                         setSelectedClipId(nextClip.id);
-                        
-                        videoRef.current.onloadedmetadata = () => {
-                            if (videoRef.current) {
-                                videoRef.current.currentTime = nextClip.start;
-                                if (wasPlaying) {
-                                    videoRef.current.play();
-                                }
-                            }
-                        };
                     } else {
                         videoRef.current.currentTime = nextClip.start;
                         setSelectedClipId(nextClip.id);
@@ -294,6 +282,26 @@ export default function VideoEditorPage() {
                 };
                 saveToHistory([initialClip]);
                 setSelectedClipId(initialClip.id);
+            }
+            
+            // Handle pending clip change (from video source switch)
+            if (pendingClipId) {
+                const pendingClip = clips.find(c => c.id === pendingClipId);
+                if (pendingClip && videoRef.current) {
+                    videoRef.current.currentTime = pendingClip.start;
+                    setCurrentTime(pendingClip.start);
+                    
+                    if (shouldAutoPlay) {
+                        videoRef.current.play().then(() => {
+                            setIsPlaying(true);
+                        }).catch(err => {
+                            console.error('Auto-play failed:', err);
+                            setIsPlaying(false);
+                        });
+                        setShouldAutoPlay(false);
+                    }
+                    setPendingClipId(null);
+                }
             }
         }
     };
