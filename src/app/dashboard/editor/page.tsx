@@ -27,8 +27,16 @@ import {
 import { useDropzone } from "react-dropzone";
 import { useDashboardTheme } from "@/components/dashboard-theme";
 
+interface VideoSource {
+    id: string;
+    file: File;
+    url: string;
+    duration: number;
+}
+
 interface VideoClip {
     id: string;
+    sourceId: string; // Reference to VideoSource
     start: number;
     end: number;
     duration: number;
@@ -49,6 +57,8 @@ type DragMode = 'move' | 'trim-start' | 'trim-end' | null;
 export default function VideoEditorPage() {
     const { isDark, palette } = useDashboardTheme();
     
+    const [videoSources, setVideoSources] = useState<VideoSource[]>([]);
+    const [activeSourceId, setActiveSourceId] = useState<string | null>(null);
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState<string>("");
     const [isPlaying, setIsPlaying] = useState(false);
@@ -72,12 +82,47 @@ export default function VideoEditorPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const onDrop = (acceptedFiles: File[]) => {
-        const file = acceptedFiles[0];
-        if (file) {
-            setVideoFile(file);
+        acceptedFiles.forEach(file => {
+            const sourceId = Date.now().toString() + Math.random();
             const url = URL.createObjectURL(file);
-            setVideoUrl(url);
-        }
+            
+            // Create a temporary video element to get duration
+            const tempVideo = document.createElement('video');
+            tempVideo.src = url;
+            tempVideo.onloadedmetadata = () => {
+                const newSource: VideoSource = {
+                    id: sourceId,
+                    file,
+                    url,
+                    duration: tempVideo.duration,
+                };
+                
+                setVideoSources(prev => {
+                    const updated = [...prev, newSource];
+                    
+                    // If this is the first video, set it as active
+                    if (prev.length === 0) {
+                        setVideoFile(file);
+                        setVideoUrl(url);
+                        setActiveSourceId(sourceId);
+                        setDuration(tempVideo.duration);
+                    } else {
+                        // Add as new clip at the end of timeline
+                        const newClip: VideoClip = {
+                            id: Date.now().toString() + Math.random(),
+                            sourceId: sourceId,
+                            start: 0, // Start from beginning of this video
+                            end: tempVideo.duration, // Full duration of this video
+                            duration: tempVideo.duration,
+                        };
+                        
+                        setClips(prev => [...prev, newClip]);
+                    }
+                    
+                    return updated;
+                });
+            };
+        });
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -85,7 +130,8 @@ export default function VideoEditorPage() {
         accept: {
             "video/*": [".mp4", ".mov", ".avi", ".webm"],
         },
-        maxFiles: 1,
+        multiple: true,
+        noClick: videoFile !== null,
     });
 
     const togglePlayPause = () => {
@@ -123,7 +169,28 @@ export default function VideoEditorPage() {
             if (!currentClip) {
                 const nextClip = clips.find(c => c.start > time);
                 if (nextClip) {
-                    videoRef.current.currentTime = nextClip.start;
+                    // Check if next clip is from different video source
+                    const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
+                    if (nextSource && nextSource.url !== videoUrl) {
+                        const wasPlaying = isPlaying;
+                        setVideoUrl(nextSource.url);
+                        setVideoFile(nextSource.file);
+                        setActiveSourceId(nextSource.id);
+                        setDuration(nextSource.duration);
+                        setSelectedClipId(nextClip.id);
+                        
+                        videoRef.current.onloadedmetadata = () => {
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = nextClip.start;
+                                if (wasPlaying) {
+                                    videoRef.current.play();
+                                }
+                            }
+                        };
+                    } else {
+                        videoRef.current.currentTime = nextClip.start;
+                        setSelectedClipId(nextClip.id);
+                    }
                     return;
                 } else {
                     // No more clips, stop playback
@@ -142,7 +209,28 @@ export default function VideoEditorPage() {
                 const nextClip = clips[currentIndex + 1];
                 
                 if (nextClip) {
-                    videoRef.current.currentTime = nextClip.start;
+                    // Check if next clip is from different video source
+                    const nextSource = videoSources.find(s => s.id === nextClip.sourceId);
+                    if (nextSource && nextSource.url !== videoUrl) {
+                        const wasPlaying = isPlaying;
+                        setVideoUrl(nextSource.url);
+                        setVideoFile(nextSource.file);
+                        setActiveSourceId(nextSource.id);
+                        setDuration(nextSource.duration);
+                        setSelectedClipId(nextClip.id);
+                        
+                        videoRef.current.onloadedmetadata = () => {
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = nextClip.start;
+                                if (wasPlaying) {
+                                    videoRef.current.play();
+                                }
+                            }
+                        };
+                    } else {
+                        videoRef.current.currentTime = nextClip.start;
+                        setSelectedClipId(nextClip.id);
+                    }
                 } else {
                     // End of all clips
                     videoRef.current.pause();
@@ -156,26 +244,45 @@ export default function VideoEditorPage() {
     };
 
     const handleLoadedMetadata = () => {
-        if (videoRef.current) {
+        if (videoRef.current && activeSourceId) {
             const dur = videoRef.current.duration;
             setDuration(dur);
             
-            // Create initial clip with full video duration
-            const initialClip: VideoClip = {
-                id: Date.now().toString(),
-                start: 0,
-                end: dur,
-                duration: dur,
-            };
-            setClips([initialClip]);
-            setSelectedClipId(initialClip.id);
+            // Create initial clip with full video duration only if no clips exist
+            if (clips.length === 0) {
+                const initialClip: VideoClip = {
+                    id: Date.now().toString(),
+                    sourceId: activeSourceId,
+                    start: 0,
+                    end: dur,
+                    duration: dur,
+                };
+                setClips([initialClip]);
+                setSelectedClipId(initialClip.id);
+            }
         }
     };
 
     const handleSeek = (value: number[]) => {
         if (videoRef.current) {
-            videoRef.current.currentTime = value[0];
-            setCurrentTime(value[0]);
+            const targetTime = value[0];
+            // Find which clip contains this time
+            const targetClip = clips.find(c => targetTime >= c.start && targetTime < c.end);
+            
+            if (targetClip) {
+                // Time is within a clip, use it
+                videoRef.current.currentTime = targetTime;
+                setCurrentTime(targetTime);
+                setSelectedClipId(targetClip.id);
+            } else {
+                // Time is in a gap, find nearest clip
+                const nextClip = clips.find(c => c.start >= targetTime);
+                if (nextClip) {
+                    videoRef.current.currentTime = nextClip.start;
+                    setCurrentTime(nextClip.start);
+                    setSelectedClipId(nextClip.id);
+                }
+            }
         }
     };
 
@@ -213,6 +320,7 @@ export default function VideoEditorPage() {
 
         const newClip2: VideoClip = {
             id: Date.now().toString(),
+            sourceId: clip.sourceId,
             start: currentTime,
             end: clip.end,
             duration: clip.end - currentTime,
@@ -263,6 +371,37 @@ export default function VideoEditorPage() {
         }
     }, [playbackSpeed]);
 
+    // Switch video source when selected clip changes
+    useEffect(() => {
+        if (selectedClipId && videoRef.current) {
+            const selectedClip = clips.find(c => c.id === selectedClipId);
+            if (selectedClip) {
+                const source = videoSources.find(s => s.id === selectedClip.sourceId);
+                if (source && source.url !== videoUrl) {
+                    const wasPlaying = isPlaying;
+                    const currentClipTime = currentTime;
+                    
+                    // Switch video source
+                    setVideoUrl(source.url);
+                    setVideoFile(source.file);
+                    setActiveSourceId(source.id);
+                    setDuration(source.duration);
+                    
+                    // Wait for video to load then restore playback state
+                    videoRef.current.onloadedmetadata = () => {
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = selectedClip.start;
+                            setCurrentTime(selectedClip.start);
+                            if (wasPlaying) {
+                                videoRef.current.play();
+                            }
+                        }
+                    };
+                }
+            }
+        }
+    }, [selectedClipId]);
+
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -276,14 +415,40 @@ export default function VideoEditorPage() {
                 e.preventDefault();
                 deleteClip(selectedClipId);
             }
-            // Arrow keys = seek
+            // Arrow keys = seek within current clip or jump to next/prev clip
             if (e.code === 'ArrowLeft') {
                 e.preventDefault();
-                handleSeek([Math.max(0, currentTime - 0.1)]);
+                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                if (currentClip) {
+                    const newTime = Math.max(currentClip.start, currentTime - 0.5);
+                    if (newTime > currentClip.start) {
+                        handleSeek([newTime]);
+                    } else {
+                        // Jump to previous clip
+                        const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+                        if (currentIndex > 0) {
+                            const prevClip = clips[currentIndex - 1];
+                            handleSeek([prevClip.end - 0.1]);
+                        }
+                    }
+                }
             }
             if (e.code === 'ArrowRight') {
                 e.preventDefault();
-                handleSeek([Math.min(duration, currentTime + 0.1)]);
+                const currentClip = clips.find(c => currentTime >= c.start && currentTime < c.end);
+                if (currentClip) {
+                    const newTime = Math.min(currentClip.end - 0.01, currentTime + 0.5);
+                    if (newTime < currentClip.end - 0.01) {
+                        handleSeek([newTime]);
+                    } else {
+                        // Jump to next clip
+                        const currentIndex = clips.findIndex(c => c.id === currentClip.id);
+                        if (currentIndex < clips.length - 1) {
+                            const nextClip = clips[currentIndex + 1];
+                            handleSeek([nextClip.start]);
+                        }
+                    }
+                }
             }
             // S = split
             if (e.code === 'KeyS' && selectedClipId) {
@@ -477,6 +642,15 @@ export default function VideoEditorPage() {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                        {videoFile && (
+                            <div {...getRootProps()} className="inline-block">
+                                <input {...getInputProps()} />
+                                <Button variant="outline" size="sm" className={isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Přidat video
+                                </Button>
+                            </div>
+                        )}
                         <Button variant="outline" size="sm" className={isDark ? 'text-white border-white/20 hover:bg-white/10' : 'text-slate-900 border-slate-300 hover:bg-slate-100'}>
                             <Settings className="h-4 w-4 mr-2" />
                             Nastavení
