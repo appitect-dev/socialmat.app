@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
+import { Moon, Sun } from "lucide-react";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -557,19 +558,29 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              className={`relative h-9 w-16 rounded-full border transition-all duration-300 ${
+              className={`relative h-9 w-16 rounded-full border transition-colors duration-300 ${
                 isDark
-                  ? "bg-slate-900/80 border-white/10 shadow-inner shadow-white/5"
-                  : "bg-white border-slate-200 shadow-sm"
+                  ? "bg-white/5 border-white/10"
+                  : "bg-white border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
               }`}
               aria-pressed={isDark}
             >
               <span className="sr-only">Přepnout vzhled</span>
+              <Moon
+                className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
+                  isDark ? "opacity-100 text-amber-200" : "opacity-60 text-slate-500"
+                }`}
+              />
+              <Sun
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
+                  isDark ? "opacity-0" : "opacity-100 text-amber-500"
+                }`}
+              />
               <span
-                className={`absolute top-1 left-1 h-7 w-7 rounded-full transition-all duration-300 ${
+                className={`absolute top-[3px] left-1 h-7 w-7 rounded-full shadow transition-transform duration-300 ${
                   isDark
-                    ? "translate-x-6 bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/25"
-                    : "translate-x-0 bg-slate-200 shadow"
+                    ? "translate-x-7 bg-white/10 border border-white/15"
+                    : "translate-x-0 bg-white border border-slate-200"
                 }`}
               />
             </button>

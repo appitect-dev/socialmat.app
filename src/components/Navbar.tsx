@@ -66,23 +66,10 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
     <nav
       className={`backdrop-blur-xl absolute top-0 left-0 right-0 z-[60] ${palette.nav.container}`}
     >
-      <div className="max-w-7xl mx-auto px-10 sm:px-6 lg:px-8">
+      <div className="w-full px-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo + sidebar toggle */}
           <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-2">
-              <span
-                className={`text-xl font-bold ${
-                  isDark ? "text-white" : "text-slate-900"
-                }`}
-                style={{
-                  fontFamily:
-                    "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
-                }}
-              >
-                SocialMat
-              </span>
-            </Link>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label={sidebarOpen ? "Skrýt sidebar" : "Zobrazit sidebar"}
@@ -98,6 +85,19 @@ export function Navbar({ userName, userEmail }: NavbarProps) {
                 <ChevronsRight className="w-5 h-5" />
               )}
             </button>
+            <Link href="/" className="flex items-center space-x-2">
+              <span
+                className={`text-xl font-bold ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
+                style={{
+                  fontFamily:
+                    "var(--font-clash), var(--font-archivo), Arial, Helvetica, sans-serif",
+                }}
+              >
+                SocialMat
+              </span>
+            </Link>
           </div>
 
           {/* Desktop actions */}
