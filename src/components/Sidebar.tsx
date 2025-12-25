@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -50,18 +50,6 @@ export function Sidebar() {
   const { isDark } = useDashboardTheme();
   const { isOpen } = useSidebar();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsSettingsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Check if any settings page is active
   const isSettingsActive = pathname?.startsWith("/dashboard/settings");
@@ -114,7 +102,7 @@ export function Sidebar() {
         })}
 
         {/* Settings Dropdown */}
-        <div ref={dropdownRef} className="relative">
+        <div className="relative">
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -148,7 +136,6 @@ export function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={() => setIsSettingsOpen(false)}
                     className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       linkInactive
                     } ${linkHover} justify-start gap-3`}
