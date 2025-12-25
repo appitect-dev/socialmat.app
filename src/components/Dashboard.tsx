@@ -788,43 +788,6 @@ export function Dashboard() {
           {igLoading && <div>Loading Instagram data…</div>}
           {igError && <div className="text-red-500">{igError}</div>}
 
-          {!isInstagramConnected && (
-            <div className={`${softCardClass} p-5 flex items-center justify-between gap-4`}>
-              <div>
-                <div className="text-sm font-semibold">Connect Instagram</div>
-                <div className="text-xs opacity-70">
-                  Connect your account to see analytics charts.
-                </div>
-              </div>
-              <button
-                className={connectButtonClass}
-                onClick={() => {
-                  window.location.href = "/api/instagram/login";
-                }}
-              >
-                Connect Instagram
-              </button>
-            </div>
-          )}
-
-          {isInstagramConnected && (
-            <div className={`${softCardClass} p-5`}>
-              {igLoading ? (
-                <div className="text-sm opacity-70">Loading analytics…</div>
-              ) : igError ? (
-                <div className="text-sm text-red-500">{igError}</div>
-              ) : (
-                <ChartCard
-                  title={chartSeriesPayload?.title ?? "Insights"}
-                  value={chartValueLabel}
-                  description={chartDescription}
-                  xLabels={chartSeriesPayload?.xLabels}
-                  series={chartSeriesPayload?.series}
-                />
-              )}
-            </div>
-          )}
-
           {igConnected && igAccount && (
             <div className={`${softCardClass} p-5`}>
               <div className="flex items-start gap-4">
@@ -908,6 +871,45 @@ export function Dashboard() {
             </div>
           )}
         </div>
+
+        {!isInstagramConnected && (
+          <div
+            className={`${softCardClass} p-5 flex items-center justify-between gap-4`}
+          >
+            <div>
+              <div className="text-sm font-semibold">Connect Instagram</div>
+              <div className="text-xs opacity-70">
+                Connect your account to see analytics charts.
+              </div>
+            </div>
+            <button
+              className={connectButtonClass}
+              onClick={() => {
+                window.location.href = "/api/instagram/login";
+              }}
+            >
+              Connect Instagram
+            </button>
+          </div>
+        )}
+
+        {isInstagramConnected && (
+          <div className={`${softCardClass} p-5`}>
+            {igLoading ? (
+              <div className="text-sm opacity-70">Loading analytics…</div>
+            ) : igError ? (
+              <div className="text-sm text-red-500">{igError}</div>
+            ) : (
+              <ChartCard
+                title={chartSeriesPayload?.title ?? "Insights"}
+                value={chartValueLabel}
+                description={chartDescription}
+                xLabels={chartSeriesPayload?.xLabels}
+                series={chartSeriesPayload?.series}
+              />
+            )}
+          </div>
+        )}
 
         {/* Media grid */}
         {igConnected && (
@@ -1187,7 +1189,6 @@ export function Dashboard() {
             )}
           </div>
         )}
-
       </div>
     </div>
   );
