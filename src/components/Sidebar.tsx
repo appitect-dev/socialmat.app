@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -12,6 +12,14 @@ import {
   Calendar,
   BarChart3,
   Image,
+  User,
+  Instagram,
+  Bell,
+  Zap,
+  Palette,
+  CreditCard,
+  Shield,
+  ChevronDown,
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { useSidebar } from "./DashboardWrapper";
@@ -24,13 +32,39 @@ const navLinks = [
   { href: "/dashboard/stories", label: "Stories Editor", icon: Image },
   { href: "/dashboard/calendar", label: "Kalendář", icon: Calendar },
   { href: "/dashboard/aicontent", label: "AI Content", icon: Brain },
-  { href: "/dashboard/settings", label: "Nastavení", icon: Settings },
+];
+
+const settingsLinks = [
+  { href: "/dashboard/settings?tab=profile", label: "Profil", icon: User },
+  { href: "/dashboard/settings?tab=instagram", label: "Instagram", icon: Instagram },
+  { href: "/dashboard/settings?tab=notifications", label: "Notifikace", icon: Bell },
+  { href: "/dashboard/settings?tab=ai", label: "AI Nastavení", icon: Zap },
+  { href: "/dashboard/settings?tab=branding", label: "Branding", icon: Palette },
+  { href: "/dashboard/settings?tab=billing", label: "Fakturace", icon: CreditCard },
+  { href: "/dashboard/settings?tab=security", label: "Zabezpečení", icon: Shield },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isDark } = useDashboardTheme();
   const { isOpen } = useSidebar();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Check if any settings page is active
+  const isSettingsActive = pathname?.startsWith("/dashboard/settings");
 
   const sidebarWidth = "w-64";
   const sidebarBg = isDark ? "bg-black/70" : "bg-white";
@@ -78,6 +112,57 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Settings Dropdown */}
+        <div ref={dropdownRef} className="relative">
+          <button
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              isSettingsActive ? linkActive : linkInactive
+            } ${linkHover} ${
+              isOpen ? "justify-start gap-3" : "justify-center gap-2"
+            }`}
+            title={!isOpen ? "Nastavení" : undefined}
+          >
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            {isOpen && (
+              <>
+                <span className="flex-1 text-left transition-opacity duration-200 whitespace-nowrap">
+                  Nastavení
+                </span>
+                <ChevronDown 
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isSettingsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </>
+            )}
+          </button>
+
+          {/* Dropdown Menu */}
+          {isOpen && isSettingsOpen && (
+            <div className="mt-1 ml-4 space-y-1">
+              {settingsLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsSettingsOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      linkInactive
+                    } ${linkHover} justify-start gap-3`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="transition-opacity duration-200 whitespace-nowrap">
+                      {link.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </nav>
     </aside>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useDashboardTheme } from "@/components/dashboard-theme";
 import {
   User,
@@ -21,9 +22,18 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
   const { palette, isDark } = useDashboardTheme();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(tabParam || "profile");
   const [saved, setSaved] = useState(false);
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   // Mock user data
   const [profileData, setProfileData] = useState({
@@ -63,15 +73,19 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const tabs = [
-    { id: "profile", label: "Profil", icon: <User className="w-5 h-5" /> },
-    { id: "instagram", label: "Instagram", icon: <Instagram className="w-5 h-5" /> },
-    { id: "notifications", label: "Notifikace", icon: <Bell className="w-5 h-5" /> },
-    { id: "ai", label: "AI Nastavení", icon: <Zap className="w-5 h-5" /> },
-    { id: "branding", label: "Branding", icon: <Palette className="w-5 h-5" /> },
-    { id: "billing", label: "Fakturace", icon: <CreditCard className="w-5 h-5" /> },
-    { id: "security", label: "Zabezpečení", icon: <Shield className="w-5 h-5" /> },
-  ];
+  // Get tab title based on active tab
+  const getTabTitle = () => {
+    const titles: Record<string, string> = {
+      profile: "Profil",
+      instagram: "Instagram",
+      notifications: "Notifikace",
+      ai: "AI Nastavení",
+      branding: "Branding",
+      billing: "Fakturace",
+      security: "Zabezpečení",
+    };
+    return titles[activeTab] || "Nastavení";
+  };
 
   return (
     <div
@@ -90,7 +104,7 @@ export default function SettingsPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-10 relative">
+      <div className="max-w-5xl mx-auto px-4 py-10 relative">
         {/* Header */}
         <div className="mb-10">
           <h1
@@ -98,51 +112,21 @@ export default function SettingsPage() {
               isDark ? "text-white" : "text-slate-900"
             }`}
           >
-            Nastavení
+            {getTabTitle()}
           </h1>
           <p className={isDark ? "text-white/60" : "text-slate-600"}>
             Přizpůsob si SocialMat podle svých potřeb
           </p>
         </div>
 
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div
-              className={`sticky top-24 rounded-2xl border p-2 ${
-                isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
-              }`}
-            >
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
-                    activeTab === tab.id
-                      ? isDark
-                        ? "bg-white/10 text-white"
-                        : "bg-indigo-50 text-indigo-600"
-                      : isDark
-                      ? "text-white/70 hover:bg-white/5"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {tab.icon}
-                  <span className="font-semibold">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            <div
-              className={`rounded-2xl border p-8 ${
-                isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
-              }`}
-            >
-              {/* Profile Tab */}
-              {activeTab === "profile" && (
+        {/* Main Content */}
+        <div
+          className={`rounded-2xl border p-8 ${
+            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
+          }`}
+        >
+          {/* Profile Tab */}
+          {activeTab === "profile" && (
                 <div className="space-y-6">
                   <div>
                     <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
@@ -714,7 +698,6 @@ export default function SettingsPage() {
                   </button>
                 </div>
               )}
-            </div>
           </div>
         </div>
       </div>
