@@ -20,10 +20,11 @@ const mockSessions: Record<string, Session> = {};
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = mockSessions[params.id];
+    const { id } = await params;
+    const session = mockSessions[id];
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -41,11 +42,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { messages, title } = await request.json();
-    const session = mockSessions[params.id];
+    const session = mockSessions[id];
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -55,7 +57,7 @@ export async function PUT(
     if (title) session.title = title;
     session.updatedAt = new Date().toISOString();
 
-    mockSessions[params.id] = session;
+    mockSessions[id] = session;
 
     return NextResponse.json({ session });
   } catch (error) {
@@ -69,14 +71,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!mockSessions[params.id]) {
+    const { id } = await params;
+    if (!mockSessions[id]) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    delete mockSessions[params.id];
+    delete mockSessions[id];
 
     return NextResponse.json({ success: true });
   } catch (error) {
