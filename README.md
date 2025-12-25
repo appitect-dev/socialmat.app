@@ -66,57 +66,57 @@ npm run dev
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        A[Landing Page<br/>Features & Pricing] --> B{Authentication}
+        A[Landing Page Features & Pricing] --> B{Authentication}
         B -->|Login/Signup| C[Dashboard]
         
-        C --> D1[Titulky AI<br/>Subtitle Generator]
-        C --> D2[Video Editor<br/>Editing Tools]
-        C --> D3[Analytics<br/>Profile Insights]
-        C --> D4[Stories Editor<br/>Story Creation]
-        C --> D5[Kalendář<br/>Content Calendar]
-        C --> D6[AI Content<br/>Brainstorming]
-        C --> D7[Auto Reply<br/>Comment Automation]
-        C --> D8[Projects<br/>Project Management]
-        C --> D9[Settings<br/>User Config]
+        C --> D1[Titulky AI Subtitle Generator]
+        C --> D2[Video Editor Editing Tools]
+        C --> D3[Analytics Profile Insights]
+        C --> D4[Stories Editor Story Creation]
+        C --> D5[Kalendář Content Calendar]
+        C --> D6[AI Content Brainstorming]
+        C --> D7[Auto Reply Comment Automation]
+        C --> D8[Projects Project Management]
+        C --> D9[Settings User Config]
     end
 
     subgraph "Feature Pages"
-        FP1[/features/titulky]
-        FP2[/features/video-editor]
-        FP3[/features/analytics]
-        FP4[/features/stories]
-        FP5[/features/kalendar]
-        FP6[/features/ai-content]
-        FP7[/features/auto-reply]
+        FP1[features/titulky]
+        FP2[features/video-editor]
+        FP3[features/analytics]
+        FP4[features/stories]
+        FP5[features/kalendar]
+        FP6[features/ai-content]
+        FP7[features/auto-reply]
     end
 
     subgraph "API Layer"
-        API1[/api/instagram/login]
-        API2[/api/instagram/callback]
-        API3[/api/instagram/account]
-        API4[/api/instagram/media]
-        API5[/api/instagram/insights]
-        API6[/api/ai/brainstorm]
-        API7[/api/ai/sessions]
-        API8[/api/ai/sessions/:id]
+        API1[api/instagram/login]
+        API2[api/instagram/callback]
+        API3[api/instagram/account]
+        API4[api/instagram/media]
+        API5[api/instagram/insights]
+        API6[api/ai/brainstorm]
+        API7[api/ai/sessions]
+        API8[api/ai/sessions/:id]
     end
 
     subgraph "Data Management"
-        DB1[(Mock Sessions DB<br/>In-Memory)]
-        DB2[(User Settings<br/>LocalStorage)]
-        DB3[(Instagram Data<br/>API Cache)]
+        DB1[(Mock Sessions DB In-Memory)]
+        DB2[(User Settings LocalStorage)]
+        DB3[(Instagram Data API Cache)]
     end
 
     subgraph "External Services"
         EXT1[Instagram Graph API]
-        EXT2[OpenAI API<br/>Future Integration]
-        EXT3[FFmpeg<br/>Video Processing]
+        EXT2[OpenAI API Future Integration]
+        EXT3[FFmpeg Video Processing]
     end
 
     subgraph "State Management"
-        STATE1[React Context<br/>Dashboard Theme]
-        STATE2[React Hooks<br/>Session State]
-        STATE3[Client Storage<br/>Theme Preference]
+        STATE1[React Context Dashboard Theme]
+        STATE2[React Hooks Session State]
+        STATE3[Client Storage Theme Preference]
     end
 
     D1 -.->|Future| EXT3
