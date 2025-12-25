@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
+interface Session {
+  id: string;
+  userId: string;
+  title: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Mock database - v produkci by to bylo uložené v databázi
-const mockSessions: Record<string, any> = {};
+const mockSessions: Record<string, Session> = {};
 
 export async function GET(request: NextRequest) {
   try {

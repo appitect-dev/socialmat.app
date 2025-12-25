@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const mockSessions: Record<string, any> = {};
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
+interface Session {
+  id: string;
+  userId: string;
+  title: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+const mockSessions: Record<string, Session> = {};
 
 export async function GET(
   request: NextRequest,
