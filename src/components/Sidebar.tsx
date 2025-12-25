@@ -10,6 +10,8 @@ import {
   Brain,
   Film,
   Calendar,
+  BarChart3,
+  Image,
 } from "lucide-react";
 import { useDashboardTheme } from "./dashboard-theme";
 import { useSidebar } from "./DashboardWrapper";
@@ -18,6 +20,8 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/titulky", label: "Titulky", icon: FolderKanban },
   { href: "/dashboard/editor", label: "Video Editor", icon: Film },
+  { href: "/dashboard/analytics", label: "Analýzy profilu", icon: BarChart3 },
+  { href: "/dashboard/stories", label: "Stories Editor", icon: Image },
   { href: "/dashboard/calendar", label: "Kalendář", icon: Calendar },
   { href: "/dashboard/aicontent", label: "AI Content", icon: Brain },
   { href: "/dashboard/settings", label: "Nastavení", icon: Settings },

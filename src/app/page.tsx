@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Sparkles, TrendingUp, Lightbulb, Video, BarChart3, MessageSquare, Send, Zap, CheckCircle2, ArrowRight, PlayCircle, Edit3, Rocket, Star, Briefcase, Users, Target, Clock, Award, Shield } from "lucide-react";
+import { SparklesIcon, CurrencyDollarIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -68,8 +69,8 @@ export default function LandingPage() {
             ? "linear-gradient(to top right, rgba(79, 70, 229, 0.32), rgba(59, 130, 246, 0.06) 65%)"
             : "linear-gradient(to top left, rgba(79, 70, 229, 0.32), rgba(59, 130, 246, 0.06) 65%)"
           : index % 2 === 0
-          ? "linear-gradient(to top right, rgba(79, 70, 229, 0.18), rgba(59, 130, 246, 0.04) 65%)"
-          : "linear-gradient(to top left, rgba(79, 70, 229, 0.18), rgba(59, 130, 246, 0.04) 65%)",
+            ? "linear-gradient(to top right, rgba(79, 70, 229, 0.18), rgba(59, 130, 246, 0.04) 65%)"
+            : "linear-gradient(to top left, rgba(79, 70, 229, 0.18), rgba(59, 130, 246, 0.04) 65%)",
     },
     statsSection: isDark
       ? "bg-black text-white"
@@ -99,25 +100,25 @@ export default function LandingPage() {
   const heroHighlights = [
     {
       badge: "AI titulky",
-      title: "Hotové do 30 s",
+      title: "Hotové za 30 vteřin",
       description:
-        "Automaticky přepisujeme češtinu, barvy, CTA slidery i export pro Reels.",
+        "Nahraj video a během chvilky máš profesionální české titulky. Žádné zdlouhavé přepisování.",
       metric: "0:30",
-      icon: "AI",
+      icon: "video",
     },
     {
-      badge: "Insights",
-      title: "Růst engagement",
+      badge: "Analytics",
+      title: "Sleduj svůj růst",
       description:
-        "Panel s metrikami účtu, výkonem obsahu a predikcí dalšího postu.",
+        "Dashboard s metrikami účtu, výkonem každého postu a predikcí toho příštího.",
       metric: "+68%",
-      icon: "UP",
+      icon: "chart",
     },
     {
-      badge: "Brainstorm",
-      title: "Obsah na míru",
+      badge: "AI Ideas",
+      title: "Nikdy ti nedojdou nápady",
       description:
-        "AI navrhne brief, hook, titulky i odpověď na komentář během jedné minuty.",
+        "AI navrhne hook, celý copy i odpovědi na komentáře během jedné minuty.",
       metric: "24 nápadů",
       icon: "FX",
     },
@@ -126,45 +127,51 @@ export default function LandingPage() {
   const coreFeatures = [
     {
       category: "AI titulky",
-      title: "Profesionální české titulky",
+      title: "Profesionální české titulky za 30 vteřin",
       description:
-        "Automaticky přepisujeme češtinu, čistíme šum, hlídáme časování a pošleme SRT, TXT i video se spálenými titulky.",
-      details: ["Brandové barvy a fonty", "Auto CTA slide a emotikony"],
+        "Nahraj video a během chvilky máš profesionální titulky. Žádné zdlouhavé přepisování, žádné chyby. Naše AI rozumí češtině perfektně včetně slangu a dialektů.",
+      details: ["Brandové barvy a fonty", "Auto CTA slide a emotikony", "Export SRT, TXT i hotové video"],
+      icon: "video",
     },
     {
       category: "Metriky účtu",
-      title: "Jasný přehled výkonu",
+      title: "Vidíš výkon svého účtu na jeden pohled",
       description:
-        "SocialMat propojujeme s Instagram API, takže vidíte reach, retention, saves i top fanoušky bez otevírání dalších tabů.",
-      details: ["Denní trend grafy", "Benchmark podle trhu"],
+        "Propojíme tvůj Instagram a zobrazíme reach, engagement, nejlepší čas na publikování i top fanoušky. Všechno přehledně na jednom místě bez přepínání aplikací.",
+      details: ["Denní trend grafy", "Benchmark podle tvého odvětví", "Sledování konkurence"],
+      icon: "chart",
     },
     {
       category: "Statistiky obsahu",
-      title: "AI interpretace dat",
+      title: "AI ti řekne, co funguje a co ne",
       description:
-        "Nejen grafy, ale i vysvětlení: které kombinace hooku + délky fungují, co zpomaluje růst a jaký formát zkusit příště.",
-      details: ["Doporučené kroky", "Predikce výkonu postu"],
+        "Nestačí vidět čísla - potřebuješ vědět PROČ. SocialMat analyzuje tvůj obsah a vysvětlí, které hooky, délky a formáty přinášejí nejvíc engagement.",
+      details: ["Doporučené kroky pro růst", "Predikce výkonu příštího postu", "Trendy ve tvém oboru"],
+      icon: "target",
     },
     {
       category: "Auto reply",
-      title: "Odpovídáme na komentáře",
+      title: "Odpovídáme na komentáře místo tebe",
       description:
-        "Vytvoříte tón komunikace a SocialMat odpoví fanouškům v češtině nebo angličtině, včetně odkazů a UTM parametrů.",
-      details: ["Filtrování negativních komentářů", "Schválení na jedno kliknutí"],
+        "Nastav tón komunikace a SocialMat bude odpovídat fanouškům profesionálně, přátelsky a včas. V češtině i angličtině. Ty jen schválíš nebo necháš běžet na autopilot.",
+      details: ["Filtrování spam a toxických komentářů", "Schválení jedním kliknutím", "Odkazy s UTM parametry"],
+      icon: "message",
     },
     {
-      category: "DM workflow",
-      title: "DM po komentáři",
+      category: "DM automatizace",
+      title: "Automatické DM po klíčovém slově",
       description:
-        "Když někdo napíše kódové slovo, SocialMat mu pošle DM s odkazem, freebie nebo upsell scénářem a sleduje konverzi.",
-      details: ["Personalizace podle reakce", "Automatické follow-upy"],
+        "Když někdo napíše 'INFO' nebo 'CHCI', SocialMat mu pošle DM s PDF, slevou nebo odkazem na rezervaci. Sledujeme konverze a posíláme follow-upy.",
+      details: ["Personalizované zprávy", "Automatické připomenutí po 24h", "Sledování ROI každého DM"],
+      icon: "send",
     },
     {
-      category: "Brainstorming",
-      title: "AI obsahový stratég",
+      category: "AI Brainstorming",
+      title: "Nikdy ti nedojdou nápady na obsah",
       description:
-        "Stačí zadat téma, SocialMat navrhne 3 úhly, hooky, copy a CTA pro Reels, Stories i carousely do měsíčního plánu.",
-      details: ["Export do Notion", "Multi-jazyčná verze"],
+        "Řekni téma a SocialMat ti navrhne 3 úhly pohledu, hooky, celý copy i CTA. Pro Reels, Stories i carousely. Vytvoříme ti plán na celý měsíc během pár minut.",
+      details: ["Export do Notion nebo Google Docs", "Multi-jazyčná verze", "Trendy a virální formáty"],
+      icon: "lightbulb",
     },
   ];
 
@@ -303,6 +310,79 @@ export default function LandingPage() {
       ],
       cta: "Domluvit demo",
       highlight: false,
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Jakub Novák",
+      role: "Content Creator",
+      avatar: "JN",
+      rating: 5,
+      text: "SocialMat mi ušetřil spoustu času. Dřív jsem musel používat 3 různé aplikace, teď mám všechno na jednom místě. Titulky, editing, AI content - prostě skvělé!",
+    },
+    {
+      name: "Marie Svobodová",
+      role: "Marketing Manager",
+      avatar: "MS",
+      rating: 5,
+      text: "Konečně nemusíme platit za Captions, ManyChat a další nástroje zvlášť. SocialMat má všechno co potřebujeme a za zlomek ceny.",
+    },
+    {
+      name: "Petr Dvořák",
+      role: "Social Media Specialist",
+      avatar: "PD",
+      rating: 5,
+      text: "Kvalita AI titulků je úžasná a video editor je tak intuitivní. Vytvářím reels 3x rychleji než předtím.",
+    },
+    {
+      name: "Anna Králová",
+      role: "Influencer",
+      avatar: "AK",
+      rating: 5,
+      text: "Miluji automatické generování contentových nápadů. AI mi pomáhá udržet konzistenci a kvalitu napříč všemi platformami.",
+    },
+    {
+      name: "Tomáš Procházka",
+      role: "Video Producer",
+      avatar: "TP",
+      rating: 5,
+      text: "Jako profesionál jsem skeptický k novým nástrojům, ale SocialMat mě opravdu překvapil. Workflow je naprosto hladký.",
+    },
+    {
+      name: "Lucie Černá",
+      role: "Digital Marketer",
+      avatar: "LČ",
+      rating: 5,
+      text: "ROI je neuvěřitelný. Za cenu jednoho nástroje mám kompletní social media suite. Doporučuji všem!",
+    },
+  ];
+
+  const competitorComparison = [
+    {
+      tool: "ManyChat",
+      price: "$15/měsíc",
+      features: ["Chatboty", "Automatizace"],
+    },
+    {
+      tool: "Captions",
+      price: "$20/měsíc",
+      features: ["AI Titulky"],
+    },
+    {
+      tool: "CapCut Pro",
+      price: "$10/měsíc",
+      features: ["Video Editing"],
+    },
+    {
+      tool: "Buffer",
+      price: "$12/měsíc",
+      features: ["Plánování", "Analytics"],
+    },
+    {
+      tool: "ChatGPT Plus",
+      price: "$20/měsíc",
+      features: ["AI Content"],
     },
   ];
 
@@ -525,9 +605,8 @@ export default function LandingPage() {
             onClick={() => {
               window.location.href = "/";
             }}
-            className={`flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer font-heading ${
-              isDark ? "text-white" : "text-slate-900"
-            }`}
+            className={`flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer font-heading ${isDark ? "text-white" : "text-slate-900"
+              }`}
           >
             SocialMat
           </button>
@@ -558,30 +637,26 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              className={`relative h-9 w-16 rounded-full border transition-colors duration-300 ${
-                isDark
+              className={`relative h-9 w-16 rounded-full border transition-colors duration-300 ${isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
-              }`}
+                }`}
               aria-pressed={isDark}
             >
               <span className="sr-only">Přepnout vzhled</span>
               <Moon
-                className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
-                  isDark ? "opacity-100 text-amber-200" : "opacity-60 text-slate-500"
-                }`}
+                className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${isDark ? "opacity-100 text-amber-200" : "opacity-60 text-slate-500"
+                  }`}
               />
               <Sun
-                className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${
-                  isDark ? "opacity-0" : "opacity-100 text-amber-500"
-                }`}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-opacity duration-300 ${isDark ? "opacity-0" : "opacity-100 text-amber-500"
+                  }`}
               />
               <span
-                className={`absolute top-[3px] left-1 h-7 w-7 rounded-full shadow transition-transform duration-300 ${
-                  isDark
+                className={`absolute top-[3px] left-1 h-7 w-7 rounded-full shadow transition-transform duration-300 ${isDark
                     ? "translate-x-7 bg-white/10 border border-white/15"
                     : "translate-x-0 bg-white border border-slate-200"
-                }`}
+                  }`}
               />
             </button>
             <a
@@ -631,9 +706,8 @@ export default function LandingPage() {
         <div className="text-center max-w-5xl mx-auto px-6 relative z-[2]">
           <div className="mb-6 flex justify-center">
             <span
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${
-                isDark ? "bg-white/10 text-white/70" : "bg-slate-100 text-slate-600"
-              }`}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${isDark ? "bg-white/10 text-white/70" : "bg-slate-100 text-slate-600"
+                }`}
             >
               SocialMat Platform · 2025
             </span>
@@ -642,61 +716,62 @@ export default function LandingPage() {
           <h1
             className={`hero-title text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] tracking-tight mb-10 opacity-0 ${palette.heroTitle}`}
           >
-            Váš{" "}
+            Váš nový{" "}
             <span className={`text-transparent bg-clip-text bg-gradient-to-r ${brandGradient}`}>
-              content tým
+              AI marketingový tým
             </span>{" "}
-            v jedné aplikaci
+            pro sociální sítě
           </h1>
 
           <p
-            className={`hero-subtitle text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto mb-16 leading-relaxed opacity-0 ${palette.heroSubtitle}`}
+            className={`hero-subtitle text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed opacity-0 ${palette.heroSubtitle}`}
           >
-            SocialMat kombinuje generování českých titulků, dashboard výkonu
-            účtu, vyhodnocování statistik obsahu, auto-reply na komentáře i
-            brainstorming další kampaně. Všechny rutiny, které zabíraly hodiny,
-            teď spouštíte z jednoho AI command centra.
+            Česká AI aplikace, která za vás vytvoří titulky, analyzuje výkon, odpovídá na komentáře a vymýšlí obsah
+            (rychleji, levněji a efektivněji než celý tým).
           </p>
 
           <div className="hero-buttons flex flex-col sm:flex-row gap-6 justify-center opacity-0">
             <Link
               href="/signup"
-              className={`bg-gradient-to-r ${brandGradient} text-white py-4 px-10 rounded-full font-semibold text-lg border border-transparent transition-all duration-300 cursor-pointer ${brandGradientHover} ${brandGlow}`}
+              className={`bg-gradient-to-r ${brandGradient} text-white py-4 px-10 rounded-full font-semibold text-lg border border-transparent transition-all duration-300 cursor-pointer ${brandGradientHover} ${brandGlow} flex items-center gap-2 justify-center`}
             >
-              Vyzkoušet SocialMat
+              <Rocket className="w-5 h-5" />
+              Vyzkoušet ZDARMA na 14 dní
             </Link>
             <button
               onClick={() => scrollToSection("features")}
-              className={`px-10 py-4 rounded-full font-semibold text-lg border transition-all duration-300 ${
-                isDark
+              className={`px-10 py-4 rounded-full font-semibold text-lg border transition-all duration-300 ${isDark
                   ? "border-white/30 text-white hover:border-white/60 hover:bg-white/5"
                   : "border-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white"
-              }`}
+                }`}
             >
-              Prohlédnout funkcionality
+              Prohlédnout funkce
             </button>
           </div>
 
+          <div className={`mt-6 text-sm opacity-0 hero-subtitle ${isDark ? "text-white/60" : "text-slate-500"} flex items-center justify-center gap-4 flex-wrap`}>
+            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Bez zadávání karty</span>
+            <span>·</span>
+            <span className="flex items-center gap-1"><Shield className="w-4 h-4" /> Možnost zrušit kdykoliv</span>
+          </div>
+
           <div
-            className={`mt-10 text-sm uppercase tracking-[0.4em] font-semibold ${
-              isDark ? "text-white/50" : "text-slate-500"
-            }`}
+            className={`mt-10 text-sm uppercase tracking-[0.4em] font-semibold ${isDark ? "text-white/50" : "text-slate-500"
+              }`}
           >
             Týmy pro značky, agentury i startupy
           </div>
 
           {/* Hero Dashboard Mockup */}
           <div className="mt-16 relative">
-            <div className={`relative rounded-3xl overflow-hidden border shadow-2xl ${
-              isDark ? "border-white/10 bg-gradient-to-br from-white/10 to-white/5" : "border-slate-200 bg-white"
-            }`}>
+            <div className={`relative rounded-3xl overflow-hidden border shadow-2xl ${isDark ? "border-white/10 bg-gradient-to-br from-white/10 to-white/5" : "border-slate-200 bg-white"
+              }`}>
               <div className="aspect-[16/10] flex items-center justify-center p-8 md:p-12">
                 {/* Mockup Grid */}
                 <div className="w-full h-full grid grid-cols-3 gap-4">
                   {/* Left Panel */}
-                  <div className={`col-span-2 rounded-2xl border-2 border-dashed flex flex-col gap-3 p-4 ${
-                    isDark ? "border-white/10" : "border-slate-200"
-                  }`}>
+                  <div className={`col-span-2 rounded-2xl border-2 border-dashed flex flex-col gap-3 p-4 ${isDark ? "border-white/10" : "border-slate-200"
+                    }`}>
                     <div className={`h-8 rounded-lg ${isDark ? "bg-white/10" : "bg-slate-100"}`} />
                     <div className={`flex-1 rounded-lg ${isDark ? "bg-white/5" : "bg-slate-50"} flex items-center justify-center`}>
                       <div className="text-center space-y-2">
@@ -709,14 +784,12 @@ export default function LandingPage() {
                   </div>
                   {/* Right Panel */}
                   <div className="flex flex-col gap-3">
-                    <div className={`flex-1 rounded-xl border-2 border-dashed flex items-center justify-center ${
-                      isDark ? "border-white/10" : "border-slate-200"
-                    }`}>
+                    <div className={`flex-1 rounded-xl border-2 border-dashed flex items-center justify-center ${isDark ? "border-white/10" : "border-slate-200"
+                      }`}>
                       <span className={`text-2xl ${isDark ? "text-white/30" : "text-slate-300"}`}>📈</span>
                     </div>
-                    <div className={`flex-1 rounded-xl border-2 border-dashed flex items-center justify-center ${
-                      isDark ? "border-white/10" : "border-slate-200"
-                    }`}>
+                    <div className={`flex-1 rounded-xl border-2 border-dashed flex items-center justify-center ${isDark ? "border-white/10" : "border-slate-200"
+                      }`}>
                       <span className={`text-2xl ${isDark ? "text-white/30" : "text-slate-300"}`}>💬</span>
                     </div>
                   </div>
@@ -724,18 +797,16 @@ export default function LandingPage() {
               </div>
             </div>
             {/* Floating Stats Cards */}
-            <div className={`absolute -right-4 top-8 rounded-2xl border p-4 shadow-xl backdrop-blur-xl animate-bounce-slow ${
-              isDark ? "bg-black/80 border-white/10" : "bg-white/90 border-slate-200"
-            }`} style={{animationDuration: "3s"}}>
+            <div className={`absolute -right-4 top-8 rounded-2xl border p-4 shadow-xl backdrop-blur-xl animate-bounce-slow ${isDark ? "bg-black/80 border-white/10" : "bg-white/90 border-slate-200"
+              }`} style={{ animationDuration: "3s" }}>
               <div className={`text-xs uppercase tracking-wider mb-1 ${isDark ? "text-white/60" : "text-slate-500"}`}>Reach</div>
               <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-slate-900"}`}>124k</div>
               <div className="text-xs text-green-500 font-semibold flex items-center gap-1">
                 <span>↑</span>+23%
               </div>
             </div>
-            <div className={`absolute -left-4 bottom-12 rounded-2xl border p-4 shadow-xl backdrop-blur-xl animate-bounce-slow ${
-              isDark ? "bg-black/80 border-white/10" : "bg-white/90 border-slate-200"
-            }`} style={{animationDuration: "3.5s", animationDelay: "0.5s"}}>
+            <div className={`absolute -left-4 bottom-12 rounded-2xl border p-4 shadow-xl backdrop-blur-xl animate-bounce-slow ${isDark ? "bg-black/80 border-white/10" : "bg-white/90 border-slate-200"
+              }`} style={{ animationDuration: "3.5s", animationDelay: "0.5s" }}>
               <div className={`text-xs uppercase tracking-wider mb-1 ${isDark ? "text-white/60" : "text-slate-500"}`}>Engagement</div>
               <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-slate-900"}`}>8.4%</div>
               <div className="text-xs text-green-500 font-semibold flex items-center gap-1">
@@ -748,38 +819,34 @@ export default function LandingPage() {
             {heroHighlights.map((highlight) => (
               <div
                 key={highlight.title}
-                className={`relative overflow-hidden rounded-3xl p-8 border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${
-                  isDark
+                className={`relative overflow-hidden rounded-3xl p-8 border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${isDark
                     ? "bg-white/5 border-white/10"
                     : "bg-white border-slate-200 shadow-xl"
-                } flex flex-col gap-6`}
+                  } flex flex-col gap-6`}
               >
                 <div className="flex items-center justify-between">
                   <div
-                    className={`h-14 w-14 rounded-2xl flex items-center justify-center text-2xl bg-gradient-to-r ${brandGradient} text-white shadow-lg`}
+                    className={`h-14 w-14 rounded-2xl flex items-center justify-center bg-gradient-to-r ${brandGradient} text-white shadow-lg`}
                   >
-                    {highlight.icon === "AI" ? "🤖" : highlight.icon === "UP" ? "📈" : "💡"}
+                    {highlight.icon === "video" ? <Video className="w-7 h-7" /> : highlight.icon === "chart" ? <BarChart3 className="w-7 h-7" /> : <Lightbulb className="w-7 h-7" />}
                   </div>
                   <span
-                    className={`inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.2em] px-3 py-1 rounded-full ${
-                      isDark ? "bg-white/10 text-white/80" : "bg-slate-100 text-slate-600"
-                    }`}
+                    className={`inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.2em] px-3 py-1 rounded-full ${isDark ? "bg-white/10 text-white/80" : "bg-slate-100 text-slate-600"
+                      }`}
                   >
                     {highlight.badge}
                   </span>
                 </div>
                 <div>
                   <h3
-                    className={`text-2xl font-bold mb-2 ${
-                      isDark ? "text-white" : "text-slate-900"
-                    }`}
+                    className={`text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"
+                      }`}
                   >
                     {highlight.title}
                   </h3>
                   <p
-                    className={`text-sm leading-relaxed ${
-                      isDark ? "text-white/70" : "text-slate-600"
-                    }`}
+                    className={`text-sm leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"
+                      }`}
                   >
                     {highlight.description}
                   </p>
@@ -796,6 +863,145 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works - 3 Steps Section */}
+      <section className={`py-24 md:py-32 relative ${isDark ? "bg-gradient-to-b from-black via-zinc-950 to-black" : "bg-gradient-to-b from-slate-50 to-white"}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className={`text-4xl md:text-6xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Začni podnikat ve 3 krocích
+            </h2>
+            <p className={`text-xl md:text-2xl max-w-3xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"}`}>
+              Žádné složité nastavování. Prostě nahraj video, klikni a hotovo.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {/* Step 1 */}
+            <div className={`relative rounded-3xl p-8 md:p-10 transition-all duration-500 hover:-translate-y-2 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-slate-200 shadow-xl"}`}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? "bg-gradient-to-br from-indigo-500/30 to-blue-500/30" : "bg-gradient-to-br from-indigo-100 to-blue-100"}`}>
+                  <PlayCircle className={`w-8 h-8 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                </div>
+                <div className={`text-xl font-bold px-4 py-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"}`}>
+                  #1
+                </div>
+              </div>
+              <h3 className={`text-2xl font-bold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Nahraj své video
+              </h3>
+              <p className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"}`}>
+                Přetáhni video z telefonu nebo počítače. SocialMat okamžitě rozpozná řeč a připraví české titulky.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className={`relative rounded-3xl p-8 md:p-10 transition-all duration-500 hover:-translate-y-2 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-slate-200 shadow-xl"}`}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? "bg-gradient-to-br from-indigo-500/30 to-blue-500/30" : "bg-gradient-to-br from-indigo-100 to-blue-100"}`}>
+                  <Edit3 className={`w-8 h-8 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                </div>
+                <div className={`text-xl font-bold px-4 py-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"}`}>
+                  #2
+                </div>
+              </div>
+              <h3 className={`text-2xl font-bold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Uprav styl a obsah
+              </h3>
+              <p className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"}`}>
+                Vyber barvy, font, pozici titulků. Přidej CTA slide nebo emoji. AI ti navrhne vylepšení textu.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className={`relative rounded-3xl p-8 md:p-10 transition-all duration-500 hover:-translate-y-2 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-slate-200 shadow-xl"}`}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? "bg-gradient-to-br from-indigo-500/30 to-blue-500/30" : "bg-gradient-to-br from-indigo-100 to-blue-100"}`}>
+                  <Zap className={`w-8 h-8 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                </div>
+                <div className={`text-xl font-bold px-4 py-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"}`}>
+                  #3
+                </div>
+              </div>
+              <h3 className={`text-2xl font-bold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Stáhni a publikuj
+              </h3>
+              <p className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"}`}>
+                Exportuj video s vypálenými titulky, nahraj na Instagram/TikTok a sleduj růst engagement v dashboardu.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-16">
+            <Link
+              href="/signup"
+              className={`inline-flex items-center gap-2 bg-gradient-to-r ${brandGradient} text-white py-4 px-12 rounded-full font-semibold text-lg transition-all duration-300 ${brandGradientHover} ${brandGlow}`}
+            >
+              <Target className="w-5 h-5" />
+              Začít tvořit obsah nyní
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Media Coverage Section */}
+      <section className={`py-16 relative ${isDark ? "bg-black" : "bg-white"}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className={`text-sm uppercase tracking-[0.3em] font-semibold mb-4 ${isDark ? "text-white/60" : "text-slate-500"}`}>
+              Píšou o nás přední česká média
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-12 md:gap-16">
+              {/* Forbes */}
+              <div className={`text-3xl font-bold tracking-tight opacity-40 hover:opacity-70 transition-opacity ${isDark ? "text-white" : "text-slate-900"}`}>
+                Forbes
+              </div>
+              {/* StartItUp */}
+              <div className={`text-2xl font-semibold opacity-40 hover:opacity-70 transition-opacity ${isDark ? "text-white" : "text-slate-900"}`}>
+                StartItUp
+              </div>
+              {/* Živě.cz */}
+              <div className={`text-2xl font-semibold opacity-40 hover:opacity-70 transition-opacity ${isDark ? "text-white" : "text-slate-900"}`}>
+                Živě.cz
+              </div>
+              {/* Marketing Journal */}
+              <div className={`text-2xl font-semibold opacity-40 hover:opacity-70 transition-opacity ${isDark ? "text-white" : "text-slate-900"}`}>
+                MarketingJournal
+              </div>
+            </div>
+          </div>
+
+          {/* Social Proof Stats */}
+          <div className="flex flex-wrap items-center justify-center gap-12 mt-12">
+            <div className="text-center">
+              <div className={`text-4xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                1000+
+              </div>
+              <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                Aktivních uživatelů
+              </p>
+            </div>
+            <div className={`h-12 w-px ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+            <div className="text-center">
+              <div className={`text-4xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                50k+
+              </div>
+              <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                Vygenerovaných titulků
+              </p>
+            </div>
+            <div className={`h-12 w-px ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+            <div className="text-center">
+              <div className={`text-4xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                4.8/5
+              </div>
+              <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                Hodnocení uživatelů
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section
         ref={featuresRef}
@@ -805,27 +1011,22 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-10 relative z-[2]">
           <div className="text-center mb-20 md:mb-32">
             <h2
-              className={`features-title text-4xl md:text-6xl font-bold mb-8 opacity-0 ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
+              className={`features-title text-4xl md:text-6xl font-bold mb-8 opacity-0 ${isDark ? "text-white" : "text-slate-900"
+                }`}
             >
-              Funkcionality pro celý tým
+              Vše, co potřebuješ pro růst na sociálních sítích
             </h2>
             <p
-              className={`features-subtitle text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed font-normal opacity-0 ${
-                isDark ? "text-white/75" : "text-slate-600"
-              }`}
+              className={`features-subtitle text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed font-normal opacity-0 ${isDark ? "text-white/75" : "text-slate-600"
+                }`}
             >
-              Od generování titulků přes reporting až po odpovědi fanouškům. Všechny
-              workflow, které jste dříve lepili z pěti nástrojů, SocialMat zvládne
-              v jedné aplikaci.
+              Od titulků přes automatické odpovědi až po AI brainstorming. SocialMat je jediný nástroj, který skutečně potřebuješ.
             </p>
           </div>
 
           <div
-            className={`features-grid grid grid-cols-1 md:grid-cols-2 gap-8 rounded-[40px] p-6 md:p-8 opacity-0 ${
-              isDark ? "border border-white/10" : "border border-slate-200 bg-white"
-            }`}
+            className={`features-grid grid grid-cols-1 md:grid-cols-2 gap-8 rounded-[40px] p-6 md:p-8 opacity-0 ${isDark ? "border border-white/10" : "border border-slate-200 bg-white"
+              }`}
           >
             {coreFeatures.map((feature, index) => {
               const featureNumber = String(index + 1).padStart(2, "0");
@@ -844,20 +1045,23 @@ export default function LandingPage() {
                     />
                   </div>
                   <div
-                    className={`absolute -left-10 -top-10 w-40 h-40 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition-opacity duration-500 ${
-                      isDark ? "bg-white/5" : "bg-indigo-200/30"
-                    }`}
+                    className={`absolute -left-10 -top-10 w-40 h-40 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition-opacity duration-500 ${isDark ? "bg-white/5" : "bg-indigo-200/30"
+                      }`}
                   />
 
                   <div className="relative z-[2] flex flex-col gap-6">
                     {/* Feature Visual */}
-                    <div className={`rounded-2xl border overflow-hidden ${
-                      isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"
-                    }`}>
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"
+                      }`}>
                       <div className="aspect-video flex items-center justify-center">
                         <div className="text-center space-y-2">
-                          <div className="text-4xl">
-                            {index === 0 ? "📝" : index === 1 ? "📊" : index === 2 ? "🎯" : index === 3 ? "💬" : index === 4 ? "📩" : "🎨"}
+                          <div className="flex items-center justify-center">
+                            {coreFeatures[index].icon === "video" ? <Video className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                             coreFeatures[index].icon === "chart" ? <BarChart3 className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                             coreFeatures[index].icon === "target" ? <Target className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                             coreFeatures[index].icon === "message" ? <MessageSquare className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                             coreFeatures[index].icon === "send" ? <Send className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                             <Lightbulb className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} />}
                           </div>
                           <p className={`text-xs font-semibold ${isDark ? "text-white/40" : "text-slate-400"}`}>
                             {feature.category} Preview
@@ -867,9 +1071,8 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div
-                        className={`text-sm font-semibold tracking-[0.4em] uppercase ${
-                          isDark ? "text-white/40" : "text-slate-400"
-                        }`}
+                        className={`text-sm font-semibold tracking-[0.4em] uppercase ${isDark ? "text-white/40" : "text-slate-400"
+                          }`}
                       >
                         {featureNumber}
                       </div>
@@ -881,27 +1084,24 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <h3
-                        className={`text-3xl font-bold mb-3 tracking-tight leading-tight ${
-                          isDark ? "text-white" : "text-slate-900"
-                        }`}
+                        className={`text-3xl font-bold mb-3 tracking-tight leading-tight ${isDark ? "text-white" : "text-slate-900"
+                          }`}
                       >
                         {feature.title}
                       </h3>
                       <p
-                        className={`leading-relaxed text-base font-normal ${
-                          isDark ? "text-white/75" : "text-slate-600"
-                        }`}
+                        className={`leading-relaxed text-base font-normal ${isDark ? "text-white/75" : "text-slate-600"
+                          }`}
                       >
                         {feature.description}
                       </p>
                     </div>
                     {feature.details?.length ? (
                       <ul
-                        className={`pt-4 border-t text-sm space-y-2 ${
-                          isDark
+                        className={`pt-4 border-t text-sm space-y-2 ${isDark
                             ? "border-white/10 text-white/65"
                             : "border-slate-200 text-slate-600"
-                        }`}
+                          }`}
                       >
                         {feature.details.map((detail) => (
                           <li key={detail} className="flex items-center gap-2">
@@ -932,51 +1132,22 @@ export default function LandingPage() {
           }}
         />
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 relative z-[2]">
-          {/* Automation Visual Preview */}
-          <div className="order-2 md:order-1">
-            <div className={`rounded-3xl border p-8 sticky top-24 ${
-              isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white shadow-2xl"
-            }`}>
-              <div className="aspect-square flex flex-col items-center justify-center gap-6">
-                <div className="text-6xl">💬</div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 animate-pulse" />
-                  <div className={`text-sm font-semibold ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                    Auto-reply aktivní
-                  </div>
-                </div>
-                <div className="space-y-3 w-full">
-                  <div className={`rounded-xl p-4 border ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"}`}>
-                    <div className={`text-xs ${isDark ? "text-white/60" : "text-slate-500"}`}>Komentář → Reply</div>
-                    <div className={`text-sm font-semibold mt-1 ${isDark ? "text-white" : "text-slate-900"}`}>3s průměr</div>
-                  </div>
-                  <div className={`rounded-xl p-4 border ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"}`}>
-                    <div className={`text-xs ${isDark ? "text-white/60" : "text-slate-500"}`}>Reply → DM</div>
-                    <div className={`text-sm font-semibold mt-1 ${isDark ? "text-white" : "text-slate-900"}`}>10s průměr</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           <div className="order-1 md:order-2 space-y-6">
             <p
-              className={`text-sm uppercase tracking-[0.3em] font-semibold ${
-                isDark ? "text-white/60" : "text-slate-500"
-              }`}
+              className={`text-sm uppercase tracking-[0.3em] font-semibold ${isDark ? "text-white/60" : "text-slate-500"
+                }`}
             >
               Automatizace komentářů & DM
             </p>
             <h2
-              className={`text-4xl md:text-5xl font-bold leading-tight ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
+              className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? "text-white" : "text-slate-900"
+                }`}
             >
               Každý komentář se promění na kvalifikovaný lead
             </h2>
             <p
-              className={`text-lg leading-relaxed ${
-                isDark ? "text-white/70" : "text-slate-600"
-              }`}
+              className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"
+                }`}
             >
               SocialMat sleduje komentáře v reálném čase, odpoví na ně v brand voice
               a naváže konverzaci v DM. Vidíte, kolik prodejů nebo registrací přinesla
@@ -986,9 +1157,8 @@ export default function LandingPage() {
               {automationBenefits.map((benefit) => (
                 <li
                   key={benefit}
-                  className={`flex items-start gap-3 text-sm ${
-                    isDark ? "text-white/70" : "text-slate-600"
-                  }`}
+                  className={`flex items-start gap-3 text-sm ${isDark ? "text-white/70" : "text-slate-600"
+                    }`}
                 >
                   <span
                     className={`mt-1 h-2 w-2 rounded-full bg-gradient-to-r ${brandGradient}`}
@@ -1006,11 +1176,10 @@ export default function LandingPage() {
 
           <div className="relative">
             <div
-              className={`absolute left-6 top-0 bottom-0 w-px ${
-                isDark
+              className={`absolute left-6 top-0 bottom-0 w-px ${isDark
                   ? "bg-gradient-to-b from-white/40 via-white/10 to-transparent"
                   : "bg-gradient-to-b from-slate-300 via-slate-200 to-transparent"
-              }`}
+                }`}
             />
             <div className="space-y-6 pl-14">
               {automationFlows.map((flow, index) => {
@@ -1018,11 +1187,10 @@ export default function LandingPage() {
                 return (
                   <div
                     key={flow.title}
-                    className={`relative rounded-2xl p-6 border overflow-hidden ${
-                      isDark
+                    className={`relative rounded-2xl p-6 border overflow-hidden ${isDark
                         ? "bg-white/5 border-white/10"
                         : "bg-white border-slate-200 shadow-xl"
-                    }`}
+                      }`}
                   >
                     <div
                       className={`absolute -left-14 top-6 h-12 w-12 rounded-2xl flex items-center justify-center text-xs font-bold uppercase tracking-wide bg-gradient-to-r ${brandGradient} text-white shadow-lg shadow-orange-500/25`}
@@ -1031,31 +1199,27 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center justify-between mb-2">
                       <span
-                        className={`text-xs font-semibold uppercase tracking-[0.2em] ${
-                          isDark ? "text-white/60" : "text-slate-500"
-                        }`}
+                        className={`text-xs font-semibold uppercase tracking-[0.2em] ${isDark ? "text-white/60" : "text-slate-500"
+                          }`}
                       >
                         {flow.stage}
                       </span>
                       <span
-                        className={`text-xs font-semibold ${
-                          isDark ? "text-white/70" : "text-slate-600"
-                        }`}
+                        className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-slate-600"
+                          }`}
                       >
                         {flow.outcome}
                       </span>
                     </div>
                     <h3
-                      className={`text-2xl font-semibold mb-2 ${
-                        isDark ? "text-white" : "text-slate-900"
-                      }`}
+                      className={`text-2xl font-semibold mb-2 ${isDark ? "text-white" : "text-slate-900"
+                        }`}
                     >
                       {flow.title}
                     </h3>
                     <p
-                      className={`text-sm leading-relaxed ${
-                        isDark ? "text-white/65" : "text-slate-600"
-                      }`}
+                      className={`text-sm leading-relaxed ${isDark ? "text-white/65" : "text-slate-600"
+                        }`}
                     >
                       {flow.detail}
                     </p>
@@ -1070,50 +1234,44 @@ export default function LandingPage() {
       {/* Insights Section */}
       <section id="insights" className="py-24 md:py-32 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className={`rounded-[32px] p-8 md:p-10 border relative overflow-hidden ${
-            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-2xl"
-          }`}>
+          <div className={`rounded-[32px] p-8 md:p-10 border relative overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-2xl"
+            }`}>
             <div className="absolute inset-0 opacity-20 bg-[conic-gradient(at_top,_rgba(251,113,133,0.3),_transparent_60%)]" />
             {/* Mini Chart Illustration */}
-            <div className={`absolute top-4 right-4 rounded-xl border p-3 ${
-              isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/80"
-            }`}>
+            <div className={`absolute top-4 right-4 rounded-xl border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/80"
+              }`}>
               <div className="flex items-end gap-1 h-12 w-16">
-                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{height: "40%"}} />
-                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{height: "70%"}} />
-                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{height: "55%"}} />
-                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{height: "90%"}} />
-                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{height: "100%"}} />
+                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{ height: "40%" }} />
+                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{ height: "70%" }} />
+                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{ height: "55%" }} />
+                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{ height: "90%" }} />
+                <div className="w-2 bg-gradient-to-t from-orange-500 to-pink-500 rounded-t" style={{ height: "100%" }} />
               </div>
             </div>
             <div className="relative grid gap-4 sm:grid-cols-2">
               {insightWidgets.map((widget) => (
                 <div
                   key={widget.label}
-                  className={`rounded-2xl p-6 border flex flex-col gap-2 ${
-                    isDark
+                  className={`rounded-2xl p-6 border flex flex-col gap-2 ${isDark
                       ? "border-white/10 bg-white/5"
                       : "border-slate-200 bg-white/80"
-                  }`}
+                    }`}
                 >
                   <p
-                    className={`text-xs uppercase tracking-[0.2em] mb-2 ${
-                      isDark ? "text-white/60" : "text-slate-500"
-                    }`}
+                    className={`text-xs uppercase tracking-[0.2em] mb-2 ${isDark ? "text-white/60" : "text-slate-500"
+                      }`}
                   >
                     {widget.label}
                   </p>
                   <div
-                    className={`text-3xl font-black ${
-                      isDark ? "text-white" : "text-slate-900"
-                    }`}
+                    className={`text-3xl font-black ${isDark ? "text-white" : "text-slate-900"
+                      }`}
                   >
                     {widget.value}
                   </div>
                   <p
-                    className={`text-sm leading-relaxed ${
-                      isDark ? "text-white/70" : "text-slate-600"
-                    }`}
+                    className={`text-sm leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"
+                      }`}
                   >
                     {widget.description}
                   </p>
@@ -1124,23 +1282,20 @@ export default function LandingPage() {
 
           <div className="space-y-6">
             <p
-              className={`text-sm uppercase tracking-[0.3em] font-semibold ${
-                isDark ? "text-white/60" : "text-slate-500"
-              }`}
+              className={`text-sm uppercase tracking-[0.3em] font-semibold ${isDark ? "text-white/60" : "text-slate-500"
+                }`}
             >
               Insights & Brainstorming
             </p>
             <h2
-              className={`text-4xl md:text-5xl font-bold leading-tight ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
+              className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? "text-white" : "text-slate-900"
+                }`}
             >
               Data, která hovoří, a AI, která navrhne další krok
             </h2>
             <p
-              className={`text-lg leading-relaxed ${
-                isDark ? "text-white/70" : "text-slate-600"
-              }`}
+              className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"
+                }`}
             >
               SocialMat propojuje statistiky z Instagramu s vlastním AI modelem.
               Ten popíše, co fungovalo, doporučí formát a přidá brainstorming pro
@@ -1150,9 +1305,8 @@ export default function LandingPage() {
               {insightSteps.map((step) => (
                 <li
                   key={step}
-                  className={`flex items-start gap-3 text-sm ${
-                    isDark ? "text-white/70" : "text-slate-600"
-                  }`}
+                  className={`flex items-start gap-3 text-sm ${isDark ? "text-white/70" : "text-slate-600"
+                    }`}
                 >
                   <span className={`mt-1 h-2 w-2 rounded-full bg-gradient-to-r ${brandGradient}`} />
                   <span>{step}</span>
@@ -1160,9 +1314,8 @@ export default function LandingPage() {
               ))}
             </ul>
             <div
-              className={`flex items-center gap-4 text-sm ${
-                isDark ? "text-white/70" : "text-slate-600"
-              }`}
+              className={`flex items-center gap-4 text-sm ${isDark ? "text-white/70" : "text-slate-600"
+                }`}
             >
               <span className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r ${brandGradient} text-white font-bold`}>
                 AI
@@ -1184,9 +1337,8 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
             <h2
-              className={`stats-heading text-4xl md:text-6xl font-bold mb-8 opacity-0 ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
+              className={`stats-heading text-4xl md:text-6xl font-bold mb-8 opacity-0 ${isDark ? "text-white" : "text-slate-900"
+                }`}
             >
               Věříme v transparentnost
             </h2>
@@ -1200,35 +1352,31 @@ export default function LandingPage() {
             {statHighlights.map((stat) => (
               <div
                 key={stat.label}
-                className={`stat-item relative rounded-3xl border p-8 opacity-0 ${
-                  isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white shadow-xl"
-                }`}
+                className={`stat-item relative rounded-3xl border p-8 opacity-0 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white shadow-xl"
+                  }`}
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-lg bg-gradient-to-r ${brandGradient}`}>
-                      {stat.label.includes("AI") ? "🤖" : stat.label.includes("doba") ? "⚡" : stat.label.includes("titulků") ? "📝" : "📈"}
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-r ${brandGradient}`}>
+                      {stat.label.includes("AI") ? <SparklesIcon className="w-5 h-5 text-white" /> : stat.label.includes("doba") ? <Zap className="w-5 h-5 text-white" /> : stat.label.includes("titulků") ? <Video className="w-5 h-5 text-white" /> : <TrendingUp className="w-5 h-5 text-white" />}
                     </div>
                     <span
-                      className={`text-xs font-semibold uppercase tracking-[0.3em] ${
-                        isDark ? "text-white/60" : "text-slate-500"
-                      }`}
+                      className={`text-xs font-semibold uppercase tracking-[0.3em] ${isDark ? "text-white/60" : "text-slate-500"
+                        }`}
                     >
                       Performance
                     </span>
                   </div>
                   <span
-                    className={`text-[11px] uppercase tracking-[0.2em] ${
-                      isDark ? "text-white/40" : "text-slate-400"
-                    }`}
+                    className={`text-[11px] uppercase tracking-[0.2em] ${isDark ? "text-white/40" : "text-slate-400"
+                      }`}
                   >
                     {stat.detail}
                   </span>
                 </div>
                 <div
-                  className={`text-4xl md:text-5xl font-bold mb-2 ${
-                    isDark ? "text-white" : "text-slate-900"
-                  }`}
+                  className={`text-4xl md:text-5xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"
+                    }`}
                 >
                   <CountUp
                     value={stat.value}
@@ -1237,9 +1385,8 @@ export default function LandingPage() {
                   />
                 </div>
                 <p
-                  className={`text-sm tracking-wide ${
-                    isDark ? "text-white/70" : "text-slate-600"
-                  }`}
+                  className={`text-sm tracking-wide ${isDark ? "text-white/70" : "text-slate-600"
+                    }`}
                 >
                   {stat.label}
                 </p>
@@ -1257,19 +1404,16 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
             <h2
-              className={`text-4xl md:text-6xl font-bold tracking-tight ${
-                isDark ? "text-white" : "text-slate-900"
-              }`}
+              className={`text-4xl md:text-6xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"
+                }`}
             >
-              Vyberte plán, který sedí
+              Jednoduchý ceník
             </h2>
             <p
-              className={`text-lg max-w-2xl mx-auto ${
-                isDark ? "text-white/70" : "text-slate-600"
-              }`}
+              className={`text-lg max-w-2xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"
+                }`}
             >
-              Transparentní ceny bez skrytých poplatků. Nahrajte video a plaťte
-              jen za to, co opravdu používáte.
+              Bez skrytých poplatků, bez komplikací. Vyber si plán a začni tvořit obsah, který roste tvůj business.
             </p>
           </div>
 
@@ -1277,52 +1421,46 @@ export default function LandingPage() {
             {pricingPlans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-3xl p-8 flex flex-col gap-6 ${
-                  plan.highlight
+                className={`relative rounded-3xl p-8 flex flex-col gap-6 border-2 transition-all duration-500 hover:-translate-y-2 ${plan.highlight
                     ? `${palette.pricingHighlightBorder} ${brandGlow}`
                     : palette.pricingBorder
-                } ${isDark ? "bg-white/5" : "bg-white"}`}
+                  } ${isDark ? "bg-white/5 hover:bg-white/10" : "bg-white hover:shadow-2xl"}`}
               >
                 {plan.highlight && (
-                  <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white text-xs font-semibold shadow-md">
-                    Nejpopulárnější
+                  <span className="absolute -top-3 left-6 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white text-sm font-bold shadow-lg animate-pulse">
+                    ⭐ NEJPOPULÁRNĚJŠÍ
                   </span>
                 )}
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-xl ${
-                      plan.highlight ? `bg-gradient-to-r ${brandGradient}` : isDark ? "bg-white/10" : "bg-slate-100"
-                    }`}>
-                      {plan.name === "Starter" ? "🚀" : plan.name === "Pro" ? "⭐" : "💼"}
+                    <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${plan.highlight ? `bg-gradient-to-r ${brandGradient}` : isDark ? "bg-white/10" : "bg-slate-100"
+                      }`}>
+                      {plan.name === "Starter" ? <Rocket className={`w-7 h-7 ${plan.highlight ? "text-white" : isDark ? "text-white/70" : "text-slate-600"}`} /> : plan.name === "Pro" ? <Star className={`w-7 h-7 ${plan.highlight ? "text-white" : isDark ? "text-white/70" : "text-slate-600"}`} /> : <Briefcase className={`w-7 h-7 ${plan.highlight ? "text-white" : isDark ? "text-white/70" : "text-slate-600"}`} />}
                     </div>
                     <h3
-                      className={`text-2xl font-bold tracking-tight ${
-                        isDark ? "text-white" : "text-slate-900"
-                      }`}
+                      className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"
+                        }`}
                     >
                       {plan.name}
                     </h3>
                   </div>
                   <p
-                    className={`text-sm ${
-                      isDark ? "text-white/70" : "text-slate-600"
-                    }`}
+                    className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"
+                      }`}
                   >
                     {plan.desc}
                   </p>
                 </div>
                 <div>
                   <div
-                    className={`text-4xl font-bold ${
-                      isDark ? "text-white" : "text-slate-900"
-                    }`}
+                    className={`text-5xl font-bold ${isDark ? "text-white" : "text-slate-900"
+                      }`}
                   >
                     {plan.price}
                     {plan.period ? (
                       <span
-                        className={`text-base font-normal ml-2 ${
-                          isDark ? "text-white/60" : "text-slate-500"
-                        }`}
+                        className={`text-lg font-normal ml-2 ${isDark ? "text-white/60" : "text-slate-500"
+                          }`}
                       >
                         {plan.period}
                       </span>
@@ -1330,9 +1468,8 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <ul
-                  className={`space-y-3 text-sm flex-1 ${
-                    isDark ? "text-white/80" : "text-slate-700"
-                  }`}
+                  className={`space-y-3 text-sm flex-1 ${isDark ? "text-white/80" : "text-slate-700"
+                    }`}
                 >
                   {plan.perks.map((perk) => (
                     <li
@@ -1346,15 +1483,13 @@ export default function LandingPage() {
                 </ul>
                 <div className="pt-2">
                   <button
-                    className={`w-full h-12 rounded-full font-semibold text-sm transition-all duration-500 ease-out ${
-                      plan.highlight
+                    className={`w-full h-12 rounded-full font-semibold text-sm transition-all duration-500 ease-out ${plan.highlight
                         ? "bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-sky-500 shadow-lg shadow-indigo-500/25"
-                        : `bg-transparent text-white border hover:bg-indigo-500/10 hover:border-indigo-500 ${
-                            isDark
-                              ? "border-white/15 text-white"
-                              : "border-slate-200 text-slate-900"
-                          }`
-                    }`}
+                        : `bg-transparent text-white border hover:bg-indigo-500/10 hover:border-indigo-500 ${isDark
+                          ? "border-white/15 text-white"
+                          : "border-slate-200 text-slate-900"
+                        }`
+                      }`}
                   >
                     {plan.cta}
                   </button>
@@ -1365,22 +1500,321 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className={`py-24 md:py-32 px-6 ${isDark ? 'bg-gradient-to-b from-black via-[#0a0a0a] to-black' : 'bg-gradient-to-b from-slate-50 via-white to-slate-50'}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-4 mb-20">
+            <h2 className={`text-4xl md:text-6xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              💬 Co říkají naši zákazníci?
+            </h2>
+            <p className={`text-lg md:text-xl max-w-2xl mx-auto ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+              Přidejte se k více než 1000 spokojených tvůrců z Česka a Slovenska
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div
+                key={index}
+                className={`p-8 md:p-10 rounded-3xl border ${isDark
+                    ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                    : 'bg-white border-slate-200 hover:shadow-2xl'
+                  } transition-all duration-500 hover:-translate-y-2`}
+              >
+                <div className="flex items-start gap-4 mb-6">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl ${isDark ? 'bg-gradient-to-br from-indigo-500/30 to-purple-500/30 text-indigo-300' : 'bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700'
+                    }`}>
+                    {testimonial.avatar}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {testimonial.name}
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
+                      {testimonial.role}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+
+                <p className={`text-base leading-relaxed ${isDark ? 'text-white/80' : 'text-slate-700'}`}>
+                  "{testimonial.text}"
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Featured Testimonial */}
+          <div className={`mt-12 p-10 md:p-12 rounded-3xl border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/30 border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200'
+            }`}>
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl shrink-0 ${isDark ? 'bg-gradient-to-br from-indigo-500/40 to-purple-500/40 text-indigo-200' : 'bg-gradient-to-br from-indigo-200 to-purple-200 text-indigo-800'
+                }`}>
+                PE
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <p className={`text-lg md:text-xl leading-relaxed mb-4 ${isDark ? 'text-white/90' : 'text-slate-800'}`}>
+                  "SocialMat je přesně to, co jsem hledala! Jednoduše a následně vše automaticky za mě prodává. Je to jako kdybych vůbec nepodnikala a jen mi chodily peníze. 😄 Miluju to!"
+                </p>
+                <div>
+                  <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    @perfekcionistkaeliska
+                  </p>
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
+                    275k sledujících na IG · Tvůrce obsahu
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Price Comparison Section */}
+      <section className={`py-24 md:py-32 px-6 ${isDark ? 'bg-black' : 'bg-white'}`}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className={`text-4xl md:text-6xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              💸 Ušetři tisíce měsíčně za jiné aplikace
+            </h2>
+            <p className={`text-lg md:text-xl max-w-3xl mx-auto ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+              SocialMat nahradí složité weby, funnelové softwary a 5+ dalších aplikací. Jednodušší, efektivnější a levnější řešení pro tvé podnikání.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Competitors Side */}
+            <div className={`p-8 rounded-2xl border ${isDark ? 'bg-red-950/20 border-red-500/30' : 'bg-red-50 border-red-200'
+              }`}>
+              <h3 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Bez SocialMat
+              </h3>
+              <div className="space-y-4">
+                {competitorComparison.map((comp, index) => (
+                  <div key={index} className={`p-4 rounded-lg ${isDark ? 'bg-black/40' : 'bg-white'
+                    }`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {comp.tool}
+                      </span>
+                      <span className={`font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                        {comp.price}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {comp.features.map((feature, i) => (
+                        <span key={i} className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      Celkem měsíčně:
+                    </span>
+                    <span className={`text-3xl font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                      $77
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SocialMat Side */}
+            <div className={`p-8 rounded-2xl border relative overflow-hidden ${isDark
+                ? 'bg-gradient-to-br from-indigo-950/40 to-blue-950/40 border-indigo-500/50'
+                : 'bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200'
+              }`}>
+              <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                }`}>
+                UŠETŘETE 87%
+              </div>
+
+              <h3 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Se SocialMat
+              </h3>
+
+              <div className={`p-6 rounded-lg mb-6 ${isDark ? 'bg-black/40' : 'bg-white'
+                }`}>
+                <div className="flex justify-between items-start mb-4">
+                  <span className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    SocialMat Pro
+                  </span>
+                  <span className={`font-bold text-2xl ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                    €10
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    'AI Titulky a přepisy',
+                    'Video Editor',
+                    'AI Content generátor',
+                    'Automatické plánování',
+                    'Analytics a insights',
+                    'Chatboty a automatizace',
+                    'Multi-platform export',
+                    'Neomezený storage'
+                  ].map((feature, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className={`text-sm ${isDark ? 'text-white/80' : 'text-slate-700'}`}>
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20' : 'bg-gradient-to-r from-green-100 to-emerald-100'
+                }`}>
+                <div className="text-center">
+                  <p className={`text-sm mb-1 ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+                    Ušetříte každý měsíc
+                  </p>
+                  <p className={`text-4xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                    $67
+                  </p>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
+                    To je $804 ročně!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link href="/signup">
+              <button className={`px-12 py-5 rounded-full bg-gradient-to-r ${brandGradient} text-white font-bold text-xl transition-all duration-300 ${brandGradientHover} ${brandGlow} hover:scale-105`}>
+                🎯 Začít šetřit ZDARMA
+              </button>
+            </Link>
+            <p className={`mt-4 text-sm ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
+              ✨ Bez zadání karty · Zruš kdykoliv · 14 dní trial
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className={`py-24 md:py-32 px-6 ${isDark ? 'bg-gradient-to-b from-black to-zinc-950' : 'bg-gradient-to-b from-white to-slate-50'}`}>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className={`text-4xl md:text-6xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              ❓ Často kladené otázky
+            </h2>
+            <p className={`text-lg md:text-xl ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+              Máte otázky? Máme odpovědi!
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* FAQ 1 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <SparklesIcon className="w-6 h-6" />
+                Jak přesná je AI při rozpoznávání české řeči?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                Naše AI je trénovaná speciálně na češtinu a slovenštinu včetně dialektů a slangu. Přesnost je 95%+ i u rychlé řeči nebo videa s hudbou v pozadí. Titulky můžete samozřejmě kdykoliv upravit.
+              </p>
+            </div>
+
+            {/* FAQ 2 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <Shield className="w-6 h-6" />
+                Musím zadávat kreditní kartu pro vyzkoušení zdarma?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                Ne! Můžete vyzkoušet SocialMat na 14 dní zcela zdarma bez zadání platební karty. Žádné automatické prodloužení, žádné skryté poplatky. Prostě si to vyzkoušíte a pak se rozhodnete.
+              </p>
+            </div>
+
+            {/* FAQ 3 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <Users className="w-6 h-6" />
+                Jaké sociální sítě podporujete?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                Momentálně podporujeme Instagram (Reels, Stories, posty) a TikTok. Připravujeme integraci s YouTube Shorts, Facebookem a LinkedIn. Všechny statistiky a automatické odpovědi fungují pro Instagram.
+              </p>
+            </div>
+
+            {/* FAQ 4 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <Edit3 className="w-6 h-6" />
+                Mohu si přizpůsobit styl titulků podle své značky?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                Ano! Můžete si nastavit vlastní barvy, fonty, pozici titulků, velikost textu a dokonce i animace. Všechna nastavení se automaticky ukládají jako vaše šablona pro příští videa.
+              </p>
+            </div>
+
+            {/* FAQ 5 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <Zap className="w-6 h-6" />
+                Jak rychle dostanu hotové video s titulky?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                U běžného 30-60 vteřinového Reels to trvá průměrně 20-40 sekund. Delší videa (3-5 minut) zpracujeme do 2 minut. Záleží na délce a kvalitě zvuku, ale vždy to je rychlejší než ruční přepisování!
+              </p>
+            </div>
+
+            {/* FAQ 6 */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <CurrencyDollarIcon className="w-6 h-6" />
+                Co když mi nevyhovuje placený plán?
+              </h3>
+              <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
+                Můžete kdykoliv zrušit předplatné bez udání důvodu. Pokud nejste spokojeni během prvních 30 dní, vrátíme vám peníze zpět. Žádné otázky, žádné komplikace. Chceme jen spokojené zákazníky!
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className={`text-lg mb-6 ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+              Máte jinou otázku? Jsme tu pro vás!
+            </p>
+            <Link href="/signup">
+              <button className={`inline-flex items-center gap-2 bg-gradient-to-r ${brandGradient} text-white py-3 px-8 rounded-full font-semibold text-lg transition-all duration-300 ${brandGradientHover} ${brandGlow}`}>
+                <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                Napsat podporu
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer
         id="contact"
-        className={`px-6 pt-24 pb-12 ${
-          isDark
+        className={`px-6 pt-24 pb-12 ${isDark
             ? "bg-black text-white"
             : "bg-gradient-to-b from-white via-slate-50 to-slate-100 text-slate-900"
-        }`}
+          }`}
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="space-y-4">
               <span
-                className={`text-xs uppercase tracking-[0.4em] ${
-                  isDark ? "text-white/70" : "text-slate-500"
-                }`}
+                className={`text-xs uppercase tracking-[0.4em] ${isDark ? "text-white/70" : "text-slate-500"
+                  }`}
               >
                 SocialMat
               </span>
@@ -1399,19 +1833,17 @@ export default function LandingPage() {
                     {group.title}
                   </h4>
                   <ul
-                    className={`space-y-2 text-sm ${
-                      isDark ? "text-white/70" : "text-slate-600"
-                    }`}
+                    className={`space-y-2 text-sm ${isDark ? "text-white/70" : "text-slate-600"
+                      }`}
                   >
                     {group.items.map((item) => (
                       <li key={item.label}>
                         <a
                           href={item.href}
-                          className={`transition-colors ${
-                            isDark
+                          className={`transition-colors ${isDark
                               ? "hover:text-white"
                               : "hover:text-slate-900"
-                          }`}
+                            }`}
                         >
                           {item.label}
                         </a>
@@ -1434,17 +1866,15 @@ export default function LandingPage() {
             <div className="flex items-center gap-4 text-sm">
               <a
                 href="https://instagram.com"
-                className={`hover:underline ${
-                  isDark ? "text-white/80" : "text-slate-600"
-                }`}
+                className={`hover:underline ${isDark ? "text-white/80" : "text-slate-600"
+                  }`}
               >
                 Instagram
               </a>
               <a
                 href="mailto:hello@socialmat.app"
-                className={`hover:underline ${
-                  isDark ? "text-white/80" : "text-slate-600"
-                }`}
+                className={`hover:underline ${isDark ? "text-white/80" : "text-slate-600"
+                  }`}
               >
                 hello@socialmat.app
               </a>
