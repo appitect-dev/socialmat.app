@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { Moon, Sun, Sparkles, TrendingUp, Lightbulb, Video, BarChart3, MessageSquare, Send, Zap, CheckCircle2, ArrowRight, PlayCircle, Edit3, Rocket, Star, Briefcase, Users, Target, Clock, Award, Shield } from "lucide-react";
+import { Moon, Sun, Sparkles, TrendingUp, Lightbulb, Video, BarChart3, MessageSquare, Send, Zap, CheckCircle2, ArrowRight, PlayCircle, Edit3, Rocket, Star, Briefcase, Users, Target, Clock, Award, Shield, ChevronDown, Image, Calendar, Brain } from "lucide-react";
 import { SparklesIcon, CurrencyDollarIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 export default function LandingPage() {
@@ -12,6 +12,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("");
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+  const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false);
 
   // Refs for animations
   const navRef = useRef(null);
@@ -613,23 +614,83 @@ export default function LandingPage() {
 
           {/* CENTER LINKS */}
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold">
-            <button
-              onClick={() => scrollToSection("features")}
-              className={`${palette.navLinks} transition-colors duration-200 bg-transparent border-none cursor-pointer`}
-            >
-              Features
-            </button>
+            {/* Features Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setFeaturesDropdownOpen(!featuresDropdownOpen)}
+                onBlur={() => setTimeout(() => setFeaturesDropdownOpen(false), 150)}
+                className={`${palette.navLinks} transition-colors duration-200 bg-transparent border-none cursor-pointer flex items-center gap-1`}
+              >
+                Funkce
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${featuresDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {featuresDropdownOpen && (
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden z-50 ${isDark ? 'bg-black/95 backdrop-blur-xl border-white/10' : 'bg-white/95 backdrop-blur-xl border-slate-200'}`}>
+                  <div className="py-2">
+                    <a href="/features/titulky" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <Video className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">AI Titulky</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Automatické titulky</div>
+                      </div>
+                    </a>
+                    <a href="/features/video-editor" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <Edit3 className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">Video Editor</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Úprava videí</div>
+                      </div>
+                    </a>
+                    <a href="/features/analytics" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <BarChart3 className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">Analýzy profilu</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Metriky & statistiky</div>
+                      </div>
+                    </a>
+                    <a href="/features/stories" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <Image className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">Stories Editor</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Tvorba Stories</div>
+                      </div>
+                    </a>
+                    <a href="/features/kalendar" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <Calendar className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">Kalendář</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Plánování obsahu</div>
+                      </div>
+                    </a>
+                    <a href="/features/ai-content" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <Brain className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">AI Content</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Generování obsahu</div>
+                      </div>
+                    </a>
+                    <a href="/features/auto-reply" className={`flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-100 text-slate-700'}`}>
+                      <MessageSquare className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold text-sm">Auto Reply</div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-500'}`}>Automatické odpovědi</div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => scrollToSection("pricing")}
               className={`${palette.navLinks} transition-colors duration-200 bg-transparent border-none cursor-pointer`}
             >
-              Pricing
+              Ceník
             </button>
             <button
               onClick={() => scrollToSection("contact")}
               className={`${palette.navLinks} transition-colors duration-200 bg-transparent border-none cursor-pointer`}
             >
-              Contact
+              Kontakt
             </button>
           </div>
 
@@ -663,13 +724,13 @@ export default function LandingPage() {
               href="/dashboard"
               className={`${palette.navLogin} text-sm font-semibold bg-transparent border-none cursor-pointer transition-colors duration-300`}
             >
-              Login
+              Přihlášení
             </a>
             <a
               href="/signup"
               className="text-white bg-gradient-to-r from-indigo-600 to-blue-500 py-2 px-6 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer shadow-md shadow-indigo-500/20 hover:from-indigo-500 hover:to-sky-500 hover:shadow-indigo-500/35"
             >
-              Get Started
+              Vyzkoušet zdarma
             </a>
           </div>
         </div>
@@ -1030,9 +1091,20 @@ export default function LandingPage() {
           >
             {coreFeatures.map((feature, index) => {
               const featureNumber = String(index + 1).padStart(2, "0");
+              const featureLinks = [
+                "/features/titulky",
+                "/features/analytics",
+                "/features/analytics",
+                "/features/auto-reply",
+                "#",
+                "/features/ai-content"
+              ];
+              const featureLink = featureLinks[index] || "#";
+              
               return (
-                <div
+                <Link
                   key={feature.title}
+                  href={featureLink}
                   className={`feature-card relative overflow-hidden ${palette.featureCard} p-8 md:p-12 transition-all duration-500 flex flex-col h-full group cursor-pointer rounded-3xl opacity-0 hover:scale-[1.02]`}
                 >
                   <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none">
@@ -1050,22 +1122,33 @@ export default function LandingPage() {
                   />
 
                   <div className="relative z-[2] flex flex-col gap-6">
-                    {/* Feature Visual */}
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"
+                    {/* Feature Visual - Enhanced with gradient backgrounds */}
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/10" : "border-slate-200"
                       }`}>
-                      <div className="aspect-video flex items-center justify-center">
-                        <div className="text-center space-y-2">
-                          <div className="flex items-center justify-center">
-                            {coreFeatures[index].icon === "video" ? <Video className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                              coreFeatures[index].icon === "chart" ? <BarChart3 className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                                coreFeatures[index].icon === "target" ? <Target className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                                  coreFeatures[index].icon === "message" ? <MessageSquare className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                                    coreFeatures[index].icon === "send" ? <Send className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                                      <Lightbulb className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} />}
+                      <div className={`aspect-video flex items-center justify-center ${
+                        index === 0 ? "bg-gradient-to-br from-indigo-500/10 to-blue-500/10" :
+                        index === 1 ? "bg-gradient-to-br from-emerald-500/10 to-teal-500/10" :
+                        index === 2 ? "bg-gradient-to-br from-purple-500/10 to-pink-500/10" :
+                        index === 3 ? "bg-gradient-to-br from-orange-500/10 to-red-500/10" :
+                        index === 4 ? "bg-gradient-to-br from-cyan-500/10 to-blue-500/10" :
+                        "bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10"
+                      }`}>
+                        <div className="text-center space-y-3">
+                          <div className={`flex items-center justify-center w-20 h-20 rounded-2xl mx-auto ${
+                            index === 0 ? "bg-gradient-to-br from-indigo-500 to-blue-500" :
+                            index === 1 ? "bg-gradient-to-br from-emerald-500 to-teal-500" :
+                            index === 2 ? "bg-gradient-to-br from-purple-500 to-pink-500" :
+                            index === 3 ? "bg-gradient-to-br from-orange-500 to-red-500" :
+                            index === 4 ? "bg-gradient-to-br from-cyan-500 to-blue-500" :
+                            "bg-gradient-to-br from-violet-500 to-fuchsia-500"
+                          } text-white shadow-lg`}>
+                            {coreFeatures[index].icon === "video" ? <Video className="w-10 h-10" /> :
+                              coreFeatures[index].icon === "chart" ? <BarChart3 className="w-10 h-10" /> :
+                                coreFeatures[index].icon === "target" ? <Target className="w-10 h-10" /> :
+                                  coreFeatures[index].icon === "message" ? <MessageSquare className="w-10 h-10" /> :
+                                    coreFeatures[index].icon === "send" ? <Send className="w-10 h-10" /> :
+                                      <Lightbulb className="w-10 h-10" />}
                           </div>
-                          <p className={`text-xs font-semibold ${isDark ? "text-white/40" : "text-slate-400"}`}>
-                            {feature.category} Preview
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -1111,8 +1194,21 @@ export default function LandingPage() {
                         ))}
                       </ul>
                     ) : null}
+                    
+                    {/* "Zjistit více" link */}
+                    <div className={`flex items-center gap-2 text-sm font-semibold mt-auto pt-4 transition-all group-hover:gap-3 ${
+                      index === 0 ? "text-indigo-500" :
+                      index === 1 ? "text-emerald-500" :
+                      index === 2 ? "text-purple-500" :
+                      index === 3 ? "text-orange-500" :
+                      index === 4 ? "text-cyan-500" :
+                      "text-violet-500"
+                    }`}>
+                      <span>Zjistit více</span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
