@@ -638,8 +638,8 @@ export default function LandingPage() {
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
               className={`relative h-9 w-16 rounded-full border transition-colors duration-300 ${isDark
-                  ? "bg-white/5 border-white/10"
-                  : "bg-white border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
+                ? "bg-white/5 border-white/10"
+                : "bg-white border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
                 }`}
               aria-pressed={isDark}
             >
@@ -654,8 +654,8 @@ export default function LandingPage() {
               />
               <span
                 className={`absolute top-[3px] left-1 h-7 w-7 rounded-full shadow transition-transform duration-300 ${isDark
-                    ? "translate-x-7 bg-white/10 border border-white/15"
-                    : "translate-x-0 bg-white border border-slate-200"
+                  ? "translate-x-7 bg-white/10 border border-white/15"
+                  : "translate-x-0 bg-white border border-slate-200"
                   }`}
               />
             </button>
@@ -741,8 +741,8 @@ export default function LandingPage() {
             <button
               onClick={() => scrollToSection("features")}
               className={`px-10 py-4 rounded-full font-semibold text-lg border transition-all duration-300 ${isDark
-                  ? "border-white/30 text-white hover:border-white/60 hover:bg-white/5"
-                  : "border-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white"
+                ? "border-white/30 text-white hover:border-white/60 hover:bg-white/5"
+                : "border-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white"
                 }`}
             >
               Prohlédnout funkce
@@ -820,8 +820,8 @@ export default function LandingPage() {
               <div
                 key={highlight.title}
                 className={`relative overflow-hidden rounded-3xl p-8 border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${isDark
-                    ? "bg-white/5 border-white/10"
-                    : "bg-white border-slate-200 shadow-xl"
+                  ? "bg-white/5 border-white/10"
+                  : "bg-white border-slate-200 shadow-xl"
                   } flex flex-col gap-6`}
               >
                 <div className="flex items-center justify-between">
@@ -1057,11 +1057,11 @@ export default function LandingPage() {
                         <div className="text-center space-y-2">
                           <div className="flex items-center justify-center">
                             {coreFeatures[index].icon === "video" ? <Video className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                             coreFeatures[index].icon === "chart" ? <BarChart3 className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                             coreFeatures[index].icon === "target" ? <Target className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                             coreFeatures[index].icon === "message" ? <MessageSquare className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                             coreFeatures[index].icon === "send" ? <Send className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
-                             <Lightbulb className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} />}
+                              coreFeatures[index].icon === "chart" ? <BarChart3 className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                                coreFeatures[index].icon === "target" ? <Target className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                                  coreFeatures[index].icon === "message" ? <MessageSquare className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                                    coreFeatures[index].icon === "send" ? <Send className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} /> :
+                                      <Lightbulb className={`w-12 h-12 ${isDark ? "text-white/40" : "text-slate-400"}`} />}
                           </div>
                           <p className={`text-xs font-semibold ${isDark ? "text-white/40" : "text-slate-400"}`}>
                             {feature.category} Preview
@@ -1099,8 +1099,8 @@ export default function LandingPage() {
                     {feature.details?.length ? (
                       <ul
                         className={`pt-4 border-t text-sm space-y-2 ${isDark
-                            ? "border-white/10 text-white/65"
-                            : "border-slate-200 text-slate-600"
+                          ? "border-white/10 text-white/65"
+                          : "border-slate-200 text-slate-600"
                           }`}
                       >
                         {feature.details.map((detail) => (
@@ -1177,8 +1177,8 @@ export default function LandingPage() {
           <div className="relative">
             <div
               className={`absolute left-6 top-0 bottom-0 w-px ${isDark
-                  ? "bg-gradient-to-b from-white/40 via-white/10 to-transparent"
-                  : "bg-gradient-to-b from-slate-300 via-slate-200 to-transparent"
+                ? "bg-gradient-to-b from-white/40 via-white/10 to-transparent"
+                : "bg-gradient-to-b from-slate-300 via-slate-200 to-transparent"
                 }`}
             />
             <div className="space-y-6 pl-14">
@@ -1188,8 +1188,8 @@ export default function LandingPage() {
                   <div
                     key={flow.title}
                     className={`relative rounded-2xl p-6 border overflow-hidden ${isDark
-                        ? "bg-white/5 border-white/10"
-                        : "bg-white border-slate-200 shadow-xl"
+                      ? "bg-white/5 border-white/10"
+                      : "bg-white border-slate-200 shadow-xl"
                       }`}
                   >
                     <div
@@ -1253,8 +1253,8 @@ export default function LandingPage() {
                 <div
                   key={widget.label}
                   className={`rounded-2xl p-6 border flex flex-col gap-2 ${isDark
-                      ? "border-white/10 bg-white/5"
-                      : "border-slate-200 bg-white/80"
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-200 bg-white/80"
                     }`}
                 >
                   <p
@@ -1422,8 +1422,8 @@ export default function LandingPage() {
               <div
                 key={plan.name}
                 className={`relative rounded-3xl p-8 flex flex-col gap-6 border-2 transition-all duration-500 hover:-translate-y-2 ${plan.highlight
-                    ? `${palette.pricingHighlightBorder} ${brandGlow}`
-                    : palette.pricingBorder
+                  ? `${palette.pricingHighlightBorder} ${brandGlow}`
+                  : palette.pricingBorder
                   } ${isDark ? "bg-white/5 hover:bg-white/10" : "bg-white hover:shadow-2xl"}`}
               >
                 {plan.highlight && (
@@ -1484,11 +1484,11 @@ export default function LandingPage() {
                 <div className="pt-2">
                   <button
                     className={`w-full h-12 rounded-full font-semibold text-sm transition-all duration-500 ease-out ${plan.highlight
-                        ? "bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-sky-500 shadow-lg shadow-indigo-500/25"
-                        : `bg-transparent text-white border hover:bg-indigo-500/10 hover:border-indigo-500 ${isDark
-                          ? "border-white/15 text-white"
-                          : "border-slate-200 text-slate-900"
-                        }`
+                      ? "bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-sky-500 shadow-lg shadow-indigo-500/25"
+                      : `bg-transparent text-white border hover:bg-indigo-500/10 hover:border-indigo-500 ${isDark
+                        ? "border-white/15 text-white"
+                        : "border-slate-200 text-slate-900"
+                      }`
                       }`}
                   >
                     {plan.cta}
@@ -1517,8 +1517,8 @@ export default function LandingPage() {
               <div
                 key={index}
                 className={`p-8 md:p-10 rounded-3xl border ${isDark
-                    ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                    : 'bg-white border-slate-200 hover:shadow-2xl'
+                  ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                  : 'bg-white border-slate-200 hover:shadow-2xl'
                   } transition-all duration-500 hover:-translate-y-2`}
               >
                 <div className="flex items-start gap-4 mb-6">
@@ -1544,7 +1544,7 @@ export default function LandingPage() {
                 </div>
 
                 <p className={`text-base leading-relaxed ${isDark ? 'text-white/80' : 'text-slate-700'}`}>
-                  "{testimonial.text}"
+                  &quot;{testimonial.text}&quot;
                 </p>
               </div>
             ))}
@@ -1560,7 +1560,7 @@ export default function LandingPage() {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <p className={`text-lg md:text-xl leading-relaxed mb-4 ${isDark ? 'text-white/90' : 'text-slate-800'}`}>
-                  "SocialMat je přesně to, co jsem hledala! Jednoduše a následně vše automaticky za mě prodává. Je to jako kdybych vůbec nepodnikala a jen mi chodily peníze. 😄 Miluju to!"
+                  &quot;SocialMat je přesně to, co jsem hledala! Jednoduše a následně vše automaticky za mě prodává. Je to jako kdybych vůbec nepodnikala a jen mi chodily peníze. 😄 Miluju to!&quot;
                 </p>
                 <div>
                   <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -1632,8 +1632,8 @@ export default function LandingPage() {
 
             {/* SocialMat Side */}
             <div className={`p-8 rounded-2xl border relative overflow-hidden ${isDark
-                ? 'bg-gradient-to-br from-indigo-950/40 to-blue-950/40 border-indigo-500/50'
-                : 'bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200'
+              ? 'bg-gradient-to-br from-indigo-950/40 to-blue-950/40 border-indigo-500/50'
+              : 'bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200'
               }`}>
               <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
                 }`}>
@@ -1805,8 +1805,8 @@ export default function LandingPage() {
       <footer
         id="contact"
         className={`px-6 pt-24 pb-12 ${isDark
-            ? "bg-black text-white"
-            : "bg-gradient-to-b from-white via-slate-50 to-slate-100 text-slate-900"
+          ? "bg-black text-white"
+          : "bg-gradient-to-b from-white via-slate-50 to-slate-100 text-slate-900"
           }`}
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-16">
@@ -1841,8 +1841,8 @@ export default function LandingPage() {
                         <a
                           href={item.href}
                           className={`transition-colors ${isDark
-                              ? "hover:text-white"
-                              : "hover:text-slate-900"
+                            ? "hover:text-white"
+                            : "hover:text-slate-900"
                             }`}
                         >
                           {item.label}
