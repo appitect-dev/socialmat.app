@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDashboardTheme } from "./dashboard-theme";
+import { ChartCard, type LineSeries } from "./ChartCard";
 
 type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
 
@@ -13,6 +14,13 @@ type InsightItem = {
   title?: string;
   description?: string;
   values: { value: InsightValue; end_time?: string }[];
+};
+
+type ChartSeriesPayload = {
+  title: string;
+  xLabels: string[];
+  series: LineSeries[];
+  latestValue: number | null;
 };
 
 type IgAccountNormalized = {
@@ -257,6 +265,21 @@ function formatTimestamp(ts?: string): string {
   return d.toLocaleString();
 }
 
+function formatDayLabel(ts?: string): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return ts;
+  return d.toLocaleDateString(undefined, { weekday: "short" });
+}
+
+function thinLabels(labels: string[], maxLabels = 7): string[] {
+  if (labels.length <= maxLabels) return labels;
+  const step = Math.ceil(labels.length / maxLabels);
+  return labels.map((label, index) =>
+    index % step === 0 || index === labels.length - 1 ? label : ""
+  );
+}
+
 function summarizeObjectValue(obj: Record<string, unknown>): string {
   const entries = Object.entries(obj);
   if (entries.length === 0) return "—";
@@ -319,6 +342,35 @@ async function fetchJson<T>(
 
 function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
+}
+
+function buildChartSeriesPayload(
+  insights: InsightItem[] | null
+): ChartSeriesPayload | null {
+  if (!insights || insights.length === 0) return null;
+
+  for (const metric of insights) {
+    const data: number[] = [];
+    const labels: string[] = [];
+
+    for (const point of metric.values ?? []) {
+      const num = toNumberOrNull(point.value);
+      if (num === null) continue;
+      data.push(num);
+      labels.push(formatDayLabel(point.end_time) || `${data.length}`);
+    }
+
+    if (data.length === 0) continue;
+
+    return {
+      title: metricLabel(metric),
+      xLabels: thinLabels(labels),
+      series: [{ data }],
+      latestValue: data.at(-1) ?? null,
+    };
+  }
+
+  return null;
 }
 
 export function Dashboard() {
@@ -676,6 +728,20 @@ export function Dashboard() {
     return accountCount ?? 0;
   }, [igAccount?.mediaCount, media.length]);
 
+  const isInstagramConnected = igConnected;
+
+  const chartSeriesPayload = useMemo(
+    () => buildChartSeriesPayload(igPerf ?? null),
+    [igPerf]
+  );
+  const chartValueLabel =
+    chartSeriesPayload?.latestValue != null
+      ? chartSeriesPayload.latestValue.toLocaleString()
+      : "—";
+  const chartDescription = chartSeriesPayload
+    ? `${chartSeriesPayload.series[0]?.data.length ?? 0} days`
+    : "No analytics data yet";
+
   return (
     <div
       className={`relative overflow-hidden min-h-screen ${pageClass} transition-colors`}
@@ -721,6 +787,43 @@ export function Dashboard() {
 
           {igLoading && <div>Loading Instagram data…</div>}
           {igError && <div className="text-red-500">{igError}</div>}
+
+          {!isInstagramConnected && (
+            <div className={`${softCardClass} p-5 flex items-center justify-between gap-4`}>
+              <div>
+                <div className="text-sm font-semibold">Connect Instagram</div>
+                <div className="text-xs opacity-70">
+                  Connect your account to see analytics charts.
+                </div>
+              </div>
+              <button
+                className={connectButtonClass}
+                onClick={() => {
+                  window.location.href = "/api/instagram/login";
+                }}
+              >
+                Connect Instagram
+              </button>
+            </div>
+          )}
+
+          {isInstagramConnected && (
+            <div className={`${softCardClass} p-5`}>
+              {igLoading ? (
+                <div className="text-sm opacity-70">Loading analytics…</div>
+              ) : igError ? (
+                <div className="text-sm text-red-500">{igError}</div>
+              ) : (
+                <ChartCard
+                  title={chartSeriesPayload?.title ?? "Insights"}
+                  value={chartValueLabel}
+                  description={chartDescription}
+                  xLabels={chartSeriesPayload?.xLabels}
+                  series={chartSeriesPayload?.series}
+                />
+              )}
+            </div>
+          )}
 
           {igConnected && igAccount && (
             <div className={`${softCardClass} p-5`}>
