@@ -111,7 +111,17 @@ type IgCaps = {
   audience: string[];
 };
 
+type DashboardCache = {
+  savedAt: number;
+  account: IgAccountNormalized;
+  perf: InsightItem[];
+  audience: InsightItem[];
+  media: MediaItem[];
+  mediaPaging: MediaListResponse["paging"];
+};
+
 const CAPS_TTL_MS = 24 * 60 * 60 * 1000;
+const DASHBOARD_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const IG_METRIC_LABELS: Record<string, string> = {
   reach: "Reach",
@@ -176,6 +186,10 @@ function capsKey(accountId: string) {
   return `ig_caps_${accountId}`;
 }
 
+function dashboardCacheKey(igUserId: string) {
+  return `ig_dashboard_cache_${igUserId}`;
+}
+
 function readCaps(accountId: string): IgCaps | null {
   const raw = localStorage.getItem(capsKey(accountId));
   if (!raw) return null;
@@ -204,6 +218,32 @@ function readCaps(accountId: string): IgCaps | null {
 
 function writeCaps(accountId: string, caps: IgCaps) {
   localStorage.setItem(capsKey(accountId), JSON.stringify(caps));
+}
+
+function readDashboardCache(igUserId: string): DashboardCache | null {
+  const raw = sessionStorage.getItem(dashboardCacheKey(igUserId));
+  if (!raw) return null;
+
+  try {
+    const cache = JSON.parse(raw) as Partial<DashboardCache>;
+    if (
+      typeof cache.savedAt !== "number" ||
+      Date.now() - cache.savedAt > DASHBOARD_CACHE_TTL_MS ||
+      !cache.account ||
+      !Array.isArray(cache.perf) ||
+      !Array.isArray(cache.audience) ||
+      !Array.isArray(cache.media)
+    ) {
+      return null;
+    }
+    return cache as DashboardCache;
+  } catch {
+    return null;
+  }
+}
+
+function writeDashboardCache(igUserId: string, cache: DashboardCache) {
+  sessionStorage.setItem(dashboardCacheKey(igUserId), JSON.stringify(cache));
 }
 
 function toNumberOrNull(v: unknown): number | null {
@@ -377,6 +417,20 @@ export function Dashboard() {
       return;
     }
 
+    const cached = readDashboardCache(auth.igUserId);
+    if (cached) {
+      setIgAccount(cached.account);
+      setIgPerf(cached.perf);
+      setIgAudience(cached.audience);
+      setMedia(cached.media);
+      setMediaPaging(cached.mediaPaging ?? null);
+      setIgError(null);
+      setMediaError(null);
+      setIgLoading(false);
+      setMediaLoading(false);
+      return;
+    }
+
     const ac = new AbortController();
     const accessToken = auth.accessToken;
 
@@ -395,6 +449,8 @@ export function Dashboard() {
       // 2) insights with caps cache
       const accountId = accountRes.normalized.id;
       const caps = readCaps(accountId);
+      let perfInsights: InsightItem[] = [];
+      let audInsights: InsightItem[] = [];
 
       if (caps) {
         const perfQs = new URLSearchParams({
@@ -423,9 +479,11 @@ export function Dashboard() {
 
         const perf = perfRes.performance;
         const aud = audRes.audience;
+        perfInsights = perf?.ok ? perf.insights ?? [] : [];
+        audInsights = aud?.ok ? aud.insights ?? [] : [];
 
-        setIgPerf(perf?.ok ? perf.insights ?? [] : []);
-        setIgAudience(aud?.ok ? aud.insights ?? [] : []);
+        setIgPerf(perfInsights);
+        setIgAudience(audInsights);
 
         writeCaps(accountId, {
           checkedAt: Date.now(),
@@ -448,8 +506,8 @@ export function Dashboard() {
         const perf = allRes.performance;
         const aud = allRes.audience;
 
-        const perfInsights = perf?.ok ? perf.insights ?? [] : [];
-        const audInsights = aud?.ok ? aud.insights ?? [] : [];
+        perfInsights = perf?.ok ? perf.insights ?? [] : [];
+        audInsights = aud?.ok ? aud.insights ?? [] : [];
 
         setIgPerf(perfInsights);
         setIgAudience(audInsights);
@@ -482,6 +540,15 @@ export function Dashboard() {
       );
       setMedia(mediaRes.media ?? []);
       setMediaPaging(mediaRes.paging ?? null);
+
+      writeDashboardCache(auth.igUserId, {
+        savedAt: Date.now(),
+        account: accountRes.normalized,
+        perf: perfInsights,
+        audience: audInsights,
+        media: mediaRes.media ?? [],
+        mediaPaging: mediaRes.paging ?? null,
+      });
     })()
       .catch((err) => {
         console.error(err);
@@ -515,7 +582,20 @@ export function Dashboard() {
         `/api/instagram/media?${qs.toString()}`,
         auth.accessToken
       );
-      setMedia((prev) => [...prev, ...(out.media ?? [])]);
+      setMedia((prev) => {
+        const next = [...prev, ...(out.media ?? [])];
+        if (igAccount) {
+          writeDashboardCache(auth.igUserId, {
+            savedAt: Date.now(),
+            account: igAccount,
+            perf: igPerf ?? [],
+            audience: igAudience ?? [],
+            media: next,
+            mediaPaging: out.paging ?? null,
+          });
+        }
+        return next;
+      });
       setMediaPaging(out.paging ?? null);
     } catch (e) {
       console.error(e);
@@ -616,6 +696,11 @@ export function Dashboard() {
                     // cache reset (optional)
                     if (igAccount?.id)
                       localStorage.removeItem(capsKey(igAccount.id));
+                    const auth = readIgAuth();
+                    if (auth)
+                      sessionStorage.removeItem(
+                        dashboardCacheKey(auth.igUserId)
+                      );
                     window.location.reload();
                   }}
                 >
