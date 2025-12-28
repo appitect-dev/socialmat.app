@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ChartCard, type LineSeries } from "@/components/ChartCard";
 import { useDashboardTheme } from "./dashboard-theme";
 
 type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
@@ -321,6 +322,68 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
+const chartLabels = Array.from({ length: 14 }, (_, i) => `D${i + 1}`);
+
+const chartOptions: Array<{
+  id: string;
+  label: string;
+  title: string;
+  value: string;
+  description: string;
+  xLabels: string[];
+  series: LineSeries[];
+}> = [
+  {
+    id: "reach",
+    label: "Reach",
+    title: "Reach",
+    value: "19.5K",
+    description: "Unique accounts reached",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          1200, 1700, 2400, 2100, 1900, 2600, 3200, 3000, 2800, 3500, 4100,
+          3900, 3800, 4200,
+        ],
+        color: "#4584E9",
+      },
+    ],
+  },
+  {
+    id: "profile-views",
+    label: "Profile views",
+    title: "Profile views",
+    value: "3.1K",
+    description: "Profile visits this week",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          320, 360, 410, 390, 380, 430, 520, 480, 470, 530, 610, 560, 520, 590,
+        ],
+        color: "#3FA7A7",
+      },
+    ],
+  },
+  {
+    id: "engaged",
+    label: "Accounts engaged",
+    title: "Accounts engaged",
+    value: "2.4K",
+    description: "Likes, comments, shares",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          210, 260, 330, 290, 280, 340, 360, 390, 410, 460, 520, 480, 470, 510,
+        ],
+        color: "#F59E0B",
+      },
+    ],
+  },
+];
+
 function isAbortError(err: unknown): boolean {
   return (
     (err instanceof DOMException && err.name === "AbortError") ||
@@ -358,6 +421,7 @@ export function Dashboard() {
 
   // UI options
   const [showEmptyMetricCards, setShowEmptyMetricCards] = useState(false);
+  const [activeChartIndex, setActiveChartIndex] = useState(0);
 
   const pageClass = useMemo(
     () =>
@@ -688,6 +752,7 @@ export function Dashboard() {
   }, [igAccount?.mediaCount, media.length]);
 
   const isInstagramConnected = igConnected;
+  const activeChart = chartOptions[activeChartIndex] ?? chartOptions[0];
 
 
   return (
@@ -816,6 +881,36 @@ export function Dashboard() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {igConnected && igAccount && activeChart && (
+            <div className="mt-6 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {chartOptions.map((chart, index) => {
+                  const isActive = index === activeChartIndex;
+                  return (
+                    <button
+                      key={chart.id}
+                      type="button"
+                      onClick={() => setActiveChartIndex(index)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
+                        palette.border
+                      } ${isActive ? palette.accentButton : "bg-transparent"}`}
+                    >
+                      {chart.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <ChartCard
+                title={activeChart.title}
+                value={activeChart.value}
+                description={activeChart.description}
+                xLabels={activeChart.xLabels}
+                series={activeChart.series}
+              />
             </div>
           )}
         </div>
