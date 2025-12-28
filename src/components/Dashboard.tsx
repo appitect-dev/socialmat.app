@@ -344,34 +344,52 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
-function buildChartSeriesPayload(
-  insights: InsightItem[] | null
-): ChartSeriesPayload | null {
-  if (!insights || insights.length === 0) return null;
-
-  for (const metric of insights) {
-    const data: number[] = [];
-    const labels: string[] = [];
-
-    for (const point of metric.values ?? []) {
-      const num = toNumberOrNull(point.value);
-      if (num === null) continue;
-      data.push(num);
-      labels.push(formatDayLabel(point.end_time) || `${data.length}`);
-    }
-
-    if (data.length === 0) continue;
-
-    return {
-      title: metricLabel(metric),
-      xLabels: thinLabels(labels),
-      series: [{ data }],
-      latestValue: data.at(-1) ?? null,
-    };
-  }
-
-  return null;
-}
+const chartMocks: ChartSeriesPayload[] = [
+  {
+    title: "Reach",
+    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    series: [
+      {
+        data: [1200, 1700, 2400, 2100, 1900, 2600, 3200],
+        color: "#4584E9",
+      },
+    ],
+    latestValue: 3200,
+  },
+  {
+    title: "Profile views",
+    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    series: [
+      {
+        data: [320, 360, 410, 390, 380, 430, 520],
+        color: "#3FA7A7",
+      },
+    ],
+    latestValue: 520,
+  },
+  {
+    title: "Accounts engaged",
+    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    series: [
+      {
+        data: [210, 260, 330, 290, 280, 340, 360],
+        color: "#F59E0B",
+      },
+    ],
+    latestValue: 360,
+  },
+  {
+    title: "Followers (4 weeks)",
+    xLabels: ["W1", "W2", "W3", "W4"],
+    series: [
+      {
+        data: [180, 210, 190, 240],
+        color: "#7C3AED",
+      },
+    ],
+    latestValue: 240,
+  },
+];
 
 export function Dashboard() {
   const { isDark, palette } = useDashboardTheme();
@@ -730,16 +748,14 @@ export function Dashboard() {
 
   const isInstagramConnected = igConnected;
 
-  const chartSeriesPayload = useMemo(
-    () => buildChartSeriesPayload(igPerf ?? null),
-    [igPerf]
-  );
+  const [selectedChartIndex, setSelectedChartIndex] = useState(0);
+  const selectedChart = chartMocks[selectedChartIndex] ?? chartMocks[0];
   const chartValueLabel =
-    chartSeriesPayload?.latestValue != null
-      ? chartSeriesPayload.latestValue.toLocaleString()
+    selectedChart?.latestValue != null
+      ? selectedChart.latestValue.toLocaleString()
       : "—";
-  const chartDescription = chartSeriesPayload
-    ? `${chartSeriesPayload.series[0]?.data.length ?? 0} days`
+  const chartDescription = selectedChart
+    ? `${selectedChart.series[0]?.data.length ?? 0} points`
     : "No analytics data yet";
 
   return (
@@ -893,23 +909,42 @@ export function Dashboard() {
           </div>
         )}
 
-        {isInstagramConnected && (
-          <div className={`${softCardClass} p-5`}>
-            {igLoading ? (
-              <div className="text-sm opacity-70">Loading analytics…</div>
-            ) : igError ? (
-              <div className="text-sm text-red-500">{igError}</div>
-            ) : (
-              <ChartCard
-                title={chartSeriesPayload?.title ?? "Insights"}
-                value={chartValueLabel}
-                description={chartDescription}
-                xLabels={chartSeriesPayload?.xLabels}
-                series={chartSeriesPayload?.series}
-              />
-            )}
-          </div>
-        )}
+          {isInstagramConnected && (
+            <div className={`${softCardClass} p-5 space-y-4`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold">Analytics</div>
+                <div className="flex flex-wrap gap-2">
+                  {chartMocks.map((chart, index) => (
+                    <button
+                      key={chart.title}
+                      className={`px-3 py-1 text-xs rounded-full border transition ${
+                        index === selectedChartIndex
+                          ? `${palette.accentButton} ${palette.accentButtonHover}`
+                          : `${palette.border} ${palette.card}`
+                      }`}
+                      onClick={() => setSelectedChartIndex(index)}
+                      type="button"
+                    >
+                      {chart.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {igLoading ? (
+                <div className="text-sm opacity-70">Loading analytics…</div>
+              ) : igError ? (
+                <div className="text-sm text-red-500">{igError}</div>
+              ) : (
+                <ChartCard
+                  title={selectedChart?.title ?? "Insights"}
+                  value={chartValueLabel}
+                  description={chartDescription}
+                  xLabels={selectedChart?.xLabels}
+                  series={selectedChart?.series}
+                />
+              )}
+            </div>
+          )}
 
         {/* Media grid */}
         {igConnected && (

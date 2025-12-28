@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { Moon, Sun, Sparkles, TrendingUp, Lightbulb, Video, BarChart3, MessageSquare, Send, Zap, CheckCircle2, ArrowRight, PlayCircle, Edit3, Rocket, Star, Briefcase, Users, Target, Clock, Award, Shield, ChevronDown, Image, Calendar, Brain } from "lucide-react";
-import { SparklesIcon, CurrencyDollarIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { Moon, Sun, Sparkles, TrendingUp, Lightbulb, Video, BarChart3, MessageSquare, Send, Zap, CheckCircle2, ArrowRight, PlayCircle, Edit3, Rocket, Star, Briefcase, Users, Target, Clock, Award, Shield, ChevronDown, Image, Calendar, Brain, DollarSign, MessageCircle } from "lucide-react";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -1454,7 +1453,7 @@ export default function LandingPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-r ${brandGradient}`}>
-                      {stat.label.includes("AI") ? <SparklesIcon className="w-5 h-5 text-white" /> : stat.label.includes("doba") ? <Zap className="w-5 h-5 text-white" /> : stat.label.includes("titulků") ? <Video className="w-5 h-5 text-white" /> : <TrendingUp className="w-5 h-5 text-white" />}
+                      {stat.label.includes("AI") ? <Sparkles className="w-5 h-5 text-white" /> : stat.label.includes("doba") ? <Zap className="w-5 h-5 text-white" /> : stat.label.includes("titulků") ? <Video className="w-5 h-5 text-white" /> : <TrendingUp className="w-5 h-5 text-white" />}
                     </div>
                     <span
                       className={`text-xs font-semibold uppercase tracking-[0.3em] ${isDark ? "text-white/60" : "text-slate-500"
@@ -1819,7 +1818,7 @@ export default function LandingPage() {
             {/* FAQ 1 */}
             <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
               <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <SparklesIcon className="w-6 h-6" />
+                <Sparkles className="w-6 h-6" />
                 Jak přesná je AI při rozpoznávání české řeči?
               </h3>
               <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
@@ -1874,7 +1873,7 @@ export default function LandingPage() {
             {/* FAQ 6 */}
             <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
               <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <CurrencyDollarIcon className="w-6 h-6" />
+                <DollarSign className="w-6 h-6" />
                 Co když mi nevyhovuje placený plán?
               </h3>
               <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
@@ -1889,7 +1888,7 @@ export default function LandingPage() {
             </p>
             <Link href="/signup">
               <button className={`inline-flex items-center gap-2 bg-gradient-to-r ${brandGradient} text-white py-3 px-8 rounded-full font-semibold text-lg transition-all duration-300 ${brandGradientHover} ${brandGlow}`}>
-                <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5" />
                 Napsat podporu
               </button>
             </Link>

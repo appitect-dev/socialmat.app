@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 export type LineSeries = {
   data: number[];
   color?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
   strokeWidth?: number;
 };
 
@@ -88,22 +90,8 @@ function computeDomain(series?: LineSeries[], yDomain?: [number, number]) {
   return normalizeDomain([Math.min(...values), Math.max(...values)]);
 }
 
-function buildLinePath(data: number[], domain: [number, number]) {
-  if (data.length === 0) return "";
-  const [min, max] = domain;
-  const range = max - min || 1;
-  const lastIndex = Math.max(data.length - 1, 1);
-
-  return data
-    .map((value, index) => {
-      const x = (index / lastIndex) * 100;
-      const y = 100 - ((value - min) / range) * 100;
-      return `${index === 0 ? "M" : "L"}${x} ${y}`;
-    })
-    .join(" ");
-}
-
-function getDots(data: number[], domain: [number, number]) {
+function buildLinePoints(data: number[], domain: [number, number]) {
+  if (data.length === 0) return [];
   const [min, max] = domain;
   const range = max - min || 1;
   const lastIndex = Math.max(data.length - 1, 1);
@@ -115,6 +103,28 @@ function getDots(data: number[], domain: [number, number]) {
   });
 }
 
+function buildLinePath(points: Array<{ x: number; y: number }>) {
+  if (points.length === 0) return "";
+  return points
+    .map((point, index) => {
+      const command = index === 0 ? "M" : "L";
+      return `${command}${point.x} ${point.y}`;
+    })
+    .join(" ");
+}
+
+function buildAreaPath(points: Array<{ x: number; y: number }>) {
+  if (points.length === 0) return "";
+  const first = points[0];
+  const last = points[points.length - 1];
+  const linePath = buildLinePath(points);
+  return `${linePath} L${last.x} 100 L${first.x} 100 Z`;
+}
+
+function getDots(data: number[], domain: [number, number]) {
+  return buildLinePoints(data, domain);
+}
+
 export function LineChart({
   className,
   xLabels = defaultXLabels,
@@ -123,6 +133,7 @@ export function LineChart({
   series,
   showDots = false,
 }: LineChartProps) {
+  const gradientSeed = React.useId();
   const { normalizedSeries, trimmedLabels, minSeriesLength, hasMismatch } =
     React.useMemo(() => {
       const labelCount = xLabels.length;
@@ -192,11 +203,16 @@ export function LineChart({
       }));
       const ordered = [...positions].sort((a, b) => a.y - b.y);
 
-      const paths = normalizedSeries.map((line) => ({
-        ...line,
-        path: buildLinePath(line.data, expandedDomain),
-        dots: showDots ? getDots(line.data, expandedDomain) : [],
-      }));
+      const paths = normalizedSeries.map((line) => {
+        const points = buildLinePoints(line.data, expandedDomain);
+        return {
+          ...line,
+          points,
+          path: buildLinePath(points),
+          area: buildAreaPath(points),
+          dots: showDots ? points : [],
+        };
+      });
 
       return {
         orderedTicks: ordered,
@@ -248,19 +264,56 @@ export function LineChart({
                 y2={tick.y}
                 stroke={GRID_STROKE}
                 strokeWidth="0.7"
-                opacity={index === orderedTicks.length - 1 ? 0.8 : 0.5}
+                strokeDasharray="2 2"
+                opacity={0.6}
               />
             ))}
             {hasSeries ? (
               seriesPaths.map((line, index) => (
                 <g key={`series-${index}`}>
+                  <defs>
+                    <linearGradient
+                      id={`${gradientSeed}-${index}`}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={
+                          line.gradientFrom ??
+                          line.color ??
+                          DEFAULT_STROKE
+                        }
+                        stopOpacity="0.14"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={
+                          line.gradientTo ??
+                          line.color ??
+                          DEFAULT_STROKE
+                        }
+                        stopOpacity="0"
+                      />
+                    </linearGradient>
+                  </defs>
+                  {line.area ? (
+                    <path
+                      d={line.area}
+                      fill={`url(#${gradientSeed}-${index})`}
+                    />
+                  ) : null}
                   <path
                     d={line.path}
                     fill="none"
                     stroke={line.color ?? DEFAULT_STROKE}
-                    strokeWidth={line.strokeWidth ?? 1.4}
+                    strokeWidth={line.strokeWidth ?? 1.1}
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                    shapeRendering="geometricPrecision"
                   />
                   {showDots &&
                     line.dots.map((dot, dotIndex) => (
@@ -307,7 +360,7 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        "flex w-full max-w-[360px] flex-col gap-[8px] rounded-[10px] border border-[#e0e2e6] bg-white p-[16px] text-[#3a3e44] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.1)]",
+        "flex w-full flex-col gap-[8px] rounded-[10px] border border-[#e0e2e6] bg-white p-[16px] text-[#3a3e44] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.1)]",
         className
       )}
       style={{ fontFamily: "Inter, var(--font-archivo), Arial, sans-serif" }}
