@@ -321,6 +321,13 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError") ||
+    (err instanceof Error && /aborted|aborterror/i.test(err.message))
+  );
+}
 
 export function Dashboard() {
   const { isDark, palette } = useDashboardTheme();
@@ -552,6 +559,7 @@ export function Dashboard() {
       });
     })()
       .catch((err) => {
+        if (ac.signal.aborted || isAbortError(err)) return;
         console.error(err);
         if (handleIgAuthFailure(err)) return;
         setIgError(
@@ -599,6 +607,7 @@ export function Dashboard() {
       });
       setMediaPaging(out.paging ?? null);
     } catch (e) {
+      if (isAbortError(e)) return;
       console.error(e);
       if (handleIgAuthFailure(e)) return;
       setMediaError(
@@ -630,6 +639,7 @@ export function Dashboard() {
       );
       setSelectedInsights(out);
     } catch (e) {
+      if (isAbortError(e)) return;
       console.error(e);
       if (handleIgAuthFailure(e)) return;
       setSelectedError(
