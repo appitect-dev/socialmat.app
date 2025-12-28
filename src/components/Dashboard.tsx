@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDashboardTheme } from "./dashboard-theme";
-import { ChartCard, type LineSeries } from "./ChartCard";
 
 type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
 
@@ -14,13 +13,6 @@ type InsightItem = {
   title?: string;
   description?: string;
   values: { value: InsightValue; end_time?: string }[];
-};
-
-type ChartSeriesPayload = {
-  title: string;
-  xLabels: string[];
-  series: LineSeries[];
-  latestValue: number | null;
 };
 
 type IgAccountNormalized = {
@@ -265,21 +257,6 @@ function formatTimestamp(ts?: string): string {
   return d.toLocaleString();
 }
 
-function formatDayLabel(ts?: string): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return ts;
-  return d.toLocaleDateString(undefined, { weekday: "short" });
-}
-
-function thinLabels(labels: string[], maxLabels = 7): string[] {
-  if (labels.length <= maxLabels) return labels;
-  const step = Math.ceil(labels.length / maxLabels);
-  return labels.map((label, index) =>
-    index % step === 0 || index === labels.length - 1 ? label : ""
-  );
-}
-
 function summarizeObjectValue(obj: Record<string, unknown>): string {
   const entries = Object.entries(obj);
   if (entries.length === 0) return "—";
@@ -344,52 +321,6 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
-const chartMocks: ChartSeriesPayload[] = [
-  {
-    title: "Reach",
-    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    series: [
-      {
-        data: [1200, 1700, 2400, 2100, 1900, 2600, 3200],
-        color: "#4584E9",
-      },
-    ],
-    latestValue: 3200,
-  },
-  {
-    title: "Profile views",
-    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    series: [
-      {
-        data: [320, 360, 410, 390, 380, 430, 520],
-        color: "#3FA7A7",
-      },
-    ],
-    latestValue: 520,
-  },
-  {
-    title: "Accounts engaged",
-    xLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    series: [
-      {
-        data: [210, 260, 330, 290, 280, 340, 360],
-        color: "#F59E0B",
-      },
-    ],
-    latestValue: 360,
-  },
-  {
-    title: "Followers (4 weeks)",
-    xLabels: ["W1", "W2", "W3", "W4"],
-    series: [
-      {
-        data: [180, 210, 190, 240],
-        color: "#7C3AED",
-      },
-    ],
-    latestValue: 240,
-  },
-];
 
 export function Dashboard() {
   const { isDark, palette } = useDashboardTheme();
@@ -748,15 +679,6 @@ export function Dashboard() {
 
   const isInstagramConnected = igConnected;
 
-  const [selectedChartIndex, setSelectedChartIndex] = useState(0);
-  const selectedChart = chartMocks[selectedChartIndex] ?? chartMocks[0];
-  const chartValueLabel =
-    selectedChart?.latestValue != null
-      ? selectedChart.latestValue.toLocaleString()
-      : "—";
-  const chartDescription = selectedChart
-    ? `${selectedChart.series[0]?.data.length ?? 0} points`
-    : "No analytics data yet";
 
   return (
     <div
@@ -908,44 +830,6 @@ export function Dashboard() {
             </button>
           </div>
         )}
-
-          {isInstagramConnected && (
-            <div className={`${softCardClass} p-5 space-y-4`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-semibold">Analytics</div>
-                <div className="flex flex-wrap gap-2">
-                  {chartMocks.map((chart, index) => (
-                    <button
-                      key={chart.title}
-                      className={`px-3 py-1 text-xs rounded-full border transition ${
-                        index === selectedChartIndex
-                          ? `${palette.accentButton} ${palette.accentButtonHover}`
-                          : `${palette.border} ${palette.card}`
-                      }`}
-                      onClick={() => setSelectedChartIndex(index)}
-                      type="button"
-                    >
-                      {chart.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {igLoading ? (
-                <div className="text-sm opacity-70">Loading analytics…</div>
-              ) : igError ? (
-                <div className="text-sm text-red-500">{igError}</div>
-              ) : (
-                <ChartCard
-                  title={selectedChart?.title ?? "Insights"}
-                  value={chartValueLabel}
-                  description={chartDescription}
-                  xLabels={selectedChart?.xLabels}
-                  series={selectedChart?.series}
-                />
-              )}
-            </div>
-          )}
-
         {/* Media grid */}
         {igConnected && (
           <div className={`${panelClass} p-6 space-y-4`}>
