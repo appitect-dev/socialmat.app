@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ChartCard, type LineSeries } from "@/components/ChartCard";
 import { useDashboardTheme } from "./dashboard-theme";
-import { ChartCard, type LineSeries } from "./ChartCard";
 
 type IgAuth = { accessToken: string; igUserId: string; expiresAt: number };
 
@@ -14,13 +14,6 @@ type InsightItem = {
   title?: string;
   description?: string;
   values: { value: InsightValue; end_time?: string }[];
-};
-
-type ChartSeriesPayload = {
-  title: string;
-  xLabels: string[];
-  series: LineSeries[];
-  latestValue: number | null;
 };
 
 type IgAccountNormalized = {
@@ -132,25 +125,25 @@ const CAPS_TTL_MS = 24 * 60 * 60 * 1000;
 const DASHBOARD_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const IG_METRIC_LABELS: Record<string, string> = {
-  reach: "Reach",
-  profile_views: "Profile views",
-  accounts_engaged: "Accounts engaged",
-  follower_count: "Follower count (series)",
-  website_clicks: "Website clicks",
-  online_followers: "Online followers",
-  views: "Views",
-  saved: "Saved",
-  shares: "Shares",
-  likes: "Likes",
-  comments: "Comments",
-  total_interactions: "Total interactions",
-  replies: "Replies",
-  navigation: "Navigation",
-  ig_reels_avg_watch_time: "Avg watch time (ms)",
-  ig_reels_video_view_total_time: "Total view time (ms)",
-  profile_activity: "Profile activity",
-  profile_visits: "Profile visits",
-  follows: "Follows",
+  reach: "Dosah",
+  profile_views: "Zobrazení profilu",
+  accounts_engaged: "Zapojené účty",
+  follower_count: "Počet sledujících (časová řada)",
+  website_clicks: "Kliknutí na web",
+  online_followers: "Sledující online",
+  views: "Zobrazení",
+  saved: "Uložení",
+  shares: "Sdílení",
+  likes: "To se mi líbí",
+  comments: "Komentáře",
+  total_interactions: "Celkové interakce",
+  replies: "Odpovědi",
+  navigation: "Navigace",
+  ig_reels_avg_watch_time: "Prům. doba sledování (ms)",
+  ig_reels_video_view_total_time: "Celkový čas sledování (ms)",
+  profile_activity: "Aktivita profilu",
+  profile_visits: "Návštěvy profilu",
+  follows: "Nová sledování",
 };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -265,21 +258,6 @@ function formatTimestamp(ts?: string): string {
   return d.toLocaleString();
 }
 
-function formatDayLabel(ts?: string): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return ts;
-  return d.toLocaleDateString(undefined, { weekday: "short" });
-}
-
-function thinLabels(labels: string[], maxLabels = 7): string[] {
-  if (labels.length <= maxLabels) return labels;
-  const step = Math.ceil(labels.length / maxLabels);
-  return labels.map((label, index) =>
-    index % step === 0 || index === labels.length - 1 ? label : ""
-  );
-}
-
 function summarizeObjectValue(obj: Record<string, unknown>): string {
   const entries = Object.entries(obj);
   if (entries.length === 0) return "—";
@@ -292,10 +270,10 @@ function summarizeObjectValue(obj: Record<string, unknown>): string {
   if (numeric.length > 0) {
     numeric.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
     const [k, v] = numeric[0];
-    return `${(v ?? 0).toLocaleString()} at ${k}`;
+    return `${(v ?? 0).toLocaleString()} v ${k}`;
   }
 
-  return `${entries.length} items`;
+  return `${entries.length} položek`;
 }
 
 function formatInsightValue(v: InsightValue): string {
@@ -331,7 +309,7 @@ async function fetchJson<T>(
     const msg =
       typeof payload === "string"
         ? payload
-        : pickErrorMessage(payload) ?? "Request failed";
+        : pickErrorMessage(payload) ?? "Požadavek selhal";
     const error = new Error(`${msg} (HTTP ${res.status})`);
     (error as Error & { status: number }).status = res.status;
     throw error;
@@ -344,33 +322,74 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
-function buildChartSeriesPayload(
-  insights: InsightItem[] | null
-): ChartSeriesPayload | null {
-  if (!insights || insights.length === 0) return null;
+const chartLabels = Array.from({ length: 14 }, (_, i) => `D${i + 1}`);
 
-  for (const metric of insights) {
-    const data: number[] = [];
-    const labels: string[] = [];
+const chartOptions: Array<{
+  id: string;
+  label: string;
+  title: string;
+  value: string;
+  description: string;
+  xLabels: string[];
+  series: LineSeries[];
+}> = [
+  {
+    id: "reach",
+    label: "Dosah",
+    title: "Dosah",
+    value: "19.5K",
+    description: "Unikátní účty v dosahu",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          1200, 1700, 2400, 2100, 1900, 2600, 3200, 3000, 2800, 3500, 4100,
+          3900, 3800, 4200,
+        ],
+        color: "#4584E9",
+      },
+    ],
+  },
+  {
+    id: "profile-views",
+    label: "Zobrazení profilu",
+    title: "Zobrazení profilu",
+    value: "3.1K",
+    description: "Návštěvy profilu tento týden",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          320, 360, 410, 390, 380, 430, 520, 480, 470, 530, 610, 560, 520, 590,
+        ],
+        color: "#3FA7A7",
+      },
+    ],
+  },
+  {
+    id: "engaged",
+    label: "Zapojené účty",
+    title: "Zapojené účty",
+    value: "2.4K",
+    description: "Lajky, komentáře, sdílení",
+    xLabels: chartLabels,
+    series: [
+      {
+        data: [
+          210, 260, 330, 290, 280, 340, 360, 390, 410, 460, 520, 480, 470, 510,
+        ],
+        color: "#F59E0B",
+      },
+    ],
+  },
+];
 
-    for (const point of metric.values ?? []) {
-      const num = toNumberOrNull(point.value);
-      if (num === null) continue;
-      data.push(num);
-      labels.push(formatDayLabel(point.end_time) || `${data.length}`);
-    }
-
-    if (data.length === 0) continue;
-
-    return {
-      title: metricLabel(metric),
-      xLabels: thinLabels(labels),
-      series: [{ data }],
-      latestValue: data.at(-1) ?? null,
-    };
-  }
-
-  return null;
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError") ||
+    (err instanceof Error && /aborted|aborterror/i.test(err.message))
+  );
 }
 
 export function Dashboard() {
@@ -402,6 +421,7 @@ export function Dashboard() {
 
   // UI options
   const [showEmptyMetricCards, setShowEmptyMetricCards] = useState(false);
+  const [activeChartIndex, setActiveChartIndex] = useState(0);
 
   const pageClass = useMemo(
     () =>
@@ -415,13 +435,15 @@ export function Dashboard() {
   const softCardClass = `rounded-2xl border ${palette.border} ${palette.card}`;
 
   const connectButtonClass = `px-4 py-2 text-sm rounded-full transition-all border ${palette.border} ${palette.accentButton} ${palette.accentButtonHover}`;
+  const connectCtaClass =
+    "px-4 py-2 text-sm rounded-full font-semibold text-white transition-all bg-gradient-to-r from-indigo-600 to-sky-500 shadow-md shadow-indigo-500/30 hover:from-indigo-500 hover:to-sky-400";
 
   const handleIgAuthFailure = (err: unknown) => {
     const status = getHttpStatus(err);
     if (status === 401 || status === 403) {
       localStorage.removeItem("ig_auth");
       setIgConnected(false);
-      setIgError("Instagram session expired. Please reconnect.");
+      setIgError("Relace Instagramu vypršela. Prosím, připojte znovu.");
       return true;
     }
     return false;
@@ -603,10 +625,13 @@ export function Dashboard() {
       });
     })()
       .catch((err) => {
+        if (ac.signal.aborted || isAbortError(err)) return;
         console.error(err);
         if (handleIgAuthFailure(err)) return;
         setIgError(
-          err instanceof Error ? err.message : "Failed to load Instagram data"
+          err instanceof Error
+            ? err.message
+            : "Nepodařilo se načíst data z Instagramu"
         );
       })
       .finally(() => {
@@ -650,10 +675,11 @@ export function Dashboard() {
       });
       setMediaPaging(out.paging ?? null);
     } catch (e) {
+      if (isAbortError(e)) return;
       console.error(e);
       if (handleIgAuthFailure(e)) return;
       setMediaError(
-        e instanceof Error ? e.message : "Failed to load more media"
+        e instanceof Error ? e.message : "Nepodařilo se načíst další média"
       );
     } finally {
       setMediaLoading(false);
@@ -670,7 +696,7 @@ export function Dashboard() {
     const auth = readIgAuth();
     if (!auth) {
       setSelectedLoading(false);
-      setSelectedError("Missing Instagram auth");
+      setSelectedError("Chybí přihlášení k Instagramu");
       return;
     }
 
@@ -681,10 +707,11 @@ export function Dashboard() {
       );
       setSelectedInsights(out);
     } catch (e) {
+      if (isAbortError(e)) return;
       console.error(e);
       if (handleIgAuthFailure(e)) return;
       setSelectedError(
-        e instanceof Error ? e.message : "Failed to load media insights"
+        e instanceof Error ? e.message : "Nepodařilo se načíst metriky média"
       );
     } finally {
       setSelectedLoading(false);
@@ -728,19 +755,8 @@ export function Dashboard() {
     return accountCount ?? 0;
   }, [igAccount?.mediaCount, media.length]);
 
-  const isInstagramConnected = igConnected;
+  const activeChart = chartOptions[activeChartIndex] ?? chartOptions[0];
 
-  const chartSeriesPayload = useMemo(
-    () => buildChartSeriesPayload(igPerf ?? null),
-    [igPerf]
-  );
-  const chartValueLabel =
-    chartSeriesPayload?.latestValue != null
-      ? chartSeriesPayload.latestValue.toLocaleString()
-      : "—";
-  const chartDescription = chartSeriesPayload
-    ? `${chartSeriesPayload.series[0]?.data.length ?? 0} days`
-    : "No analytics data yet";
 
   return (
     <div
@@ -751,7 +767,12 @@ export function Dashboard() {
         <div className={`${panelClass} p-6 space-y-4`}>
           <div className="flex items-center justify-between gap-4">
             <div className="text-base">
-              Instagram: <b>{igConnected ? "Connected" : "Not connected"}</b>
+              Instagram: <b>{igConnected ? "Připojeno" : "Nepřipojeno"}</b>
+              {!igConnected && (
+                <div className="text-xs opacity-70 mt-1">
+                  Připojte účet a zobrazí se metriky, grafy i média.
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -770,22 +791,22 @@ export function Dashboard() {
                     window.location.reload();
                   }}
                 >
-                  Refresh metrics
+                  Obnovit metriky
                 </button>
               )}
 
               <button
-                className={connectButtonClass}
+                className={igConnected ? connectButtonClass : connectCtaClass}
                 onClick={() => {
                   window.location.href = "/api/instagram/login";
                 }}
               >
-                {igConnected ? "Reconnect Instagram" : "Connect Instagram"}
+                {igConnected ? "Znovu připojit Instagram" : "Připojit Instagram"}
               </button>
             </div>
           </div>
 
-          {igLoading && <div>Loading Instagram data…</div>}
+          {igLoading && <div>Načítám data z Instagramu…</div>}
           {igError && <div className="text-red-500">{igError}</div>}
 
           {igConnected && igAccount && (
@@ -796,7 +817,7 @@ export function Dashboard() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={igAccount.profilePictureUrl}
-                      alt="Profile"
+                      alt="Profil"
                       className="h-full w-full object-cover"
                     />
                   ) : null}
@@ -824,13 +845,13 @@ export function Dashboard() {
 
                   <div className="mt-4 flex flex-wrap gap-4 text-sm">
                     <div>
-                      <b>{igAccount.followersCount ?? "—"}</b> followers
+                      <b>{igAccount.followersCount ?? "—"}</b> sledující
                     </div>
                     <div>
-                      <b>{igAccount.followsCount ?? "—"}</b> following
+                      <b>{igAccount.followsCount ?? "—"}</b> sleduji
                     </div>
                     <div>
-                      <b>{inferredPostsCount}</b> posts
+                      <b>{inferredPostsCount}</b> příspěvků
                     </div>
                   </div>
                 </div>
@@ -841,7 +862,7 @@ export function Dashboard() {
                     checked={showEmptyMetricCards}
                     onChange={(e) => setShowEmptyMetricCards(e.target.checked)}
                   />
-                  show empty metrics
+                  zobrazit prázdné metriky
                 </label>
               </div>
             </div>
@@ -870,54 +891,46 @@ export function Dashboard() {
               })}
             </div>
           )}
-        </div>
 
-        {!isInstagramConnected && (
-          <div
-            className={`${softCardClass} p-5 flex items-center justify-between gap-4`}
-          >
-            <div>
-              <div className="text-sm font-semibold">Connect Instagram</div>
-              <div className="text-xs opacity-70">
-                Connect your account to see analytics charts.
+          {igConnected && igAccount && activeChart && (
+            <div className="mt-6 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {chartOptions.map((chart, index) => {
+                  const isActive = index === activeChartIndex;
+                  return (
+                    <button
+                      key={chart.id}
+                      type="button"
+                      onClick={() => setActiveChartIndex(index)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
+                        palette.border
+                      } ${isActive ? palette.accentButton : "bg-transparent"}`}
+                    >
+                      {chart.label}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-            <button
-              className={connectButtonClass}
-              onClick={() => {
-                window.location.href = "/api/instagram/login";
-              }}
-            >
-              Connect Instagram
-            </button>
-          </div>
-        )}
 
-        {isInstagramConnected && (
-          <div className={`${softCardClass} p-5`}>
-            {igLoading ? (
-              <div className="text-sm opacity-70">Loading analytics…</div>
-            ) : igError ? (
-              <div className="text-sm text-red-500">{igError}</div>
-            ) : (
               <ChartCard
-                title={chartSeriesPayload?.title ?? "Insights"}
-                value={chartValueLabel}
-                description={chartDescription}
-                xLabels={chartSeriesPayload?.xLabels}
-                series={chartSeriesPayload?.series}
+                title={activeChart.title}
+                value={activeChart.value}
+                description={activeChart.description}
+                buttonLabel="Zobrazit data"
+                xLabels={activeChart.xLabels}
+                series={activeChart.series}
               />
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* Media grid */}
         {igConnected && (
           <div className={`${panelClass} p-6 space-y-4`}>
             <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">Recent media</div>
+              <div className="text-lg font-semibold">Nedávná média</div>
               {mediaLoading && (
-                <div className="text-sm opacity-70">Loading…</div>
+                <div className="text-sm opacity-70">Načítám…</div>
               )}
             </div>
 
@@ -925,8 +938,7 @@ export function Dashboard() {
 
             {media.length === 0 && !mediaLoading ? (
               <div className="text-sm opacity-70">
-                No media returned from API (or the account has very limited
-                access).
+                API nevrátilo žádná média (nebo má účet velmi omezený přístup).
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -959,7 +971,7 @@ export function Dashboard() {
                           {(
                             item.media_product_type ??
                             item.media_type ??
-                            "MEDIA"
+                            "MÉDIUM"
                           ).toString()}{" "}
                           • {formatTimestamp(item.timestamp)}
                         </div>
@@ -969,7 +981,7 @@ export function Dashboard() {
                             {item.caption}
                           </div>
                         ) : (
-                          <div className="text-sm opacity-60">No caption</div>
+                          <div className="text-sm opacity-60">Bez popisku</div>
                         )}
 
                         <div className="text-xs opacity-70 flex gap-3">
@@ -994,7 +1006,7 @@ export function Dashboard() {
                   onClick={loadMoreMedia}
                   disabled={mediaLoading}
                 >
-                  Load more
+                  Načíst další
                 </button>
               </div>
             ) : null}
@@ -1007,11 +1019,11 @@ export function Dashboard() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-lg font-semibold">Media details</div>
+                    <div className="text-lg font-semibold">Detail média</div>
                     <div className="text-xs opacity-70">
                       {selected.media_product_type ??
                         selected.media_type ??
-                        "MEDIA"}{" "}
+                        "MÉDIUM"}{" "}
                       • {formatTimestamp(selected.timestamp)}
                     </div>
                   </div>
@@ -1024,7 +1036,7 @@ export function Dashboard() {
                       setSelectedError(null);
                     }}
                   >
-                    Close
+                    Zavřít
                   </button>
                 </div>
 
@@ -1063,7 +1075,7 @@ export function Dashboard() {
                         {selected.caption}
                       </div>
                     ) : (
-                      <div className="text-sm opacity-60">No caption</div>
+                      <div className="text-sm opacity-60">Bez popisku</div>
                     )}
 
                     {selected.permalink ? (
@@ -1073,7 +1085,7 @@ export function Dashboard() {
                         rel="noreferrer"
                         className="text-sm opacity-80 break-all underline"
                       >
-                        Open on Instagram
+                        Otevřít na Instagramu
                       </a>
                     ) : null}
                   </div>
@@ -1081,9 +1093,9 @@ export function Dashboard() {
                   {/* right: insights */}
                   <div className={`${softCardClass} p-3 space-y-3`}>
                     <div className="flex items-center justify-between">
-                      <div className="font-semibold">Insights</div>
+                      <div className="font-semibold">Metriky</div>
                       {selectedLoading ? (
-                        <div className="text-sm opacity-70">Loading…</div>
+                        <div className="text-sm opacity-70">Načítám…</div>
                       ) : null}
                     </div>
 
@@ -1115,7 +1127,7 @@ export function Dashboard() {
                         {selectedInsights.result.breakdowns.length > 0 && (
                           <div className="space-y-2">
                             <div className="text-sm font-semibold">
-                              Breakdowns
+                              Rozklady
                             </div>
 
                             {selectedInsights.result.breakdowns.map(
@@ -1125,7 +1137,7 @@ export function Dashboard() {
                                     typeof b.error === "string"
                                       ? b.error
                                       : pickErrorMessage(b.error) ??
-                                        "Breakdown failed";
+                                        "Rozklad se nezdařil";
                                   return (
                                     <div
                                       key={idx}
@@ -1147,7 +1159,7 @@ export function Dashboard() {
 
                                     {b.insights.length === 0 ? (
                                       <div className="text-sm opacity-60">
-                                        No breakdown data
+                                        Žádná data rozkladu
                                       </div>
                                     ) : (
                                       <div className="mt-2 space-y-2">
@@ -1177,7 +1189,7 @@ export function Dashboard() {
 
                         {selectedInsights.result.droppedMetrics.length > 0 ? (
                           <div className="text-xs opacity-70">
-                            Dropped metrics:{" "}
+                            Vyřazené metriky:{" "}
                             {selectedInsights.result.droppedMetrics.join(", ")}
                           </div>
                         ) : null}
