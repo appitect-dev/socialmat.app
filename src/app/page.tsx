@@ -1380,7 +1380,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className={`text-sm leading-relaxed ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-                  "{testimonial.text}"
+                  &ldquo;{testimonial.text}&rdquo;
                 </p>
               </div>
             ))}
