@@ -322,9 +322,7 @@ function metricLabel(m: InsightItem): string {
   return IG_METRIC_LABELS[m.name] ?? m.title ?? m.name;
 }
 
-const chartLabels = Array.from({ length: 14 }, (_, i) => `D${i + 1}`);
-
-const chartOptions: Array<{
+type ChartOption = {
   id: string;
   label: string;
   title: string;
@@ -332,57 +330,136 @@ const chartOptions: Array<{
   description: string;
   xLabels: string[];
   series: LineSeries[];
-}> = [
-  {
-    id: "reach",
-    label: "Dosah",
-    title: "Dosah",
-    value: "19.5K",
-    description: "Unikátní účty v dosahu",
-    xLabels: chartLabels,
-    series: [
-      {
-        data: [
-          1200, 1700, 2400, 2100, 1900, 2600, 3200, 3000, 2800, 3500, 4100,
-          3900, 3800, 4200,
-        ],
-        color: "#4584E9",
-      },
-    ],
-  },
-  {
-    id: "profile-views",
-    label: "Zobrazení profilu",
-    title: "Zobrazení profilu",
-    value: "3.1K",
-    description: "Návštěvy profilu tento týden",
-    xLabels: chartLabels,
-    series: [
-      {
-        data: [
-          320, 360, 410, 390, 380, 430, 520, 480, 470, 530, 610, 560, 520, 590,
-        ],
-        color: "#3FA7A7",
-      },
-    ],
-  },
-  {
-    id: "engaged",
-    label: "Zapojené účty",
-    title: "Zapojené účty",
-    value: "2.4K",
-    description: "Lajky, komentáře, sdílení",
-    xLabels: chartLabels,
-    series: [
-      {
-        data: [
-          210, 260, 330, 290, 280, 340, 360, 390, 410, 460, 520, 480, 470, 510,
-        ],
-        color: "#F59E0B",
-      },
-    ],
-  },
-];
+};
+
+const METRIC_DESCRIPTIONS: Record<string, string> = {
+  reach: "Unikátní účty v dosahu",
+  accounts_engaged: "Lajky, komentáře, sdílení",
+  profile_views: "Návštěvy profilu",
+  follower_count: "Vývoj počtu sledujících",
+  website_clicks: "Kliknutí na web",
+};
+
+function formatCompactNumber(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("cs-CZ", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatEndTimeLabel(endTime: string): string | null {
+  const date = new Date(endTime);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("cs-CZ", { day: "2-digit", month: "2-digit" });
+}
+
+function buildChartOptions(args: {
+  perf: InsightItem[];
+  audience: InsightItem[];
+}): ChartOption[] {
+  const options: ChartOption[] = [];
+  const perfMap = new Map(args.perf.map((item) => [item.name, item]));
+
+  const perfMetrics = [
+    "reach",
+    "accounts_engaged",
+    "profile_views",
+    "follower_count",
+    "website_clicks",
+  ];
+
+  for (const metric of perfMetrics) {
+    const item = perfMap.get(metric);
+    if (!item || item.values.length === 0) continue;
+
+    let hasNumeric = false;
+    let hasNonZero = false;
+    const data: number[] = [];
+    const labels: string[] = [];
+
+    item.values.forEach((point, index) => {
+      const value =
+        typeof point.value === "number" && Number.isFinite(point.value)
+          ? point.value
+          : null;
+      if (value !== null) {
+        hasNumeric = true;
+        if (value !== 0) hasNonZero = true;
+      }
+      data.push(value ?? 0);
+      const label = point.end_time
+        ? formatEndTimeLabel(point.end_time)
+        : null;
+      labels.push(label ?? `D${index + 1}`);
+    });
+
+    if (!hasNumeric) continue;
+    if (metric === "website_clicks" && !hasNonZero) continue;
+
+    const lastNumeric = [...item.values]
+      .map((point) =>
+        typeof point.value === "number" && Number.isFinite(point.value)
+          ? point.value
+          : null
+      )
+      .reverse()
+      .find((value) => value !== null);
+
+    options.push({
+      id: metric,
+      label: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
+      title: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
+      value: formatCompactNumber(lastNumeric ?? 0),
+      description:
+        item.description ?? METRIC_DESCRIPTIONS[metric] ?? "Vývoj metriky",
+      xLabels: labels,
+      series: [{ data }],
+    });
+  }
+
+  const audienceItem =
+    args.audience.find((item) => item.name === "online_followers") ?? null;
+  const audienceValue = audienceItem?.values.at(-1)?.value ?? null;
+
+  if (audienceItem && isRecord(audienceValue)) {
+    const entries = Object.entries(audienceValue)
+      .map(([key, value]) => ({
+        key,
+        hour: Number(key),
+        value:
+          typeof value === "number" && Number.isFinite(value) ? value : null,
+      }))
+      .filter((entry) => entry.value !== null);
+
+    if (entries.length > 0) {
+      entries.sort((a, b) => {
+        const aValid = Number.isFinite(a.hour);
+        const bValid = Number.isFinite(b.hour);
+        if (aValid && bValid) return a.hour - b.hour;
+        return a.key.localeCompare(b.key);
+      });
+
+      const data = entries.map((entry) => entry.value ?? 0);
+      const labels = entries.map((entry) =>
+        Number.isFinite(entry.hour) ? `${entry.hour}` : entry.key
+      );
+      const maxValue = Math.max(...data);
+
+      options.push({
+        id: "online_followers",
+        label: "Sledující online",
+        title: "Sledující online",
+        value: formatCompactNumber(maxValue),
+        description: "Rozložení sledujících podle hodin",
+        xLabels: labels,
+        series: [{ data }],
+      });
+    }
+  }
+
+  return options;
+}
 
 function isAbortError(err: unknown): boolean {
   return (
@@ -422,6 +499,15 @@ export function Dashboard() {
   // UI options
   const [showEmptyMetricCards, setShowEmptyMetricCards] = useState(false);
   const [activeChartIndex, setActiveChartIndex] = useState(0);
+
+  const chartOptions = useMemo(
+    () =>
+      buildChartOptions({
+        perf: igPerf ?? [],
+        audience: igAudience ?? [],
+      }),
+    [igPerf, igAudience]
+  );
 
   const pageClass = useMemo(
     () =>
@@ -463,6 +549,16 @@ export function Dashboard() {
 
     return () => window.clearTimeout(id);
   }, [selected]);
+
+  useEffect(() => {
+    if (chartOptions.length === 0) {
+      if (activeChartIndex !== 0) setActiveChartIndex(0);
+      return;
+    }
+    if (activeChartIndex > chartOptions.length - 1) {
+      setActiveChartIndex(chartOptions.length - 1);
+    }
+  }, [activeChartIndex, chartOptions.length]);
 
   // initial connected check
   useEffect(() => {
@@ -755,7 +851,7 @@ export function Dashboard() {
     return accountCount ?? 0;
   }, [igAccount?.mediaCount, media.length]);
 
-  const activeChart = chartOptions[activeChartIndex] ?? chartOptions[0];
+  const activeChart = chartOptions[activeChartIndex] ?? chartOptions[0] ?? null;
 
 
   return (
@@ -892,7 +988,7 @@ export function Dashboard() {
             </div>
           )}
 
-          {igConnected && igAccount && activeChart && (
+          {igConnected && igAccount && activeChart && chartOptions.length > 0 && (
             <div className="mt-6 space-y-3">
               <div className="flex flex-wrap gap-2">
                 {chartOptions.map((chart, index) => {
