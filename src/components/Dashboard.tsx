@@ -130,6 +130,11 @@ const IG_METRIC_LABELS: Record<string, string> = {
   accounts_engaged: "Zapojené účty",
   follower_count: "Počet sledujících (časová řada)",
   website_clicks: "Kliknutí na web",
+  email_contacts: "E-mailové kontakty",
+  phone_call_clicks: "Kliknutí na telefon",
+  text_message_clicks: "Kliknutí na zprávu",
+  get_directions_clicks: "Navigace na adresu",
+  impressions: "Zobrazení (impressions)",
   online_followers: "Sledující online",
   views: "Zobrazení",
   saved: "Uložení",
@@ -144,6 +149,7 @@ const IG_METRIC_LABELS: Record<string, string> = {
   profile_activity: "Aktivita profilu",
   profile_visits: "Návštěvy profilu",
   follows: "Nová sledování",
+  profile_actions: "Akce profilu",
 };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -338,6 +344,12 @@ const METRIC_DESCRIPTIONS: Record<string, string> = {
   profile_views: "Návštěvy profilu",
   follower_count: "Vývoj počtu sledujících",
   website_clicks: "Kliknutí na web",
+  email_contacts: "Kliknutí na e-mailový kontakt",
+  phone_call_clicks: "Kliknutí na telefon",
+  text_message_clicks: "Kliknutí na zprávu",
+  get_directions_clicks: "Kliknutí na navigaci",
+  impressions: "Celkový počet zobrazení",
+  profile_actions: "Součet akcí na profilu",
 };
 
 function formatCompactNumber(value: number): string {
@@ -354,6 +366,97 @@ function formatEndTimeLabel(endTime: string): string | null {
   return date.toLocaleDateString("cs-CZ", { day: "2-digit", month: "2-digit" });
 }
 
+function buildSeriesFromValues(values: InsightItem["values"]) {
+  let hasNumeric = false;
+  let hasNonZero = false;
+  const data: number[] = [];
+  const labels: string[] = [];
+
+  values.forEach((point, index) => {
+    const value =
+      typeof point.value === "number" && Number.isFinite(point.value)
+        ? point.value
+        : null;
+    if (value !== null) {
+      hasNumeric = true;
+      if (value !== 0) hasNonZero = true;
+    }
+    data.push(value ?? 0);
+    const label = point.end_time
+      ? formatEndTimeLabel(point.end_time)
+      : null;
+    labels.push(label ?? `D${index + 1}`);
+  });
+
+  const lastNumeric = [...values]
+    .map((point) =>
+      typeof point.value === "number" && Number.isFinite(point.value)
+        ? point.value
+        : null
+    )
+    .reverse()
+    .find((value) => value !== null);
+
+  return {
+    data,
+    labels,
+    hasNumeric,
+    hasNonZero,
+    lastNumeric: lastNumeric ?? 0,
+  };
+}
+
+function buildCombinedSeries(items: InsightItem[]) {
+  if (items.length === 0) return null;
+
+  const maxLength = Math.max(...items.map((item) => item.values.length));
+  if (!Number.isFinite(maxLength) || maxLength <= 0) return null;
+
+  let hasNumeric = false;
+  let hasNonZero = false;
+  const data: number[] = [];
+  const labels: string[] = [];
+
+  for (let index = 0; index < maxLength; index += 1) {
+    let sum = 0;
+    let hasPoint = false;
+    let label: string | null = null;
+
+    for (const item of items) {
+      const point = item.values[index];
+      if (!point) continue;
+      const value =
+        typeof point.value === "number" && Number.isFinite(point.value)
+          ? point.value
+          : null;
+      if (value !== null) {
+        sum += value;
+        hasPoint = true;
+        if (value !== 0) hasNonZero = true;
+      }
+      if (!label && point.end_time) {
+        label = formatEndTimeLabel(point.end_time);
+      }
+    }
+
+    if (hasPoint) hasNumeric = true;
+    data.push(hasPoint ? sum : 0);
+    labels.push(label ?? `D${index + 1}`);
+  }
+
+  if (!hasNumeric) return null;
+
+  const lastNumeric = [...data].reverse().find((value) => Number.isFinite(value));
+
+  return {
+    data,
+    labels,
+    hasNumeric,
+    hasNonZero,
+    lastNumeric: lastNumeric ?? 0,
+  };
+}
+
 function buildChartOptions(args: {
   perf: InsightItem[];
   audience: InsightItem[];
@@ -367,55 +470,78 @@ function buildChartOptions(args: {
     "profile_views",
     "follower_count",
     "website_clicks",
+    "email_contacts",
+    "phone_call_clicks",
+    "text_message_clicks",
+    "get_directions_clicks",
+    "impressions",
   ];
 
   for (const metric of perfMetrics) {
     const item = perfMap.get(metric);
     if (!item || item.values.length === 0) continue;
 
-    let hasNumeric = false;
-    let hasNonZero = false;
-    const data: number[] = [];
-    const labels: string[] = [];
+    const seriesData = buildSeriesFromValues(item.values);
 
-    item.values.forEach((point, index) => {
-      const value =
-        typeof point.value === "number" && Number.isFinite(point.value)
-          ? point.value
-          : null;
-      if (value !== null) {
-        hasNumeric = true;
-        if (value !== 0) hasNonZero = true;
-      }
-      data.push(value ?? 0);
-      const label = point.end_time
-        ? formatEndTimeLabel(point.end_time)
-        : null;
-      labels.push(label ?? `D${index + 1}`);
-    });
-
-    if (!hasNumeric) continue;
-    if (metric === "website_clicks" && !hasNonZero) continue;
-
-    const lastNumeric = [...item.values]
-      .map((point) =>
-        typeof point.value === "number" && Number.isFinite(point.value)
-          ? point.value
-          : null
-      )
-      .reverse()
-      .find((value) => value !== null);
+    if (!seriesData.hasNumeric) continue;
+    if (metric === "website_clicks" && !seriesData.hasNonZero) continue;
 
     options.push({
       id: metric,
       label: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
       title: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
-      value: formatCompactNumber(lastNumeric ?? 0),
+      value: formatCompactNumber(seriesData.lastNumeric),
       description:
         item.description ?? METRIC_DESCRIPTIONS[metric] ?? "Vývoj metriky",
-      xLabels: labels,
-      series: [{ data }],
+      xLabels: seriesData.labels,
+      series: [{ data: seriesData.data }],
     });
+  }
+
+  const profileActionMetrics = [
+    "website_clicks",
+    "email_contacts",
+    "phone_call_clicks",
+    "text_message_clicks",
+    "get_directions_clicks",
+  ];
+  const profileActionItems = profileActionMetrics
+    .map((metric) => perfMap.get(metric))
+    .filter((item): item is InsightItem => Boolean(item));
+
+  const profileActionSeries = buildCombinedSeries(profileActionItems);
+  if (profileActionSeries) {
+    options.push({
+      id: "profile_actions",
+      label: "Akce profilu",
+      title: "Akce profilu",
+      value: formatCompactNumber(profileActionSeries.lastNumeric),
+      description: METRIC_DESCRIPTIONS.profile_actions,
+      xLabels: profileActionSeries.labels,
+      series: [{ data: profileActionSeries.data }],
+    });
+  }
+
+  const reachItem = perfMap.get("reach");
+  const engagedItem = perfMap.get("accounts_engaged");
+  if (reachItem && engagedItem) {
+    const reachSeries = buildSeriesFromValues(reachItem.values);
+    const engagedSeries = buildSeriesFromValues(engagedItem.values);
+
+    if (reachSeries.hasNumeric && engagedSeries.hasNumeric) {
+      options.push({
+        id: "reach_vs_engaged",
+        label: "Dosah vs zapojení",
+        title: "Dosah vs zapojení",
+        value: formatCompactNumber(engagedSeries.lastNumeric),
+        description: "Porovnání dosahu a zapojených účtů",
+        xLabels: reachSeries.labels,
+        series: [
+          { data: reachSeries.data, color: "#4584E9" },
+          { data: engagedSeries.data, color: "#F97316" },
+        ],
+      });
+    }
   }
 
   const audienceItem =
@@ -852,6 +978,14 @@ export function Dashboard() {
   }, [igAccount?.mediaCount, media.length]);
 
   const activeChart = chartOptions[activeChartIndex] ?? chartOptions[0] ?? null;
+  const shuffleChart = () => {
+    if (chartOptions.length <= 1) return;
+    let nextIndex = activeChartIndex;
+    while (nextIndex === activeChartIndex) {
+      nextIndex = Math.floor(Math.random() * chartOptions.length);
+    }
+    setActiveChartIndex(nextIndex);
+  };
 
 
   return (
@@ -990,7 +1124,7 @@ export function Dashboard() {
 
           {igConnected && igAccount && activeChart && chartOptions.length > 0 && (
             <div className="mt-6 space-y-3">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {chartOptions.map((chart, index) => {
                   const isActive = index === activeChartIndex;
                   return (
@@ -1006,6 +1140,17 @@ export function Dashboard() {
                     </button>
                   );
                 })}
+                {chartOptions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={shuffleChart}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
+                      palette.border
+                    } ${palette.accentButton} ${palette.accentButtonHover}`}
+                  >
+                    Náhodný graf
+                  </button>
+                )}
               </div>
 
               <ChartCard
