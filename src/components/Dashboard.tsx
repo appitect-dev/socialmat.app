@@ -340,17 +340,6 @@ type ChartOption = {
 };
 
 const METRIC_DESCRIPTIONS: Record<string, string> = {
-  reach: "Unikátní účty v dosahu",
-  accounts_engaged: "Lajky, komentáře, sdílení",
-  profile_views: "Návštěvy profilu",
-  follower_count: "Vývoj počtu sledujících",
-  website_clicks: "Kliknutí na web",
-  email_contacts: "Kliknutí na e-mailový kontakt",
-  phone_call_clicks: "Kliknutí na telefon",
-  text_message_clicks: "Kliknutí na zprávu",
-  get_directions_clicks: "Kliknutí na navigaci",
-  impressions: "Celkový počet zobrazení",
-  profile_actions: "Součet akcí na profilu",
   profile_views: "Zobrazení profilu za měsíc",
   follows: "Nová sledování za měsíc",
   unfollows: "Zrušená sledování za měsíc",
