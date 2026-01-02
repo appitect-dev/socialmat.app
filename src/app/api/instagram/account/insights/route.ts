@@ -220,6 +220,8 @@ const PERFORMANCE_CANDIDATES = [
   "profile_views",
   "accounts_engaged",
   "follower_count",
+  "follows",
+  "unfollows",
   "website_clicks",
   "email_contacts",
   "phone_call_clicks",

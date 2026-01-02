@@ -149,6 +149,7 @@ const IG_METRIC_LABELS: Record<string, string> = {
   profile_activity: "Aktivita profilu",
   profile_visits: "Návštěvy profilu",
   follows: "Nová sledování",
+  unfollows: "Zrušená sledování",
   profile_actions: "Akce profilu",
 };
 
@@ -350,6 +351,10 @@ const METRIC_DESCRIPTIONS: Record<string, string> = {
   get_directions_clicks: "Kliknutí na navigaci",
   impressions: "Celkový počet zobrazení",
   profile_actions: "Součet akcí na profilu",
+  profile_views: "Zobrazení profilu za měsíc",
+  follows: "Nová sledování za měsíc",
+  unfollows: "Zrušená sledování za měsíc",
+  reach: "Nové účty v dosahu za měsíc",
 };
 
 function formatCompactNumber(value: number): string {
@@ -360,101 +365,81 @@ function formatCompactNumber(value: number): string {
   }).format(value);
 }
 
-function formatEndTimeLabel(endTime: string): string | null {
-  const date = new Date(endTime);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("cs-CZ", { day: "2-digit", month: "2-digit" });
+function formatMonthLabel(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${month}/${year}`;
 }
 
-function buildSeriesFromValues(values: InsightItem["values"]) {
-  let hasNumeric = false;
-  let hasNonZero = false;
-  const data: number[] = [];
-  const labels: string[] = [];
+function monthKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${year}-${month}`;
+}
 
-  values.forEach((point, index) => {
+function monthLabelFromKey(key: string) {
+  const [year, month] = key.split("-");
+  if (!year || !month) return key;
+  return `${month}/${year}`;
+}
+
+function monthOrderFromKey(key: string) {
+  const [yearRaw, monthRaw] = key.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return 0;
+  return year * 12 + month;
+}
+
+type MonthlyBucket = {
+  label: string;
+  order: number;
+  total: number;
+};
+
+function aggregateMonthlyMap(values: InsightItem["values"]) {
+  const buckets = new Map<string, MonthlyBucket>();
+
+  for (const point of values) {
     const value =
       typeof point.value === "number" && Number.isFinite(point.value)
         ? point.value
         : null;
-    if (value !== null) {
-      hasNumeric = true;
-      if (value !== 0) hasNonZero = true;
+    if (value === null) continue;
+    if (!point.end_time) continue;
+
+    const date = new Date(point.end_time);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const key = monthKey(date);
+    const existing = buckets.get(key);
+    if (existing) {
+      existing.total += value;
+    } else {
+      buckets.set(key, {
+        label: formatMonthLabel(date),
+        order: monthOrderFromKey(key),
+        total: value,
+      });
     }
-    data.push(value ?? 0);
-    const label = point.end_time
-      ? formatEndTimeLabel(point.end_time)
-      : null;
-    labels.push(label ?? `D${index + 1}`);
-  });
-
-  const lastNumeric = [...values]
-    .map((point) =>
-      typeof point.value === "number" && Number.isFinite(point.value)
-        ? point.value
-        : null
-    )
-    .reverse()
-    .find((value) => value !== null);
-
-  return {
-    data,
-    labels,
-    hasNumeric,
-    hasNonZero,
-    lastNumeric: lastNumeric ?? 0,
-  };
-}
-
-function buildCombinedSeries(items: InsightItem[]) {
-  if (items.length === 0) return null;
-
-  const maxLength = Math.max(...items.map((item) => item.values.length));
-  if (!Number.isFinite(maxLength) || maxLength <= 0) return null;
-
-  let hasNumeric = false;
-  let hasNonZero = false;
-  const data: number[] = [];
-  const labels: string[] = [];
-
-  for (let index = 0; index < maxLength; index += 1) {
-    let sum = 0;
-    let hasPoint = false;
-    let label: string | null = null;
-
-    for (const item of items) {
-      const point = item.values[index];
-      if (!point) continue;
-      const value =
-        typeof point.value === "number" && Number.isFinite(point.value)
-          ? point.value
-          : null;
-      if (value !== null) {
-        sum += value;
-        hasPoint = true;
-        if (value !== 0) hasNonZero = true;
-      }
-      if (!label && point.end_time) {
-        label = formatEndTimeLabel(point.end_time);
-      }
-    }
-
-    if (hasPoint) hasNumeric = true;
-    data.push(hasPoint ? sum : 0);
-    labels.push(label ?? `D${index + 1}`);
   }
 
-  if (!hasNumeric) return null;
+  return buckets;
+}
 
-  const lastNumeric = [...data].reverse().find((value) => Number.isFinite(value));
+function buildMonthlySeries(map: Map<string, MonthlyBucket>) {
+  if (map.size === 0) return null;
 
-  return {
-    data,
-    labels,
-    hasNumeric,
-    hasNonZero,
-    lastNumeric: lastNumeric ?? 0,
-  };
+  const orderedKeys = [...map.keys()].sort(
+    (a, b) => monthOrderFromKey(a) - monthOrderFromKey(b)
+  );
+  const data = orderedKeys.map((key) => map.get(key)?.total ?? 0);
+  const labels = orderedKeys.map(
+    (key) => map.get(key)?.label ?? monthLabelFromKey(key)
+  );
+  const lastNumeric = data.length > 0 ? data[data.length - 1] : 0;
+
+  return { data, labels, lastNumeric };
 }
 
 function buildChartOptions(args: {
@@ -464,122 +449,73 @@ function buildChartOptions(args: {
   const options: ChartOption[] = [];
   const perfMap = new Map(args.perf.map((item) => [item.name, item]));
 
-  const perfMetrics = [
-    "reach",
-    "accounts_engaged",
-    "profile_views",
-    "follower_count",
-    "website_clicks",
-    "email_contacts",
-    "phone_call_clicks",
-    "text_message_clicks",
-    "get_directions_clicks",
-    "impressions",
-  ];
-
-  for (const metric of perfMetrics) {
-    const item = perfMap.get(metric);
-    if (!item || item.values.length === 0) continue;
-
-    const seriesData = buildSeriesFromValues(item.values);
-
-    if (!seriesData.hasNumeric) continue;
-    if (metric === "website_clicks" && !seriesData.hasNonZero) continue;
-
-    options.push({
-      id: metric,
-      label: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
-      title: IG_METRIC_LABELS[metric] ?? item.title ?? metric,
-      value: formatCompactNumber(seriesData.lastNumeric),
-      description:
-        item.description ?? METRIC_DESCRIPTIONS[metric] ?? "Vývoj metriky",
-      xLabels: seriesData.labels,
-      series: [{ data: seriesData.data }],
-    });
-  }
-
-  const profileActionMetrics = [
-    "website_clicks",
-    "email_contacts",
-    "phone_call_clicks",
-    "text_message_clicks",
-    "get_directions_clicks",
-  ];
-  const profileActionItems = profileActionMetrics
-    .map((metric) => perfMap.get(metric))
-    .filter((item): item is InsightItem => Boolean(item));
-
-  const profileActionSeries = buildCombinedSeries(profileActionItems);
-  if (profileActionSeries) {
-    options.push({
-      id: "profile_actions",
-      label: "Akce profilu",
-      title: "Akce profilu",
-      value: formatCompactNumber(profileActionSeries.lastNumeric),
-      description: METRIC_DESCRIPTIONS.profile_actions,
-      xLabels: profileActionSeries.labels,
-      series: [{ data: profileActionSeries.data }],
-    });
-  }
-
-  const reachItem = perfMap.get("reach");
-  const engagedItem = perfMap.get("accounts_engaged");
-  if (reachItem && engagedItem) {
-    const reachSeries = buildSeriesFromValues(reachItem.values);
-    const engagedSeries = buildSeriesFromValues(engagedItem.values);
-
-    if (reachSeries.hasNumeric && engagedSeries.hasNumeric) {
+  const profileViewsItem = perfMap.get("profile_views");
+  if (profileViewsItem) {
+    const profileViews = buildMonthlySeries(
+      aggregateMonthlyMap(profileViewsItem.values)
+    );
+    if (profileViews) {
       options.push({
-        id: "reach_vs_engaged",
-        label: "Dosah vs zapojení",
-        title: "Dosah vs zapojení",
-        value: formatCompactNumber(engagedSeries.lastNumeric),
-        description: "Porovnání dosahu a zapojených účtů",
-        xLabels: reachSeries.labels,
-        series: [
-          { data: reachSeries.data, color: "#4584E9" },
-          { data: engagedSeries.data, color: "#F97316" },
-        ],
+        id: "profile_views_month",
+        label: "Zobrazení profilu / měsíc",
+        title: "Zobrazení profilu",
+        value: formatCompactNumber(profileViews.lastNumeric),
+        description: METRIC_DESCRIPTIONS.profile_views,
+        xLabels: profileViews.labels,
+        series: [{ data: profileViews.data }],
       });
     }
   }
 
-  const audienceItem =
-    args.audience.find((item) => item.name === "online_followers") ?? null;
-  const audienceValue = audienceItem?.values.at(-1)?.value ?? null;
+  const followsItem = perfMap.get("follows");
+  const unfollowsItem = perfMap.get("unfollows");
+  const followsMap = followsItem
+    ? aggregateMonthlyMap(followsItem.values)
+    : new Map();
+  const unfollowsMap = unfollowsItem
+    ? aggregateMonthlyMap(unfollowsItem.values)
+    : new Map();
+  const allKeys = Array.from(
+    new Set([...followsMap.keys(), ...unfollowsMap.keys()])
+  ).sort((a, b) => monthOrderFromKey(a) - monthOrderFromKey(b));
 
-  if (audienceItem && isRecord(audienceValue)) {
-    const entries = Object.entries(audienceValue)
-      .map(([key, value]) => ({
-        key,
-        hour: Number(key),
-        value:
-          typeof value === "number" && Number.isFinite(value) ? value : null,
-      }))
-      .filter((entry) => entry.value !== null);
+  if (allKeys.length > 0) {
+    const labels = allKeys.map((key) => monthLabelFromKey(key));
+    const followsData = allKeys.map(
+      (key) => followsMap.get(key)?.total ?? 0
+    );
+    const unfollowsData = allKeys.map(
+      (key) => unfollowsMap.get(key)?.total ?? 0
+    );
+    const lastFollows =
+      followsData.length > 0 ? followsData[followsData.length - 1] : 0;
 
-    if (entries.length > 0) {
-      entries.sort((a, b) => {
-        const aValid = Number.isFinite(a.hour);
-        const bValid = Number.isFinite(b.hour);
-        if (aValid && bValid) return a.hour - b.hour;
-        return a.key.localeCompare(b.key);
-      });
+    options.push({
+      id: "follows_unfollows_month",
+      label: "Sledování / měsíc",
+      title: "Nová a zrušená sledování",
+      value: formatCompactNumber(lastFollows),
+      description: "Přehled nových a zrušených sledování za měsíc",
+      xLabels: labels,
+      series: [
+        { data: followsData, color: "#22C55E" },
+        { data: unfollowsData, color: "#EF4444" },
+      ],
+    });
+  }
 
-      const data = entries.map((entry) => entry.value ?? 0);
-      const labels = entries.map((entry) =>
-        Number.isFinite(entry.hour) ? `${entry.hour}` : entry.key
-      );
-      const maxValue = Math.max(...data);
-
+  const reachItem = perfMap.get("reach");
+  if (reachItem) {
+    const reachSeries = buildMonthlySeries(aggregateMonthlyMap(reachItem.values));
+    if (reachSeries) {
       options.push({
-        id: "online_followers",
-        label: "Sledující online",
-        title: "Sledující online",
-        value: formatCompactNumber(maxValue),
-        description: "Rozložení sledujících podle hodin",
-        xLabels: labels,
-        series: [{ data }],
+        id: "reach_month",
+        label: "Nové účty v dosahu / měsíc",
+        title: "Nové účty v dosahu",
+        value: formatCompactNumber(reachSeries.lastNumeric),
+        description: METRIC_DESCRIPTIONS.reach,
+        xLabels: reachSeries.labels,
+        series: [{ data: reachSeries.data }],
       });
     }
   }
