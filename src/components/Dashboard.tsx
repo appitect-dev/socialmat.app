@@ -1051,7 +1051,7 @@ export function Dashboard() {
                           : ""
                       }`}
                     >
-                      <div className="rounded-xl overflow-hidden bg-slate-200/40 aspect-video">
+                      <div className="rounded-xl overflow-hidden bg-slate-200/40 aspect-[9/16]">
                         {preview ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
