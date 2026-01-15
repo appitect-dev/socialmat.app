@@ -1,199 +1,134 @@
 "use client";
 
-/**
- * LOGIN STRÁNKA
- *
- * Formulář pro přihlášení uživatele
- * Používá React Hook Form pro validaci a useActionState pro Server Actions
- */
-
-import { useActionState, useEffect, useState } from "react";
+import { useActionState } from "react";
 import { login } from "@/app/actions/auth";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, null);
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedTheme = localStorage.getItem("landing-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-      return;
-    }
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      return;
-    }
-    setTheme("light");
-  }, []);
-
-  const isDark = (theme ?? "light") === "dark";
-
-  const palette = {
-    page: isDark
-      ? "bg-[#05050a] text-white"
-      : "bg-gradient-to-br from-white via-slate-50 to-blue-50 text-slate-900",
-    card: isDark
-      ? "bg-white/5 border border-white/10"
-      : "bg-white border border-slate-200 shadow-xl",
-    label: isDark ? "text-white/70" : "text-slate-600",
-    input: isDark
-      ? "bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:ring-indigo-400/50 focus:border-indigo-300/80"
-      : "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-indigo-300/60 focus:border-indigo-400",
-    supporting: isDark ? "text-white/70" : "text-slate-600",
-    accentText: isDark ? "text-indigo-300 hover:text-indigo-200" : "text-indigo-600 hover:text-indigo-500",
-    accentButton:
-      "bg-gradient-to-r from-indigo-500 to-sky-500 text-white hover:from-indigo-400 hover:to-sky-400",
-    errorBox: isDark
-      ? "bg-red-500/10 border-red-500/40 text-red-100"
-      : "bg-red-50 border-red-200 text-red-700",
-    errorText: isDark ? "text-red-300" : "text-red-600",
-    mutedLink: isDark ? "text-white/60 hover:text-white" : "text-slate-500 hover:text-slate-800",
-  } as const;
-
-  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)";
-
-  // Avoid flicker by only rendering once theme is resolved
-  if (theme === null) {
-    return (
-      <div className="min-h-screen bg-white" aria-hidden />
-    );
-  }
+  const accentPink = "#E1306C";
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${palette.page}`}>
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className={
-            isDark
-              ? "absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-sky-500/5"
-              : "absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-sky-50"
-          }
-        />
-        <div
-          className="absolute inset-0 opacity-[0.08]"
-          style={{
-            backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(79,70,229,0.16),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.12),transparent_30%)]" />
+    <AuthLayout
+      title="Přihlášení"
+      subtitle="Vítej zpět v SocialMat"
+    >
+      {/* OAuth Buttons */}
+      <div className="space-y-3 mb-6">
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-slate-100 transition-all"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Pokračovat s Google
+        </button>
+
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-slate-100 transition-all"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          Pokračovat s Apple
+        </button>
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-8">
-        <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
-            Vítejte zpět v <span className="text-indigo-400">SocialMat</span>
-          </h1>
-          <p className={`${palette.supporting} max-w-xl mx-auto`}>
-            Přihlaste se a pokračujte v tvorbě titulků
-          </p>
-        </div>
+      {/* Divider */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-white/40 text-sm">nebo</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
 
-        <div className="w-full max-w-md">
-          <div className={`${palette.card} rounded-3xl shadow-2xl p-8 backdrop-blur`}>
-            <form action={formAction} className="space-y-6">
-              {/* Globální error message */}
-              {state?.message && (
-                <div className={`${palette.errorBox} px-4 py-3 rounded-lg text-sm border`}>
-                  {state.message}
-                </div>
-              )}
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className={`block text-sm font-medium mb-2 ${palette.label}`}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  className={`w-full px-4 py-3 rounded-full focus:ring-2 outline-none transition-all ${palette.input}`}
-                  placeholder="vas@email.cz"
-                />
-                {state?.errors?.email && (
-                  <p className={`mt-1 text-sm ${palette.errorText}`}>
-                    {state.errors.email[0]}
-                  </p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className={`block text-sm font-medium mb-2 ${palette.label}`}
-                >
-                  Heslo
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  required
-                  className={`w-full px-4 py-3 rounded-full focus:ring-2 outline-none transition-all ${palette.input}`}
-                  placeholder="••••••••"
-                />
-                {state?.errors?.password && (
-                  <p className={`mt-1 text-sm ${palette.errorText}`}>
-                    {state.errors.password[0]}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isPending}
-                className={`w-full py-3 px-4 rounded-full font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 ${palette.accentButton}`}
-              >
-                {isPending ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Přihlašuji...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-5 h-5" />
-                    Přihlásit se
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Link na registraci */}
-            <div className="mt-6 text-center">
-              <p className={`text-sm ${palette.supporting}`}>
-                Ještě nemáte účet?{" "}
-                <Link
-                  href="/signup"
-                  className={`${palette.accentText} font-semibold`}
-                >
-                  Zaregistrovat se
-                </Link>
-              </p>
-            </div>
-
-            {/* Link zpět */}
-            <div className="mt-4 text-center">
-              <Link
-                href="/"
-                className={`text-sm ${palette.mutedLink}`}
-              >
-                ← Zpět na homepage
-              </Link>
-            </div>
+      {/* Form */}
+      <form action={formAction} className="space-y-4">
+        {state?.message && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl text-sm">
+            {state.message}
           </div>
+        )}
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-[#E1306C]/50 focus:ring-1 focus:ring-[#E1306C]/50 outline-none transition-all"
+            placeholder="vas@email.cz"
+          />
+          {state?.errors?.email && (
+            <p className="mt-1 text-sm text-red-400">{state.errors.email[0]}</p>
+          )}
         </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-white/70">
+              Heslo
+            </label>
+            <Link href="/forgot-password" className="text-sm text-[#E1306C] hover:underline">
+              Zapomenuté heslo?
+            </Link>
+          </div>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-[#E1306C]/50 focus:ring-1 focus:ring-[#E1306C]/50 outline-none transition-all"
+            placeholder="••••••••"
+          />
+          {state?.errors?.password && (
+            <p className="mt-1 text-sm text-red-400">{state.errors.password[0]}</p>
+          )}
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full py-3.5 px-4 rounded-xl font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          style={{
+            background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)",
+            boxShadow: `0 8px 24px -8px ${accentPink}`,
+          }}
+        >
+          {isPending ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Přihlašuji...
+            </>
+          ) : (
+            <>
+              <LogIn className="w-5 h-5" />
+              Přihlásit se
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Signup link */}
+      <div className="mt-6 text-center">
+        <p className="text-sm text-white/60">
+          Nemáš účet?{" "}
+          <Link href="/signup" className="text-[#E1306C] font-semibold hover:underline">
+            Registrovat se
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

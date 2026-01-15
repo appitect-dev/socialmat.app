@@ -1,216 +1,235 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { MessageSquare, Zap, Filter, CheckCircle2, Shield, Bot, ArrowRight } from "lucide-react";
-import { FeatureNavbar } from "@/components/FeatureNavbar";
+import { FeaturePageLayout } from "@/components/layout/FeaturePageLayout";
+import {
+  MessageSquare,
+  Bot,
+  Zap,
+  Shield,
+  Heart,
+  Users,
+  TrendingUp,
+  LineChart,
+  Calendar,
+  Type,
+} from "lucide-react";
 
 export default function AutoReplyPage() {
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+  const stats = [
+    { value: "10s", label: "Průměrná doba odpovědi" },
+    { value: "97%", label: "Přesnost AI odpovědí" },
+    { value: "+37%", label: "Vyšší engagement" },
+    { value: "24/7", label: "Non-stop aktivita" },
+  ];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedTheme = localStorage.getItem("landing-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-      return;
-    }
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      return;
-    }
-    setTheme("light");
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && theme) {
-      localStorage.setItem("landing-theme", theme);
-    }
-  }, [theme]);
-
-  const isDark = theme === "dark";
-
-  const features = [
+  const steps = [
     {
-      icon: <Bot className="w-6 h-6" />,
-      title: "AI odpovědi v tvém stylu",
-      description: "Nastav tón komunikace a AI bude odpovídat fanouškům profesionálně, přátelsky a včas. V češtině i angličtině.",
+      number: "1",
+      title: "Fanoušek napíše komentář",
+      description: "AI okamžitě zachytí nový komentář pod tvým postem nebo Reels.",
+      icon: <MessageSquare className="w-7 h-7 text-white" />,
     },
     {
-      icon: <Filter className="w-6 h-6" />,
-      title: "Automatické filtrování",
-      description: "AI rozpozná spam, toxické komentáře a nevhodný obsah. Ty se jen zaměř na pozitivní interakce.",
+      number: "2",
+      title: "AI vytvoří odpověď",
+      description: "Vygeneruje odpověď v tvém stylu podle kontextu komentáře.",
+      icon: <Bot className="w-7 h-7 text-white" />,
     },
     {
-      icon: <CheckCircle2 className="w-6 h-6" />,
+      number: "3",
+      title: "Schválíš nebo autopilot",
+      description: "Můžeš odpověď schválit nebo nechat AI publikovat automaticky.",
+      icon: <Zap className="w-7 h-7 text-white" />,
+    },
+  ];
+
+  const subFeatures = [
+    {
+      title: "AI odpovědi ve tvém stylu",
+      description:
+        "Nastav tón komunikace a AI bude odpovídat fanouškům profesionálně, přátelsky a včas. V češtině i angličtině.",
+      features: [
+        "Personalizované odpovědi podle kontextu",
+        "Podpora češtiny, slovenštiny i angličtiny",
+        "Nastavitelný tón: formální / neformální",
+        "Učí se z tvých předchozích odpovědí",
+      ],
+      imagePosition: "right" as const,
+    },
+    {
+      title: "Automatické filtrování spamu",
+      description:
+        "AI rozpozná spam, toxické komentáře a nevhodný obsah. Ty se jen zaměř na pozitivní interakce.",
+      features: [
+        "Detekce spamu a reklamních komentářů",
+        "Filtrování toxických zpráv",
+        "Skrytí nevhodného obsahu",
+        "Whitelist pro důležité účty",
+      ],
+      imagePosition: "left" as const,
+    },
+    {
       title: "Schválení jedním kliknutím",
-      description: "Zkontroluj AI odpovědi před odesláním nebo nech běžet na autopilot. Máš plnou kontrolu.",
-    },
-    {
-      icon: <Zap className="w-6 h-6" />,
-      title: "Okamžité reakce",
-      description: "Odpovídej na komentáře během vteřin, ne hodin. Zvyš engagement a buduj komunitu rychleji.",
+      description:
+        "Zkontroluj AI odpovědi před odesláním nebo nech běžet na autopilot. Máš plnou kontrolu.",
+      features: [
+        "Preview odpovědi před publikací",
+        "Autopilot režim pro rutinní dotazy",
+        "Editace AI návrhů",
+        "Historie všech konverzací",
+      ],
+      imagePosition: "right" as const,
     },
   ];
 
-  const benefits = [
-    "Odpovědi do 10 sekund po komentáři",
-    "Automatická detekce spamu a toxicity",
-    "Personalizované odpovědi podle kontextu",
-    "Schválení nebo autopilot režim",
-    "Podpora češtiny i angličtiny",
-    "Sledování engagement metrik",
+  const useCases = [
+    {
+      icon: <Users className="w-6 h-6 text-white" />,
+      title: "Content Creators",
+      description: "Stihni odpovědět všem fanouškům i při tisících komentářů.",
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6 text-white" />,
+      title: "Influenceři",
+      description: "Udržuj engagement rate vysoko bez hodin práce.",
+    },
+    {
+      icon: <Heart className="w-6 h-6 text-white" />,
+      title: "Malé značky",
+      description: "Buduj komunitu a odpovídej zákazníkům 24/7.",
+    },
+    {
+      icon: <Shield className="w-6 h-6 text-white" />,
+      title: "Agentury",
+      description: "Spravuj více klientů efektivně z jednoho místa.",
+    },
   ];
+
+  const testimonials = [
+    {
+      name: "Petra Novotná",
+      role: "Influencer · 150K followers",
+      text: "Dostávám stovky komentářů denně. Bez Auto Reply bych to nestíhala. Teď odpovídám všem a engagement mi vyrostl o třetinu.",
+    },
+    {
+      name: "David Krejčí",
+      role: "E-shop owner · 45K followers",
+      text: "Zákazníci dostávají odpověď do minuty místo hodin. Automatické filtry mě zbavily spamu a haterů.",
+    },
+  ];
+
+  const relatedFeatures = [
+    {
+      title: "AI Titulky",
+      description: "Automatické české titulky s 95% přesností",
+      href: "/features/titulky",
+      icon: <Type className="w-5 h-5 text-white" />,
+      color: "from-[#833AB4] to-[#C13584]",
+    },
+    {
+      title: "Analytics",
+      description: "Sleduj výkon svého profilu v reálném čase",
+      href: "/features/analytics",
+      icon: <LineChart className="w-5 h-5 text-white" />,
+      color: "from-[#F77737] to-[#FCB045]",
+    },
+    {
+      title: "Plánování",
+      description: "Vizuální kalendář pro plánování obsahu",
+      href: "/features/kalendar",
+      icon: <Calendar className="w-5 h-5 text-white" />,
+      color: "from-[#C13584] to-[#833AB4]",
+    },
+  ];
+
+  const heroScreenshot = (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a1a]/80 backdrop-blur-xl shadow-2xl">
+      {/* Chat interface mockup */}
+      <div className="aspect-video bg-gradient-to-br from-[#0A0A0A] to-[#1a1a1a] p-6">
+        <div className="grid grid-cols-2 gap-6 h-full">
+          {/* Comments list */}
+          <div className="space-y-3">
+            <div className="text-white/50 text-xs mb-2 flex items-center justify-between">
+              <span>Nové komentáře</span>
+              <span className="bg-[#E1306C] text-white text-[10px] px-2 py-0.5 rounded-full">12 nových</span>
+            </div>
+            {[
+              { user: "@jana.style", text: "Kde koupím ty náušnice? ", time: "2m", status: "pending" },
+              { user: "@petr.foto", text: "Super video! Jakou kameru používáš?", time: "5m", status: "replied" },
+              { user: "@marie_22", text: "Moc hezké, díky za inspiraci!", time: "8m", status: "replied" },
+            ].map((comment, i) => (
+              <div
+                key={i}
+                className={`p-3 rounded-xl border ${comment.status === "pending" ? "bg-[#E1306C]/10 border-[#E1306C]/30" : "bg-white/5 border-white/10"}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-white text-xs font-medium">{comment.user}</span>
+                  <span className="text-white/30 text-[10px]">{comment.time}</span>
+                </div>
+                <p className="text-white/60 text-xs">{comment.text}</p>
+                {comment.status === "pending" && (
+                  <div className="flex gap-2 mt-2">
+                    <div className="px-2 py-1 bg-[#E1306C] text-white text-[10px] rounded">Odpovědět</div>
+                    <div className="px-2 py-1 bg-white/10 text-white/50 text-[10px] rounded">Autopilot</div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* AI Response panel */}
+          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#833AB4] to-[#E1306C] flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-white text-xs font-medium">AI Odpověď</div>
+                <div className="text-white/30 text-[10px]">Pro @jana.style</div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 rounded-lg p-3 mb-4">
+              <p className="text-white/80 text-sm">
+                Ahoj! Ty náušnice jsou od @czechjewelry - mám je ve stories zvýrazněných.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-[10px] text-white/30 mb-4">
+              <Zap className="w-3 h-3" />
+              <span>Tón: Přátelský · Jazyk: Čeština</span>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex-1 px-3 py-2 bg-gradient-to-r from-[#833AB4] to-[#E1306C] text-white text-xs rounded-lg text-center font-medium">
+                Odeslat odpověď
+              </div>
+              <div className="px-3 py-2 bg-white/10 text-white/50 text-xs rounded-lg">
+                Upravit
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-black text-white" : "bg-white text-slate-900"}`}>
-      <FeatureNavbar isDark={isDark} onThemeToggle={() => setTheme(isDark ? "light" : "dark")} />
-
-      {/* Hero Section */}
-      <section className="pt-40 pb-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 mb-6">
-            <MessageSquare className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-semibold text-orange-500">Auto Reply</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-rose-500 bg-clip-text text-transparent">
-            Odpovídáme na komentáře<br />místo tebe
-          </h1>
-          <p className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Nastav tón komunikace a SocialMat bude odpovídat fanouškům profesionálně, přátelsky a včas. Ty jen schválíš nebo necháš běžet na autopilot.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-orange-600 to-red-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-orange-500/50 transition-all">
-              Aktivovat Auto Reply
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/#pricing" className={`inline-flex items-center gap-2 py-4 px-8 rounded-full text-lg font-semibold border-2 transition-all ${isDark ? "border-white/20 hover:bg-white/10" : "border-slate-300 hover:bg-slate-100"}`}>
-              Zobrazit ceník
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Jak funguje Auto Reply
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className={`p-8 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${isDark ? "bg-orange-500/10 text-orange-400" : "bg-orange-100 text-orange-600"}`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className={isDark ? "text-white/70" : "text-slate-600"}>
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Co všechno Auto Reply umí
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {benefits.map((benefit, index) => (
-              <div key={index} className={`flex items-start gap-3 p-4 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-50"}`}>
-                <CheckCircle2 className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
-                <span className="text-lg">{benefit}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works flow */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Automatická odpověď ve 3 krocích
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "01",
-                title: "Fanoušek napíše komentář",
-                description: "AI okamžitě zachytí nový komentář pod tvým postem nebo Reels.",
-                icon: <MessageSquare className="w-8 h-8" />,
-              },
-              {
-                step: "02",
-                title: "AI vytvoří odpověď",
-                description: "Vygeneruje odpověď v tvém stylu podle kontextu komentáře.",
-                icon: <Bot className="w-8 h-8" />,
-              },
-              {
-                step: "03",
-                title: "Schválíš nebo autopilot",
-                description: "Můžeš odpověď schválit nebo nechat AI publikovat automaticky.",
-                icon: <Zap className="w-8 h-8" />,
-              },
-            ].map((step, index) => (
-              <div key={index} className={`relative p-8 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`absolute -top-4 -left-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${isDark ? "bg-orange-500/20 text-orange-400 border-2 border-orange-500/40" : "bg-orange-100 text-orange-600 border-2 border-orange-200"}`}>
-                  {step.step}
-                </div>
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto ${isDark ? "bg-orange-500/10 text-orange-400" : "bg-orange-100 text-orange-600"}`}>
-                  {step.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-center">{step.title}</h3>
-                <p className={`text-center ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  {step.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-3 gap-8 text-center">
-            {[
-              { number: "10s", label: "Průměrná doba odpovědi" },
-              { number: "97%", label: "Přesnost AI odpovědí" },
-              { number: "+37%", label: "Vyšší engagement" },
-            ].map((stat, index) => (
-              <div key={index} className={`p-8 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent">
-                  {stat.number}
-                </div>
-                <div className={`text-lg ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className={`max-w-4xl mx-auto text-center p-12 rounded-3xl ${isDark ? "bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-white/10" : "bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200"}`}>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Začni odpovídat rychleji než konkurence
-          </h2>
-          <p className={`text-xl mb-8 ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Bez závazků, bez platební karty. Vyzkoušej Auto Reply zdarma.
-          </p>
-          <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-orange-600 to-red-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-orange-500/50 transition-all">
-            Vyzkoušet zdarma
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
-      </section>
-    </div>
+    <FeaturePageLayout
+      badge="AI Powered"
+      badgeIcon={<MessageSquare className="w-4 h-4 text-[#E1306C]" />}
+      title="Odpovídáme na komentáře"
+      titleGradient="from-[#833AB4] via-[#E1306C] to-[#F77737]"
+      subtitle="Nastav tón komunikace a SocialMat bude odpovídat fanouškům profesionálně, přátelsky a včas. Ty jen schválíš nebo necháš běžet na autopilot."
+      heroScreenshot={heroScreenshot}
+      stats={stats}
+      steps={steps}
+      subFeatures={subFeatures}
+      useCases={useCases}
+      testimonials={testimonials}
+      ctaTitle="Začni odpovídat rychleji než konkurence"
+      ctaSubtitle="Bez závazků, bez platební karty. Vyzkoušej Auto Reply zdarma."
+      relatedFeatures={relatedFeatures}
+    />
   );
 }

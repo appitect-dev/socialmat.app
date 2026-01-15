@@ -1,148 +1,244 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Calendar as CalendarIcon, Clock, Zap, CheckCircle2, Grid3x3, ArrowRight } from "lucide-react";
-import { FeatureNavbar } from "@/components/FeatureNavbar";
+import { FeaturePageLayout } from "@/components/layout/FeaturePageLayout";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  CheckCircle2,
+  Grid3x3,
+  Users,
+  Sparkles,
+  Image as ImageIcon,
+  Send,
+  Bot,
+  LineChart,
+  Type,
+} from "lucide-react";
 
 export default function KalendarPage() {
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+  const stats = [
+    { value: "30+", label: "Dní dopředu" },
+    { value: "Auto", label: "Publikování" },
+    { value: "AI", label: "Optimální časy" },
+    { value: "Team", label: "Spolupráce" },
+  ];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedTheme = localStorage.getItem("landing-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-      return;
-    }
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      return;
-    }
-    setTheme("light");
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && theme) {
-      localStorage.setItem("landing-theme", theme);
-    }
-  }, [theme]);
-
-  const isDark = theme === "dark";
-
-  const features = [
+  const steps = [
     {
-      icon: <Grid3x3 className="w-6 h-6" />,
-      title: "Vizuální plánování",
-      description: "Vidíš celý měsíc najednou. Přetáhni, přesuň nebo zkopíruj posty podle potřeby.",
+      number: "1",
+      title: "Připrav obsah",
+      description: "Nahraj fotky, videa a napíš popisky. Vše na jednom místě.",
+      icon: <ImageIcon className="w-7 h-7 text-white" />,
     },
     {
-      icon: <Clock className="w-6 h-6" />,
-      title: "Optimální čas publikování",
-      description: "AI ti navrhne nejlepší čas pro každý post podle tvého publika a historických dat.",
+      number: "2",
+      title: "Naplánuj v kalendáři",
+      description: "Přetáhni posty na konkrétní dny. AI navrhne optimální čas.",
+      icon: <CalendarIcon className="w-7 h-7 text-white" />,
     },
     {
-      icon: <Zap className="w-6 h-6" />,
-      title: "Automatické publikování",
-      description: "Naplánuj si posty dopředu a systém je publikuje přesně v ten správný čas.",
-    },
-    {
-      icon: <CheckCircle2 className="w-6 h-6" />,
-      title: "Schvalování & spolupráce",
-      description: "Sdílej kalendář s týmem, přidávej komentáře a schvaluj obsah před publikací.",
+      number: "3",
+      title: "Publikuj automaticky",
+      description: "Systém publikuje posty přesně v naplánovaný čas.",
+      icon: <Send className="w-7 h-7 text-white" />,
     },
   ];
 
-  return (
-    <div className={`min-h-screen ${isDark ? "bg-black text-white" : "bg-white text-slate-900"}`}>
-      <FeatureNavbar isDark={isDark} onThemeToggle={() => setTheme(isDark ? "light" : "dark")} />
+  const subFeatures = [
+    {
+      title: "Vizuální plánování obsahu",
+      description:
+        "Vidíš celý měsíc najednou. Přetáhni, přesuň nebo zkopíruj posty podle potřeby. Drag & drop jako v Excelu.",
+      features: [
+        "Měsíční a týdenní zobrazení",
+        "Drag & drop přesouvání postů",
+        "Kopírování a duplikování",
+        "Barevné štítky a kategorie",
+      ],
+      imagePosition: "right" as const,
+    },
+    {
+      title: "AI optimální čas publikování",
+      description:
+        "AI analyzuje tvé publikum a navrhne nejlepší čas pro každý post. Publikuj, když jsou tvoji followers online.",
+      features: [
+        "Analýza aktivity publika",
+        "Personalizovaná doporučení",
+        "A/B testování časů",
+        "Historická data výkonu",
+      ],
+      imagePosition: "left" as const,
+    },
+    {
+      title: "Týmová spolupráce",
+      description:
+        "Sdílej kalendář s týmem, přidávej komentáře a schvaluj obsah před publikací. Ideální pro agentury a týmy.",
+      features: [
+        "Role: Admin, Editor, Viewer",
+        "Komentáře a schvalování",
+        "Historie změn",
+        "Notifikace o úpravách",
+      ],
+      imagePosition: "right" as const,
+    },
+  ];
 
-      {/* Hero Section */}
-      <section className="pt-40 pb-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 mb-6">
-            <CalendarIcon className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-semibold text-blue-500">Kalendář</span>
+  const useCases = [
+    {
+      icon: <Users className="w-6 h-6 text-white" />,
+      title: "Content Creators",
+      description: "Naplánuj celý měsíc obsahu dopředu a udržuj konzistenci.",
+    },
+    {
+      icon: <Sparkles className="w-6 h-6 text-white" />,
+      title: "Influenceři",
+      description: "Koordinuj sponzorované posty a kampaně s přehledem.",
+    },
+    {
+      icon: <Grid3x3 className="w-6 h-6 text-white" />,
+      title: "Značky",
+      description: "Spravuj content calendar pro více platforem najednou.",
+    },
+    {
+      icon: <CheckCircle2 className="w-6 h-6 text-white" />,
+      title: "Agentury",
+      description: "Spolupracuj s klienty na schvalování obsahu.",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Anna Procházková",
+      role: "Social Media Manager · Agentura",
+      text: "Spravuju 8 klientů a bez kalendáře bych se zbláznila. Vidím všechno na jednom místě a klienti mohou schvalovat přímo v appce.",
+    },
+    {
+      name: "Jakub Veselý",
+      role: "Content Creator · 95K followers",
+      text: "AI mi doporučila publikovat v neděli večer místo pondělí ráno. Reach vyrostl o 50%. Game changer!",
+    },
+  ];
+
+  const relatedFeatures = [
+    {
+      title: "Analytics",
+      description: "Sleduj výkon svého profilu v reálném čase",
+      href: "/features/analytics",
+      icon: <LineChart className="w-5 h-5 text-white" />,
+      color: "from-[#F77737] to-[#FCB045]",
+    },
+    {
+      title: "Auto-reply",
+      description: "AI odpovídá na komentáře místo tebe",
+      href: "/features/auto-reply",
+      icon: <Bot className="w-5 h-5 text-white" />,
+      color: "from-[#E1306C] to-[#F77737]",
+    },
+    {
+      title: "AI Titulky",
+      description: "Automatické české titulky s 95% přesností",
+      href: "/features/titulky",
+      icon: <Type className="w-5 h-5 text-white" />,
+      color: "from-[#833AB4] to-[#C13584]",
+    },
+  ];
+
+  const heroScreenshot = (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a1a]/80 backdrop-blur-xl shadow-2xl">
+      {/* Calendar mockup */}
+      <div className="aspect-video bg-gradient-to-br from-[#0A0A0A] to-[#1a1a1a] p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="text-white font-semibold text-lg">Leden 2026</div>
+            <div className="flex gap-1">
+              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/50 text-sm">&lt;</div>
+              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/50 text-sm">&gt;</div>
+            </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 bg-clip-text text-transparent">
-            Plánuj obsah jako profesionál
-          </h1>
-          <p className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Vizuální kalendář pro Instagram, TikTok a další platformy. Naplánuj si celý měsíc dopředu a publikuj v optimální čas.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-blue-600 to-indigo-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-blue-500/50 transition-all">
-              Začít plánovat zdarma
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/#pricing" className={`inline-flex items-center gap-2 py-4 px-8 rounded-full text-lg font-semibold border-2 transition-all ${isDark ? "border-white/20 hover:bg-white/10" : "border-slate-300 hover:bg-slate-100"}`}>
-              Zobrazit ceník
-            </Link>
+          <div className="flex gap-2">
+            <div className="px-3 py-1.5 bg-white/5 rounded-lg text-white/50 text-xs">Týden</div>
+            <div className="px-3 py-1.5 bg-[#E1306C]/20 text-[#E1306C] rounded-lg text-xs font-medium">Měsíc</div>
           </div>
         </div>
-      </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Plánování obsahu, které ti ušetří hodiny práce
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className={`p-8 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${isDark ? "bg-blue-500/10 text-blue-400" : "bg-blue-100 text-blue-600"}`}>
-                  {feature.icon}
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-2">
+          {/* Day headers */}
+          {["Po", "Út", "St", "Čt", "Pá", "So", "Ne"].map((day) => (
+            <div key={day} className="text-center text-white/40 text-xs py-2">
+              {day}
+            </div>
+          ))}
+
+          {/* Calendar days */}
+          {Array.from({ length: 35 }, (_, i) => {
+            const day = i - 2; // Start from previous month
+            const isCurrentMonth = day >= 1 && day <= 31;
+            const hasPost = [3, 7, 10, 14, 17, 21, 24, 28].includes(day);
+            const isToday = day === 15;
+
+            return (
+              <div
+                key={i}
+                className={`aspect-square rounded-lg p-1 ${
+                  isCurrentMonth
+                    ? isToday
+                      ? "bg-[#E1306C]/20 border border-[#E1306C]/50"
+                      : "bg-white/5"
+                    : "bg-transparent"
+                }`}
+              >
+                <div className={`text-xs ${isCurrentMonth ? "text-white/60" : "text-white/20"}`}>
+                  {isCurrentMonth ? day : ""}
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className={isDark ? "text-white/70" : "text-slate-600"}>
-                  {feature.description}
-                </p>
+                {hasPost && isCurrentMonth && (
+                  <div className="mt-1">
+                    <div className="w-full h-1 rounded-full bg-gradient-to-r from-[#833AB4] to-[#E1306C]" />
+                    <div className="text-[8px] text-white/40 mt-0.5 truncate">Post</div>
+                  </div>
+                )}
               </div>
-            ))}
+            );
+          })}
+        </div>
+
+        {/* Upcoming posts */}
+        <div className="absolute bottom-4 right-4 w-48 bg-white/5 rounded-xl p-3 border border-white/10">
+          <div className="text-white text-xs font-medium mb-2">Další publikace</div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded bg-gradient-to-br from-[#833AB4] to-[#E1306C]" />
+              <div>
+                <div className="text-white/80 text-xs">Reels #23</div>
+                <div className="text-white/40 text-[10px] flex items-center gap-1">
+                  <Clock className="w-2.5 h-2.5" />
+                  Dnes 18:00
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Proč používat kalendář SocialMat
-          </h2>
-          <div className="space-y-4">
-            {[
-              "Vidíš celý měsíc obsahu na jeden pohled",
-              "AI navrhne nejlepší čas pro každý post",
-              "Automatické publikování ve vybraný čas",
-              "Spolupráce s týmem a schvalování obsahu",
-              "Podpora všech hlavních platforem",
-              "Historie a statistiky zveřejněného obsahu",
-            ].map((benefit, index) => (
-              <div key={index} className={`flex items-center gap-3 p-4 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-50"}`}>
-                <CheckCircle2 className="w-6 h-6 text-blue-500 flex-shrink-0" />
-                <span className="text-lg">{benefit}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className={`max-w-4xl mx-auto text-center p-12 rounded-3xl ${isDark ? "bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-white/10" : "bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"}`}>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Naplánuj si celý měsíc dopředu
-          </h2>
-          <p className={`text-xl mb-8 ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Bez závazků, bez platební karty. Vyzkoušej zdarma.
-          </p>
-          <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-blue-600 to-indigo-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-blue-500/50 transition-all">
-            Vyzkoušet zdarma
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
-      </section>
+      </div>
     </div>
+  );
+
+  return (
+    <FeaturePageLayout
+      badge="Smart Scheduling"
+      badgeIcon={<CalendarIcon className="w-4 h-4 text-[#E1306C]" />}
+      title="Plánuj obsah jako profík"
+      titleGradient="from-[#833AB4] via-[#E1306C] to-[#F77737]"
+      subtitle="Vizuální kalendář pro Instagram, TikTok a další platformy. Naplánuj si celý měsíc dopředu a publikuj v optimální čas."
+      heroScreenshot={heroScreenshot}
+      stats={stats}
+      steps={steps}
+      subFeatures={subFeatures}
+      useCases={useCases}
+      testimonials={testimonials}
+      ctaTitle="Naplánuj si celý měsíc dopředu"
+      ctaSubtitle="Bez závazků, bez platební karty. Vyzkoušej zdarma."
+      relatedFeatures={relatedFeatures}
+    />
   );
 }

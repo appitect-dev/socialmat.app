@@ -1,150 +1,243 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { BarChart3, TrendingUp, Users, Eye, Heart, Target, ArrowRight } from "lucide-react";
-import { FeatureNavbar } from "@/components/FeatureNavbar";
+import { FeaturePageLayout } from "@/components/layout/FeaturePageLayout";
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  Eye,
+  Heart,
+  Target,
+  Lightbulb,
+  ArrowUpRight,
+  Bot,
+  Calendar,
+  Type,
+} from "lucide-react";
 
 export default function AnalyticsPage() {
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+  const stats = [
+    { value: "15+", label: "Sledovaných metrik" },
+    { value: "Real-time", label: "Aktualizace dat" },
+    { value: "90 dní", label: "Historie dat" },
+    { value: "AI", label: "Doporučení" },
+  ];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedTheme = localStorage.getItem("landing-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-      return;
-    }
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      return;
-    }
-    setTheme("light");
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && theme) {
-      localStorage.setItem("landing-theme", theme);
-    }
-  }, [theme]);
-
-  const isDark = theme === "dark";
-
-  const features = [
+  const steps = [
     {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "Výkon profilu v reálném čase",
-      description: "Sleduj reach, engagement, follower growth a další klíčové metriky na jednom místě.",
+      number: "1",
+      title: "Propoj Instagram",
+      description: "Jedním kliknutím propoj svůj Instagram účet přes oficiální API.",
+      icon: <Target className="w-7 h-7 text-white" />,
     },
     {
-      icon: <Target className="w-6 h-6" />,
-      title: "AI doporučení",
-      description: "Umělá inteligence ti řekne, kdy publikovat, jaký obsah funguje a kde máš prostor pro růst.",
+      number: "2",
+      title: "Sleduj metriky",
+      description: "Všechny důležité statistiky na jednom přehledném dashboardu.",
+      icon: <BarChart3 className="w-7 h-7 text-white" />,
     },
     {
-      icon: <Users className="w-6 h-6" />,
-      title: "Analýza publika",
-      description: "Zjisti, kdo jsou tvoji fanoušci, odkud jsou, kdy jsou online a co je zajímá.",
-    },
-    {
-      icon: <Eye className="w-6 h-6" />,
-      title: "Konkurenční analýza",
-      description: "Porovnej svůj výkon s konkurencí a objevuj nové příležitosti pro růst.",
+      number: "3",
+      title: "Získej AI tipy",
+      description: "Umělá inteligence ti poradí, jak zlepšit výkon profilu.",
+      icon: <Lightbulb className="w-7 h-7 text-white" />,
     },
   ];
 
-  return (
-    <div className={`min-h-screen ${isDark ? "bg-black text-white" : "bg-white text-slate-900"}`}>
-      <FeatureNavbar isDark={isDark} onThemeToggle={() => setTheme(isDark ? "light" : "dark")} />
+  const subFeatures = [
+    {
+      title: "Výkon profilu v reálném čase",
+      description:
+        "Sleduj reach, engagement, follower growth a další klíčové metriky na jednom místě. Data se aktualizují automaticky.",
+      features: [
+        "Reach a impressions za období",
+        "Engagement rate s trendy",
+        "Přírůstek a úbytek followers",
+        "Porovnání s předchozím obdobím",
+      ],
+      imagePosition: "right" as const,
+    },
+    {
+      title: "AI doporučení pro růst",
+      description:
+        "Umělá inteligence analyzuje tvá data a říká ti, kdy publikovat, jaký obsah funguje a kde máš prostor pro růst.",
+      features: [
+        "Optimální čas pro publikování",
+        "Analýza nejúspěšnějšího obsahu",
+        "Doporučení pro hashtags",
+        "Tipy pro zvýšení engagement",
+      ],
+      imagePosition: "left" as const,
+    },
+    {
+      title: "Detailní analýza publika",
+      description:
+        "Zjisti, kdo jsou tvoji fanoušci, odkud jsou, kdy jsou online a co je zajímá. Poznej své publikum do detailu.",
+      features: [
+        "Demografie: věk, pohlaví, lokace",
+        "Aktivita followers v čase",
+        "Nejaktivnější fanoušci",
+        "Zájmy a chování publika",
+      ],
+      imagePosition: "right" as const,
+    },
+  ];
 
-      {/* Hero Section */}
-      <section className="pt-40 pb-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 mb-6">
-            <BarChart3 className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm font-semibold text-emerald-500">Analýzy profilu</span>
+  const useCases = [
+    {
+      icon: <Users className="w-6 h-6 text-white" />,
+      title: "Content Creators",
+      description: "Pochop, jaký obsah tvé publikum miluje a vytvárej víc.",
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6 text-white" />,
+      title: "Influenceři",
+      description: "Měř růst, dokazuj hodnotu brandům s daty.",
+    },
+    {
+      icon: <Target className="w-6 h-6 text-white" />,
+      title: "Značky",
+      description: "Sleduj výkon kampaní a ROI sociálních sítí.",
+    },
+    {
+      icon: <Heart className="w-6 h-6 text-white" />,
+      title: "Malé firmy",
+      description: "Optimalizuj strategii a šetři čas s AI tipy.",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Lucie Veselá",
+      role: "Lifestyle blogger · 80K followers",
+      text: "Konečně vidím všechny metriky na jednom místě. AI mi řekla, že mám publikovat v pondělí večer - engagement vyrostl o 40%!",
+    },
+    {
+      name: "Tomáš Horák",
+      role: "Marketing Manager · Agentura",
+      text: "Pro naše klienty potřebujeme přesná data. SocialMat nám šetří hodiny práce s reporty každý měsíc.",
+    },
+  ];
+
+  const relatedFeatures = [
+    {
+      title: "Auto-reply",
+      description: "AI odpovídá na komentáře místo tebe",
+      href: "/features/auto-reply",
+      icon: <Bot className="w-5 h-5 text-white" />,
+      color: "from-[#E1306C] to-[#F77737]",
+    },
+    {
+      title: "AI Titulky",
+      description: "Automatické české titulky s 95% přesností",
+      href: "/features/titulky",
+      icon: <Type className="w-5 h-5 text-white" />,
+      color: "from-[#833AB4] to-[#C13584]",
+    },
+    {
+      title: "Plánování",
+      description: "Vizuální kalendář pro plánování obsahu",
+      href: "/features/kalendar",
+      icon: <Calendar className="w-5 h-5 text-white" />,
+      color: "from-[#C13584] to-[#833AB4]",
+    },
+  ];
+
+  const heroScreenshot = (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a1a]/80 backdrop-blur-xl shadow-2xl">
+      {/* Dashboard mockup */}
+      <div className="aspect-video bg-gradient-to-br from-[#0A0A0A] to-[#1a1a1a] p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="text-white font-semibold">Přehled profilu</div>
+            <div className="text-white/40 text-xs">Posledních 30 dní</div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
-            Vidíš výkon svého profilu<br />na jeden pohled
-          </h1>
-          <p className={`text-xl md:text-2xl mb-10 max-w-3xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Propojíme tvůj Instagram a zobrazíme reach, engagement, nejlepší čas na publikování i top fanoušky. Všechno přehledně na jednom místě.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-emerald-500/50 transition-all">
-              Propojit Instagram
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/#pricing" className={`inline-flex items-center gap-2 py-4 px-8 rounded-full text-lg font-semibold border-2 transition-all ${isDark ? "border-white/20 hover:bg-white/10" : "border-slate-300 hover:bg-slate-100"}`}>
-              Zobrazit ceník
-            </Link>
+          <div className="flex gap-2">
+            <div className="px-3 py-1.5 bg-white/5 rounded-lg text-white/50 text-xs">7 dní</div>
+            <div className="px-3 py-1.5 bg-[#E1306C]/20 text-[#E1306C] rounded-lg text-xs font-medium">30 dní</div>
+            <div className="px-3 py-1.5 bg-white/5 rounded-lg text-white/50 text-xs">90 dní</div>
           </div>
         </div>
-      </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Co všechno se dozvíš o svém profilu
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className={`p-8 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-600"}`}>
-                  {feature.icon}
+        {/* Stats cards */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "Reach", value: "124.5K", change: "+23%", icon: Eye },
+            { label: "Engagement", value: "8.4%", change: "+2.1%", icon: Heart },
+            { label: "Followers", value: "52,847", change: "+847", icon: Users },
+            { label: "Posts", value: "24", change: "+8", icon: BarChart3 },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center justify-between mb-2">
+                <stat.icon className="w-4 h-4 text-white/40" />
+                <div className="flex items-center gap-1 text-green-400 text-xs">
+                  <ArrowUpRight className="w-3 h-3" />
+                  {stat.change}
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className={isDark ? "text-white/70" : "text-slate-600"}>
-                  {feature.description}
-                </p>
               </div>
-            ))}
-          </div>
+              <div className="text-white font-bold text-lg">{stat.value}</div>
+              <div className="text-white/40 text-xs">{stat.label}</div>
+            </div>
+          ))}
         </div>
-      </section>
 
-      {/* Stats Preview */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Metriky, které skutečně potřebuješ
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: <Eye className="w-6 h-6" />, label: "Reach", value: "124.5K", trend: "+23%" },
-              { icon: <Heart className="w-6 h-6" />, label: "Engagement", value: "8.4%", trend: "+2.1%" },
-              { icon: <Users className="w-6 h-6" />, label: "Followers", value: "2,847", trend: "+15%" },
-              { icon: <TrendingUp className="w-6 h-6" />, label: "Growth", value: "+247", trend: "+12%" },
-            ].map((stat, index) => (
-              <div key={index} className={`p-6 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-600"}`}>
-                  {stat.icon}
+        {/* Chart placeholder */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-2 bg-white/5 rounded-xl p-4 border border-white/10">
+            <div className="text-white text-sm font-medium mb-3">Engagement trend</div>
+            <div className="flex items-end gap-1 h-24">
+              {[40, 55, 45, 70, 60, 85, 75, 90, 80, 95, 85, 100].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t bg-gradient-to-t from-[#833AB4] to-[#E1306C]"
+                  style={{ height: `${h}%`, opacity: 0.3 + (i / 12) * 0.7 }}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+            <div className="text-white text-sm font-medium mb-3">Nejlepší čas</div>
+            <div className="space-y-2">
+              {[
+                { day: "Po", time: "18:00", score: 95 },
+                { day: "St", time: "20:00", score: 87 },
+                { day: "Pá", time: "19:00", score: 82 },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-8 text-white/40 text-xs">{item.day}</div>
+                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#833AB4] to-[#E1306C] rounded-full"
+                      style={{ width: `${item.score}%` }}
+                    />
+                  </div>
+                  <div className="text-white/60 text-xs w-12">{item.time}</div>
                 </div>
-                <div className={`text-sm font-medium mb-1 ${isDark ? "text-white/60" : "text-slate-500"}`}>{stat.label}</div>
-                <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-green-500 font-semibold">{stat.trend}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className={`max-w-4xl mx-auto text-center p-12 rounded-3xl ${isDark ? "bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-white/10" : "bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200"}`}>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Začni růst na Instagramu
-          </h2>
-          <p className={`text-xl mb-8 ${isDark ? "text-white/70" : "text-slate-600"}`}>
-            Propoj svůj profil a získej přístup k pokročilým analytikám zdarma.
-          </p>
-          <Link href="/signup" className="inline-flex items-center gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-500 py-4 px-8 rounded-full text-lg font-semibold shadow-lg hover:shadow-emerald-500/50 transition-all">
-            Vyzkoušet zdarma
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
-      </section>
+      </div>
     </div>
+  );
+
+  return (
+    <FeaturePageLayout
+      badge="Real-time Data"
+      badgeIcon={<BarChart3 className="w-4 h-4 text-[#E1306C]" />}
+      title="Vidíš výkon profilu"
+      titleGradient="from-[#833AB4] via-[#E1306C] to-[#F77737]"
+      subtitle="Propojíme tvůj Instagram a zobrazíme reach, engagement, nejlepší čas na publikování i top fanoušky. Všechno přehledně na jednom místě."
+      heroScreenshot={heroScreenshot}
+      stats={stats}
+      steps={steps}
+      subFeatures={subFeatures}
+      useCases={useCases}
+      testimonials={testimonials}
+      ctaTitle="Začni růst na Instagramu"
+      ctaSubtitle="Propoj svůj profil a získej přístup k pokročilým analytikám zdarma."
+      relatedFeatures={relatedFeatures}
+    />
   );
 }
