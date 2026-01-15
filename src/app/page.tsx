@@ -2,1583 +2,1320 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Brain,
   BarChart3,
   Calendar,
   ChevronDown,
+  ChevronRight,
   Edit3,
-  Image,
-  Lightbulb,
   MessageSquare,
   Moon,
-  PlayCircle,
+  Play,
   Sparkles,
   Sun,
   Video,
   Zap,
-  DollarSign,
-  MessageCircle,
-  Shield,
+  Check,
+  Star,
+  Instagram,
+  Clock,
   TrendingUp,
+  Shield,
+  CreditCard,
   Users,
+  MessageCircle,
+  Wand2,
+  Bot,
+  LineChart,
+  Layers,
+  Send,
+  Heart,
+  X,
+  Menu,
 } from "lucide-react";
 
 export default function LandingPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  const navRef = useRef<HTMLDivElement | null>(null);
-  const heroRef = useRef<HTMLElement | null>(null);
-  const featuresRef = useRef<HTMLElement | null>(null);
-  const statsRef = useRef<HTMLElement | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => setTheme(mediaQuery.matches ? "dark" : "light");
-
-    handleChange();
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    // Auto-rotate testimonials
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const isDark = theme === "dark";
-  const palette = {
-    page: isDark ? "bg-[#03050b] text-white" : "bg-white text-slate-900",
-  };
   const currentYear = new Date().getFullYear();
 
-  const heroHighlights = [
+  // Gradient colors
+  const gradientPrimary = "from-violet-600 via-fuchsia-500 to-orange-400";
+  const gradientSecondary = "from-violet-500 to-fuchsia-500";
+  const gradientText = "bg-gradient-to-r from-violet-400 via-fuchsia-400 to-orange-300 bg-clip-text text-transparent";
+
+  // Features data
+  const features = [
     {
-      badge: "Content ops",
-      title: "AI titulky v brandu",
-      description: "Templates drží fonty, barvy i motion pro každý kanál.",
-      metric: "98.6%",
-      icon: "video",
+      icon: Video,
+      title: "AI Titulky",
+      description: "Automatické titulky v češtině a slovenštině. 95%+ přesnost i u rychlé řeči. Export do SRT nebo přímo do videa.",
+      color: "from-violet-500 to-purple-600",
+      href: "/features/titulky",
+      badge: "Populární",
     },
     {
-      badge: "Analytics",
-      title: "Realtime přehled",
-      description: "Sleduj reach, retention i sentiment přímo z hero panelu.",
-      metric: "Live",
-      icon: "chart",
+      icon: Bot,
+      title: "Auto-reply chatbot",
+      description: "Automatické odpovědi na komentáře a DM ve tvém tónu. Předá konverzaci člověku když je potřeba.",
+      color: "from-fuchsia-500 to-pink-600",
+      href: "/features/auto-reply",
+      badge: "Nové",
     },
     {
-      badge: "Crew log",
-      title: "AI odpoví a hlídá SLA",
-      description: "Komentáře a DM mají audit trail i přepnutí na člověka.",
-      metric: "<10s",
-      icon: "idea",
+      icon: LineChart,
+      title: "Analytics dashboard",
+      description: "Real-time metriky tvého účtu. AI ti řekne co funguje a proč. Doporučení na zlepšení.",
+      color: "from-orange-500 to-red-500",
+      href: "/features/analytics",
+    },
+    {
+      icon: Edit3,
+      title: "Video Editor",
+      description: "Střih videí přímo v prohlížeči. Šablony pro Reels a Stories. Drag & drop jednoduchost.",
+      color: "from-cyan-500 to-blue-600",
+      href: "/features/video-editor",
+    },
+    {
+      icon: Calendar,
+      title: "Plánování obsahu",
+      description: "Naplánuj posty na týdny dopředu. AI ti navrhne nejlepší čas publikace.",
+      color: "from-green-500 to-emerald-600",
+      href: "/features/kalendar",
+    },
+    {
+      icon: Brain,
+      title: "AI Brainstorming",
+      description: "Generuje nápady, hooky a skripty. Personalizované podle tvého stylu a audience.",
+      color: "from-amber-500 to-orange-600",
+      href: "/features/ai-content",
     },
   ];
 
-  const cockpitMetrics = [
-    { label: "Zapojené profily", value: "12", detail: "Workspace" },
-    { label: "Aktivní kampaně", value: "5", detail: "Mission" },
-    { label: "Čas do exportu", value: "0:32", detail: "Fronta" },
-    { label: "DM hand-offs", value: "2", detail: "Crew" },
-  ];
-
-  const tapeMessages = [
-    "Mission control · SocialMat",
-    "Realtime ops",
-    "AI titulky",
-    "Komentáře → lead",
-  ];
-
-  const featureBenefits = [
-    "Každý modul je specialista, ale sdílí stejný data layer",
-    "Brief, scénář i export se drží v jednom canvasu",
-    "Automatizace loguje výsledky, takže víš co fungovalo",
-  ];
-
-  const systemTracks = [
+  // How it works steps
+  const steps = [
     {
-      badge: "Lane 01",
-      title: "AI Content Studio",
-      summary:
-        "Headliny, storyboardy i titulky vznikají v jednom editoru s historií verzí.",
-      modules: [
-        {
-          title: "Ideation",
-          description:
-            "Hook, CTA i captions ve třech variantách. Brief exportujeme do Notion i Slacku.",
-          tags: ["CZ + EN copy", "Plán na měsíc"],
-          href: "/features/ai-content",
-        },
-        {
-          title: "Storyboard",
-          description: "Klíčové scény a overlays připravíš drag & dropem.",
-          tags: ["Brand kit", "Motion presets"],
-          href: "/features/video-editor",
-        },
-        {
-          title: "Launch decks",
-          description: "Brief + assety posíláme týmu i freelancerům.",
-          tags: ["PDF + Notion", "Sdílené checklisty"],
-          href: "/features/projects",
-        },
-      ],
+      number: "01",
+      emoji: "📱",
+      title: "Připoj svůj účet",
+      description: "Propoj Instagram za 30 sekund. Bezpečné OAuth přihlášení.",
     },
     {
-      badge: "Lane 02",
-      title: "Automatizace komentářů & DM",
-      summary:
-        "Komentáře, odpovědi i follow-upy běží jako scénáře. Vybereš tón komunikace, SocialMat hlídá SLA i předání člověku.",
-      modules: [
-        {
-          title: "Auto Reply",
-          description:
-            "Odpovídáme v češtině i angličtině, filtrujeme spam a logujeme každou reakci.",
-          tags: ["Tón značky", "Schválení jedním klikem"],
-          href: "/features/auto-reply",
-        },
-        {
-          title: "DM Playbooks",
-          description: "Keyword spouští PDF, slevu nebo booking link a sleduje konverze.",
-          tags: ["UTM tracking", "Follow-up po 24h"],
-          href: "/features/analytics",
-        },
-        {
-          title: "Kalendář dropů",
-          description: "Launch sekvence přes Stories, Reels i e-mail v jednom časovém plánu.",
-          tags: ["Drag & drop", "Sdílené checklisty"],
-          href: "/features/kalendar",
-        },
-      ],
+      number: "02",
+      emoji: "🎬",
+      title: "Nahraj video",
+      description: "Drag & drop nebo vyber z knihovny. Podporujeme všechny formáty.",
     },
     {
-      badge: "Lane 03",
-      title: "Insights & řízení výkonu",
-      summary:
-        "Dashboard, který propojuje metriky účtu, obsahové inspekce a AI doporučení do jednoho logu.",
-      modules: [
-        {
-          title: "Account Telemetry",
-          description: "Reach, engagement a nejlepší časy publikace mapujeme po hodinách.",
-          tags: ["Benchmark odvětví", "Top fanoušci"],
-          href: "/features/analytics",
-        },
-        {
-          title: "Obsahový audit",
-          description: "AI vysvětlí, které hooky a délky fungují a navrhne další iteraci.",
-          tags: ["Predikce výkonu", "Content tags"],
-          href: "/features/stories",
-        },
-        {
-          title: "Braintrust",
-          description:
-            "Tým vidí, kdo schválil titulky, kdo odpověděl na DM a co čeká na edit.",
-          tags: ["Audit log", "Role & SLA"],
-          href: "/dashboard",
-        },
-      ],
+      number: "03",
+      emoji: "✨",
+      title: "AI udělá zbytek",
+      description: "Titulky, odpovědi, analytics. Vše automaticky za pár sekund.",
     },
   ];
 
-  const automationFlows = [
+  // Testimonials
+  const testimonials = [
     {
-      stage: "Komentář",
-      title: "Fanoušek napíše klíčové slovo",
-      detail:
-        "Sledujeme klíčová slova pod Reels i carouselem a spouštíme scénář jen pro kvalifikované komentáře.",
-      outcome: "Trigger zachycen do 3 s",
+      name: "Tereza Králová",
+      role: "Content Creator",
+      handle: "@tereza.creates",
+      avatar: "/avatars/tereza.jpg",
+      text: "SocialMat mi ušetřil hodiny práce týdně. Titulky jsou přesné, automatické odpovědi fungují skvěle. Konečně mám čas na tvorbu, ne na admin! 🙌",
+      followers: "52K",
     },
     {
-      stage: "Reply",
-      title: "Veřejná odpověď v nastaveném tónu",
-      detail:
-        "AI odpověď může obsahovat emoji, odkazy i kontext poslední kampaně. Stačí schválit nebo nechat auto mode.",
-      outcome: "Publikováno do 10 s",
+      name: "Jakub Novotný",
+      role: "Fitness Influencer",
+      handle: "@jakub.fit",
+      avatar: "/avatars/jakub.jpg",
+      text: "Nejlepší investice do mého contentu. Auto-reply mi přinesl 3x více leadů na můj program. Analytics jsou super přehledné.",
+      followers: "128K",
     },
     {
-      stage: "DM",
-      title: "Soukromé navázání v DM",
-      detail:
-        "Pošleme PDF, slevu nebo booking link. Každý DM dostane UTM parametr a uvidíte, kolik prodejů přinesl.",
-      outcome: "+37% leadů",
+      name: "Marie Svobodová",
+      role: "Marketing Agency Owner",
+      handle: "@marie.social",
+      avatar: "/avatars/marie.jpg",
+      text: "Spravujeme 15 účtů a SocialMat nám šetří minimálně 20 hodin týdně. ROI je neuvěřitelný. Doporučuji všem agenturám!",
+      followers: "89K",
     },
     {
-      stage: "Follow-up",
-      title: "Automatické připomenutí",
-      detail:
-        "Pokud uživatel neodpoví, SocialMat připomene benefit po 24 hodinách a přepne konverzaci na člověka, když je hotový deal.",
-      outcome: "Service handoff",
-    },
-  ];
-
-  const automationBenefits = [
-    "Automatické zachytávání poptávky i mimo pracovní dobu",
-    "Každý komentář i DM má historii a odpovědnou osobu",
-    "AI odpovědi udržují tón značky bez manuální práce",
-    "Follow-up se spouští jen u relevantních leadů",
-  ];
-
-  const insightWidgets = [
-    {
-      label: "Výkon účtu",
-      value: "124k reach",
-      description: "Denní vývoj reach + retention s barevným zvýrazněním odchylek.",
+      name: "Petr Dvořák",
+      role: "E-commerce Owner",
+      handle: "@petr.ecom",
+      avatar: "/avatars/petr.jpg",
+      text: "Chatbot odpovídá na dotazy zákazníků 24/7. Konverze z Instagramu vzrostly o 47%. SocialMat je game changer.",
+      followers: "34K",
     },
     {
-      label: "AI Debrief",
-      value: "3 doporučení",
-      description: "Shrnutí toho, proč poslední video fungovalo a co zopakovat příště.",
-    },
-    {
-      label: "Brainstorm board",
-      value: "7 hooků",
-      description: "AI generuje hook, CTA a outlines v češtině i angličtině pro další content drop.",
+      name: "Anna Černá",
+      role: "Lifestyle Blogger",
+      handle: "@anna.lifestyle",
+      avatar: "/avatars/anna.jpg",
+      text: "Miluji jak jednoduché je vytvořit Reels s titulky. Dřív mi to zabralo hodinu, teď 2 minuty. Kvalita je top! 💜",
+      followers: "67K",
     },
   ];
 
-  const insightSteps = [
-    "Zobrazování metrik účtu a obsahu v reálném čase",
-    "AI vysvětlí, co stáhlo výkon nahoru nebo dolů",
-    "Brainstorming dalších postů včetně titulků a CTA",
-  ];
-
-  const statHighlights = [
-    {
-      value: 98.6,
-      suffix: "%",
-      label: "Přesnost AI titulků",
-      detail: "Validované na 50k klipech",
-      decimals: 1,
-    },
-    {
-      value: 0.32,
-      suffix: " s",
-      label: "Průměrná latence fronty",
-      detail: "Od uploadu po export",
-      decimals: 2,
-    },
-    {
-      value: 10000,
-      suffix: "+",
-      label: "Vytvořených titulků denně",
-      detail: "Napříč brandy a agenturami",
-      decimals: 0,
-    },
-    {
-      value: 2.3,
-      suffix: "x",
-      label: "Růst engagement",
-      detail: "Po 30 dnech používání",
-      decimals: 1,
-    },
-  ];
-
-  const [accuracyStat, speedStat, throughputStat, engagementStat] = statHighlights;
-
-  const statStorylines = [
-    "12k videí denně se zpracuje s brand šablonami",
-    "Komentáře a DM mají audit trail a SLA",
-    "Týmy vidí výsledky kampaní po hodinách, ne týdnech",
-  ];
-
+  // Pricing plans
   const pricingPlans = [
     {
       name: "Starter",
       price: "Zdarma",
-      period: "na vždy",
-      desc: "Na vyzkoušení a první titulky.",
-      perks: [
-        "10 minut zpracování měsíčně",
-        "Základní šablony titulků",
-        "Export MP4 se spálenými titulky",
+      period: "navždy",
+      description: "Pro vyzkoušení a první kroky",
+      features: [
+        "10 minut AI titulků měsíčně",
+        "Základní šablony",
+        "Export MP4",
+        "Email podpora",
       ],
       cta: "Začít zdarma",
       highlight: false,
     },
     {
       name: "Pro",
-      price: "€10",
-      period: "/ měsíc",
-      desc: "Pro tvůrce, kteří publikují denně.",
-      perks: [
-        "180 minut zpracování měsíčně",
-        "Prémiové šablony a barvy",
-        "Export SRT + MP4 + auto-reels",
-        "Prioritní fronta zpracování",
+      price: "299 Kč",
+      period: "měsíčně",
+      description: "Pro aktivní tvůrce",
+      features: [
+        "180 minut AI titulků",
+        "Auto-reply chatbot",
+        "Analytics dashboard",
+        "Prémiové šablony",
+        "Prioritní fronta",
+        "Chat podpora",
       ],
-      cta: "Zvolit Pro",
+      cta: "Vyzkoušet Pro",
       highlight: true,
+      badge: "Nejoblíbenější",
     },
     {
       name: "Business",
-      price: "Kontaktujte nás",
-      period: "",
-      desc: "Pro týmy, agentury a velké objemy.",
-      perks: [
+      price: "799 Kč",
+      period: "měsíčně",
+      description: "Pro agentury a týmy",
+      features: [
         "Neomezené minuty",
-        "SSO a týmové workspace",
-        "Vyhrazená podpora a SLA",
-        "Custom brand šablony",
+        "Více účtů (až 10)",
+        "Týmový přístup",
+        "Custom branding",
+        "API přístup",
+        "Dedikovaný support",
       ],
-      cta: "Domluvit demo",
+      cta: "Kontaktovat sales",
       highlight: false,
     },
   ];
 
-  const testimonials = [
-    {
-      name: "Jakub Novák",
-      role: "Content Creator",
-      avatar: "JN",
-      rating: 5,
-      text: "SocialMat mi ušetřil spoustu času. Dřív jsem musel používat 3 různé aplikace, teď mám všechno na jednom místě. Titulky, editing, AI content - prostě skvělé!",
-    },
-    {
-      name: "Marie Svobodová",
-      role: "Marketing Manager",
-      avatar: "MS",
-      rating: 5,
-      text: "Konečně nemusíme platit za Captions, ManyChat a další nástroje zvlášť. SocialMat má všechno co potřebujeme a za zlomek ceny.",
-    },
-    {
-      name: "Petr Dvořák",
-      role: "Social Media Specialist",
-      avatar: "PD",
-      rating: 5,
-      text: "Kvalita AI titulků je úžasná a video editor je tak intuitivní. Vytvářím reels 3x rychleji než předtím.",
-    },
-    {
-      name: "Anna Králová",
-      role: "Influencer",
-      avatar: "AK",
-      rating: 5,
-      text: "Miluji automatické generování contentových nápadů. AI mi pomáhá udržet konzistenci a kvalitu napříč všemi platformami.",
-    },
-    {
-      name: "Tomáš Procházka",
-      role: "Video Producer",
-      avatar: "TP",
-      rating: 5,
-      text: "Jako profesionál jsem skeptický k novým nástrojům, ale SocialMat mě opravdu překvapil. Workflow je naprosto hladký.",
-    },
-    {
-      name: "Lucie Černá",
-      role: "Digital Marketer",
-      avatar: "LČ",
-      rating: 5,
-      text: "ROI je neuvěřitelný. Za cenu jednoho nástroje mám kompletní social media suite. Doporučuji všem!",
-    },
-  ];
-
-  const [heroTestimonial, ...otherTestimonials] = testimonials;
-
-  const competitorComparison = [
-    {
-      tool: "ManyChat",
-      price: "$15/měsíc",
-      features: ["Chatboty", "Automatizace"],
-    },
-    {
-      tool: "Captions",
-      price: "$20/měsíc",
-      features: ["AI Titulky"],
-    },
-    {
-      tool: "CapCut Pro",
-      price: "$10/měsíc",
-      features: ["Video Editing"],
-    },
-    {
-      tool: "Buffer",
-      price: "$12/měsíc",
-      features: ["Plánování", "Analytics"],
-    },
-    {
-      tool: "ChatGPT Plus",
-      price: "$20/měsíc",
-      features: ["AI Content"],
-    },
-  ];
-
-  const competitorTotal = "$77 / měsíc";
-
+  // FAQ items
   const faqItems = [
     {
       question: "Jak přesná je AI při rozpoznávání české řeči?",
-      answer:
-        "Naše AI je trénovaná speciálně na češtinu a slovenštinu včetně dialektů a slangu. Přesnost je 95%+ i u rychlé řeči nebo videa s hudbou v pozadí. Titulky můžete samozřejmě kdykoliv upravit.",
+      answer: "Naše AI je speciálně trénovaná na češtinu a slovenštinu včetně dialektů a slangu. Dosahujeme 95%+ přesnosti i u rychlé řeči nebo videa s hudbou na pozadí. Titulky můžeš kdykoliv upravit přímo v editoru.",
     },
     {
-      question: "Musím zadávat kreditní kartu pro vyzkoušení zdarma?",
-      answer:
-        "Ne! Můžete vyzkoušet SocialMat na 14 dní zcela zdarma bez zadání platební karty. Žádné automatické prodloužení, žádné skryté poplatky.",
+      question: "Musím zadávat kreditní kartu?",
+      answer: "Ne! Starter plán je úplně zdarma a nepotřebuje kartu. U placených plánů nabízíme 14 dní trial zdarma. Žádné automatické prodloužení, žádné skryté poplatky.",
     },
     {
       question: "Jaké sociální sítě podporujete?",
-      answer:
-        "Momentálně podporujeme Instagram (Reels, Stories, posty) a TikTok. Připravujeme integraci s YouTube Shorts, Facebookem a LinkedIn.",
+      answer: "Momentálně plně podporujeme Instagram (Reels, Stories, posty). TikTok a YouTube Shorts jsou v beta verzi. Facebook a LinkedIn připravujeme.",
     },
     {
-      question: "Mohu si přizpůsobit styl titulků podle své značky?",
-      answer:
-        "Ano! Nastavíte barvy, fonty, pozici titulků, velikost textu i animace. Všechna nastavení se ukládají jako vaše šablona pro příští videa.",
+      question: "Jak rychle dostanu hotové video?",
+      answer: "30-60 vteřinové Reels zpracujeme za 20-40 sekund. Delší videa do 5 minut jsou hotová do 2 minut. Máme nejrychlejší zpracování na trhu!",
     },
     {
-      question: "Jak rychle dostanu hotové video s titulky?",
-      answer:
-        "U běžného 30-60 vteřinového Reels to trvá průměrně 20-40 sekund. Delší videa (3-5 minut) zpracujeme do 2 minut včetně exportu.",
-    },
-    {
-      question: "Co když mi nevyhovuje placený plán?",
-      answer:
-        "Můžete kdykoliv zrušit předplatné. Pokud nejste spokojeni během prvních 30 dní, vrátíme vám peníze zpět. Chceme jen spokojené zákazníky.",
+      question: "Mohu zrušit kdykoliv?",
+      answer: "Ano, předplatné můžeš zrušit jedním klikem. Pokud nejsi spokojený během prvních 30 dní, vrátíme ti peníze. Bez otázek.",
     },
   ];
 
-  const footerLinks = [
-    {
-      title: "Produkt",
-      items: [
-        { label: "Funkcionality", href: "#features" },
-        { label: "Automatizace", href: "#automation" },
-        { label: "Mission Control", href: "#automation" },
-      ],
-    },
-    {
-      title: "Společnost",
-      items: [
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "Ceník", href: "#pricing" },
-        { label: "Kontakt", href: "mailto:hello@socialmat.app" },
-      ],
-    },
-    {
-      title: "Právní",
-      items: [
-        { label: "Privacy", href: "/privacy" },
-        { label: "Data Deletion", href: "/data-deletion" },
-      ],
-    },
+  // Social proof avatars
+  const avatars = [
+    { initials: "TK", color: "bg-violet-500" },
+    { initials: "JN", color: "bg-fuchsia-500" },
+    { initials: "MS", color: "bg-orange-500" },
+    { initials: "PD", color: "bg-pink-500" },
+    { initials: "+", color: "bg-slate-700" },
   ];
-
-  const gridLineColor = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)";
-  const spotlightGradient = isDark
-    ? "radial-gradient(80% 220% at 50% 8%, rgba(255,255,255,0.22), rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.03) 65%, rgba(255,255,255,0) 100%)"
-    : "radial-gradient(80% 220% at 50% 8%, rgba(79,70,229,0.20), rgba(59,130,246,0.10) 35%, rgba(255,255,255,0.70) 58%, rgba(255,255,255,0) 100%)";
-
-  useEffect(() => {
-    // Register ScrollTrigger plugin
-    gsap.registerPlugin(ScrollTrigger);
-
-    // Navigation animation (immediate)
-    if (navRef.current) {
-      gsap.set(navRef.current, { opacity: 1 });
-      gsap.fromTo(
-        navRef.current,
-        { y: -20 },
-        { y: 0, duration: 0.8, ease: "power2.out", delay: 0.1 }
-      );
-    }
-
-    // Hero section animations - play immediately since it's above the fold
-    const heroTl = gsap.timeline({ delay: 0.2 });
-
-    heroTl
-      .fromTo(
-        ".hero-title",
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
-      )
-      .fromTo(
-        ".hero-subtitle",
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-        "-=0.4"
-      )
-      .fromTo(
-        ".hero-buttons",
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-        "-=0.3"
-      );
-
-    // Features section animations
-    const featuresTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: featuresRef.current,
-        start: "top 90%",
-        once: true,
-      },
-    });
-
-    featuresTl
-      .fromTo(
-        ".features-title",
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
-      )
-      .fromTo(
-        ".features-subtitle",
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-        "-=0.4"
-      )
-      .fromTo(
-        ".features-grid",
-        { opacity: 0, scale: 0.98, y: 15 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: "power2.out" },
-        "-=0.3"
-      )
-      .fromTo(
-        ".feature-card",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.1 },
-        "-=0.35"
-      );
-
-    // Stats section animations
-    const statsTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: statsRef.current,
-        start: "top 90%",
-        once: true,
-      },
-    });
-
-    statsTl
-      .fromTo(
-        ".stats-heading",
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
-      )
-      .fromTo(
-        ".stats-subtitle",
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-        "-=0.4"
-      )
-      .fromTo(
-        ".stat-item",
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 },
-        "-=0.3"
-      );
-
-    // Cleanup function
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
-  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
-  };
-
-  const CountUp = ({
-    value,
-    suffix = "",
-    decimals = 0,
-    duration = 1600,
-  }: {
-    value: number;
-    suffix?: string;
-    decimals?: number;
-    duration?: number;
-  }) => {
-    const [display, setDisplay] = useState(0);
-    const hasAnimated = useRef(false);
-    const nodeRef = useRef<HTMLSpanElement | null>(null);
-
-    useEffect(() => {
-      const node = nodeRef.current;
-      if (!node) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && !hasAnimated.current) {
-            hasAnimated.current = true;
-            const start = performance.now();
-            const animate = (time: number) => {
-              const progress = Math.min((time - start) / duration, 1);
-              const eased = 1 - Math.pow(1 - progress, 3); // cubic ease-out
-              const current = Math.min(value, value * eased);
-              setDisplay(current);
-              if (progress < 1) requestAnimationFrame(animate);
-            };
-            requestAnimationFrame(animate);
-          }
-        },
-        { threshold: 0.3 }
-      );
-
-      observer.observe(node);
-      return () => observer.disconnect();
-    }, [value, duration]);
-
-    const formatted =
-      value >= 1000
-        ? Math.round(display).toLocaleString("cs-CZ")
-        : display.toFixed(decimals);
-
-    return (
-      <span ref={nodeRef}>
-        {formatted}
-        {suffix}
-      </span>
-    );
+    setMobileMenuOpen(false);
   };
 
   return (
-    <div className={`${palette.page} font-sans overflow-visible`}>
-      {/* Grain texture overlay */}
-      <div
-        className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-[0.015] z-[1]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
+    <div className={`${isDark ? "bg-[#0a0a0f]" : "bg-white"} font-sans overflow-x-hidden`}>
+      {/* Animated gradient background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className={`absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] ${isDark ? "opacity-30" : "opacity-20"}`}
+          style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F97316 100%)" }}
+        />
+        <div
+          className={`absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full blur-[100px] ${isDark ? "opacity-20" : "opacity-15"}`}
+          style={{ background: "linear-gradient(225deg, #F97316 0%, #EC4899 100%)" }}
+        />
+        <div
+          className={`absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[80px] ${isDark ? "opacity-20" : "opacity-10"}`}
+          style={{ background: "linear-gradient(45deg, #8B5CF6 0%, #06B6D4 100%)" }}
+        />
+      </div>
 
       {/* Navigation */}
-      <nav
-        ref={navRef}
-        className="fixed top-4 inset-x-0 z-50 flex justify-center px-4 opacity-0"
-      >
-        <div
-          className={`${isDark ? "bg-black/40" : "bg-white/70"} backdrop-blur-2xl border rounded-2xl px-6 py-3.5 flex items-center justify-between w-full max-w-5xl transition-all duration-300 ${isDark ? "border-white/10 shadow-2xl shadow-black/20" : "border-slate-200/50 shadow-xl shadow-slate-900/5"}`}
-        >
-          {/* LOGO */}
-          <button
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            className={`flex items-center gap-2.5 font-bold text-xl tracking-tight cursor-pointer font-heading group ${isDark ? "text-white" : "text-slate-900"
-              }`}
-          >
-            <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/10" : "bg-slate-900"} flex items-center justify-center`}>
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            SocialMat
-          </button>
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
+        <div className={`max-w-6xl mx-auto rounded-2xl px-6 py-3 backdrop-blur-xl border transition-all duration-300 ${isDark ? "bg-black/40 border-white/10" : "bg-white/70 border-slate-200/50 shadow-lg"}`}>
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradientPrimary} flex items-center justify-center`}>
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className={`font-bold text-xl ${isDark ? "text-white" : "text-slate-900"}`}>
+                SocialMat
+              </span>
+            </Link>
 
-          {/* CENTER LINKS */}
-          <div className="hidden md:flex items-center gap-1 text-sm font-medium">
-            {/* Features Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setFeaturesDropdownOpen(!featuresDropdownOpen)}
-                onBlur={() => setTimeout(() => setFeaturesDropdownOpen(false), 150)}
-                className={`px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
-              >
-                Funkce
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${featuresDropdownOpen ? 'rotate-180' : ''}`} />
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-1">
+              <div className="relative">
+                <button
+                  onClick={() => setFeaturesDropdownOpen(!featuresDropdownOpen)}
+                  onBlur={() => setTimeout(() => setFeaturesDropdownOpen(false), 200)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+                >
+                  Funkce
+                  <ChevronDown className={`w-4 h-4 transition-transform ${featuresDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {featuresDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className={`absolute top-full left-0 mt-2 w-72 rounded-2xl border overflow-hidden ${isDark ? "bg-black/90 backdrop-blur-xl border-white/10" : "bg-white border-slate-200 shadow-xl"}`}
+                    >
+                      <div className="p-2">
+                        {features.slice(0, 6).map((feature) => {
+                          const Icon = feature.icon;
+                          return (
+                            <Link
+                              key={feature.href}
+                              href={feature.href}
+                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isDark ? "hover:bg-white/10" : "hover:bg-slate-50"}`}
+                            >
+                              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
+                                <Icon className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <div className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}>{feature.title}</div>
+                                <div className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"}`}>{feature.description.split(".")[0]}</div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <button onClick={() => scrollToSection("pricing")} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}>
+                Ceník
               </button>
-              {featuresDropdownOpen && (
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl shadow-2xl border overflow-hidden z-50 ${isDark ? 'bg-black/95 backdrop-blur-xl border-white/10' : 'bg-white backdrop-blur-xl border-slate-200'}`}>
-                  <div className="p-2">
-                    {[
-                      { href: "/features/titulky", icon: Video, title: "AI Titulky", desc: "Automatické titulky" },
-                      { href: "/features/video-editor", icon: Edit3, title: "Video Editor", desc: "Úprava videí" },
-                      { href: "/features/analytics", icon: BarChart3, title: "Analýzy", desc: "Metriky & statistiky" },
-                      { href: "/features/stories", icon: Image, title: "Stories", desc: "Tvorba Stories" },
-                      { href: "/features/kalendar", icon: Calendar, title: "Kalendář", desc: "Plánování obsahu" },
-                      { href: "/features/ai-content", icon: Brain, title: "AI Content", desc: "Generování obsahu" },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <a key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/10 text-white/85' : 'hover:bg-slate-50 text-slate-700'}`}>
-                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? "bg-white/5" : "bg-slate-100"}`}>
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-semibold text-sm">{item.title}</div>
-                            <div className={`text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>{item.desc}</div>
-                          </div>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <button onClick={() => scrollToSection("faq")} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}>
+                FAQ
+              </button>
             </div>
-            <button
-              onClick={() => scrollToSection("pricing")}
-              className={`px-4 py-2 rounded-xl transition-all duration-200 ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
-            >
-              Ceník
-            </button>
-            <button
-              onClick={() => scrollToSection("contact")}
-              className={`px-4 py-2 rounded-xl transition-all duration-200 ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
-            >
-              Kontakt
-            </button>
-          </div>
 
-          {/* RIGHT BUTTONS */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              className={`p-2 rounded-xl transition-all duration-200 ${isDark ? "bg-white/10 hover:bg-white/15 text-white/80" : "bg-slate-100 hover:bg-slate-200 text-slate-600"}`}
-              aria-pressed={isDark}
-            >
-              <span className="sr-only">Přepnout vzhled</span>
-              {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
-            <a
-              href="/dashboard"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${isDark ? "text-white/80 hover:text-white hover:bg-white/10" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
-            >
-              Přihlášení
-            </a>
-            <a
-              href="/signup"
-              className={`${isDark ? "bg-white text-black" : "bg-slate-900 text-white"} py-2 px-5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer hover:scale-105`}
-            >
-              Začít zdarma
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                className={`p-2.5 rounded-xl transition-all ${isDark ? "bg-white/10 hover:bg-white/15 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-600"}`}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+
+              <Link href="/login" className={`hidden sm:block px-4 py-2 rounded-xl text-sm font-medium transition-all ${isDark ? "text-white/80 hover:text-white" : "text-slate-600 hover:text-slate-900"}`}>
+                Přihlášení
+              </Link>
+
+              <Link href="/signup" className={`px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r ${gradientPrimary} text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all hover:-translate-y-0.5`}>
+                Začít zdarma
+              </Link>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`md:hidden p-2.5 rounded-xl transition-all ${isDark ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={`md:hidden mt-2 rounded-2xl p-4 backdrop-blur-xl border ${isDark ? "bg-black/90 border-white/10" : "bg-white border-slate-200"}`}
+            >
+              <div className="space-y-2">
+                {features.slice(0, 4).map((feature) => (
+                  <Link
+                    key={feature.href}
+                    href={feature.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-4 py-3 rounded-xl transition-all ${isDark ? "hover:bg-white/10 text-white/80" : "hover:bg-slate-50 text-slate-600"}`}
+                  >
+                    {feature.title}
+                  </Link>
+                ))}
+                <button onClick={() => scrollToSection("pricing")} className={`block w-full text-left px-4 py-3 rounded-xl transition-all ${isDark ? "hover:bg-white/10 text-white/80" : "hover:bg-slate-50 text-slate-600"}`}>
+                  Ceník
+                </button>
+                <button onClick={() => scrollToSection("faq")} className={`block w-full text-left px-4 py-3 rounded-xl transition-all ${isDark ? "hover:bg-white/10 text-white/80" : "hover:bg-slate-50 text-slate-600"}`}>
+                  FAQ
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}
-      <section
-        ref={heroRef}
-        id="hero"
-        className={`relative overflow-hidden py-20 ${isDark ? "bg-[#03050b]" : "bg-[#f8f9ff]"}`}
-      >
-        <div
-          className="absolute inset-0 opacity-[0.15]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 45%), radial-gradient(circle at 80% 0%, rgba(148,197,255,0.35), transparent 40%)",
-          }}
-        />
-
-        <div className="max-w-7xl mx-auto relative grid gap-12 lg:grid-cols-2 px-6 pt-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.6em] text-slate-500">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-              SocialMat · 2025 Release
+      <section ref={heroRef} className="relative min-h-screen flex items-center pt-32 pb-20 px-4 overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          {/* Announcement badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center mb-8"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-sm ${isDark ? "bg-white/5 border-white/10" : "bg-violet-50 border-violet-200"}`}>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+              </span>
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-violet-700"}`}>
+                🚀 Nová verze 2025 je tady!
+              </span>
+              <ChevronRight className={`w-4 h-4 ${isDark ? "text-white/50" : "text-violet-500"}`} />
             </div>
-            <div className="space-y-5">
-              <h1
-                className={`hero-title text-left text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}
-              >
-                <span className="block text-xs uppercase tracking-[0.8em] mb-3 text-slate-500">Operating studio</span>
-                Tvoří obsah, <span className="underline decoration-4 decoration-cyan-300 underline-offset-8">odpovídá na komentáře</span> a reportuje za tebe.
-              </h1>
-              <p className={`hero-subtitle text-left text-lg max-w-xl ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                Jeden systém pro tvorbu, automatizaci a analytics. Od AI brainstormu po automatické titulky a chatboty.
-              </p>
-            </div>
-            <div className="hero-buttons opacity-0">
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/signup"
-                  className={`inline-flex items-center gap-2 rounded-full px-8 py-3 text-base font-semibold ${isDark ? "bg-white text-black" : "bg-slate-900 text-white"} transition-transform hover:-translate-y-0.5`}
-                >
-                  Spustit SocialMat
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <button
-                  onClick={() => scrollToSection("automation")}
-                  className={`inline-flex items-center gap-2 rounded-full px-8 py-3 border text-base font-semibold ${isDark ? "border-white/25 text-white hover:bg-white/10" : "border-slate-200 text-slate-900 hover:bg-slate-100"} transition-colors`}
-                >
-                  Prohlédnout workflow
-                  <PlayCircle className="w-5 h-5" />
-                </button>
-              </div>
-              <div className={`mt-4 flex flex-wrap gap-6 text-xs uppercase tracking-[0.5em] ${isDark ? "text-white/40" : "text-slate-500"}`}>
-                <span>14 dní zdarma</span>
-                <span>Bez kreditky</span>
-                <span>Cloud + AI</span>
-              </div>
-            </div>
-          </div>
+          </motion.div>
 
-          <div className="relative">
-            {/* Floating Accent Element */}
-            <div className="absolute -right-12 -top-12 w-64 h-64 bg-gradient-to-br from-cyan-400/20 to-teal-400/20 rounded-full blur-3xl opacity-30 animate-pulse" />
+          {/* Main headline */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-center mb-8"
+          >
+            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Tvůj Instagram na
+              <span className={`block ${gradientText}`}>autopilotu ✨</span>
+            </h1>
+            <p className={`text-lg sm:text-xl max-w-2xl mx-auto ${isDark ? "text-white/70" : "text-slate-600"}`}>
+              AI titulky, automatické odpovědi, analytics a video editor.
+              Všechno v jednom nástroji pro české tvůrce.
+            </p>
+          </motion.div>
 
-            {/* Decorative shapes */}
-            <div className="absolute -left-8 top-1/4 w-16 h-16 border-2 border-cyan-400/20 rounded-2xl rotate-12" />
-            <div className="absolute -right-4 bottom-1/4 w-12 h-12 bg-cyan-400/10 rounded-full" />
+          {/* CTA buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+          >
+            <Link
+              href="/signup"
+              className={`group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-lg font-semibold bg-gradient-to-r ${gradientPrimary} text-white hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:-translate-y-1`}
+            >
+              Vyzkoušet zdarma
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <button
+              onClick={() => scrollToSection("features")}
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-lg font-semibold border transition-all hover:-translate-y-1 ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+            >
+              <Play className="w-5 h-5" />
+              Jak to funguje
+            </button>
+          </motion.div>
 
-            {/* Hero Dashboard Visual */}
-            <div className={`relative rounded-[32px] border overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-2xl"}`}>
-              <div className="aspect-[4/3] relative">
-                <img
-                  src="/screenshots/dashboard-main.png"
-                  alt="SocialMat Dashboard"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.classList.add('bg-gradient-to-br', isDark ? 'from-slate-900' : 'from-slate-100', isDark ? 'to-slate-800' : 'to-slate-200', 'flex', 'items-center', 'justify-center');
-                      parent.innerHTML = `<div class="text-center p-8"><div class="${isDark ? 'text-white/40' : 'text-slate-400'} text-sm uppercase tracking-widest mb-4">Dashboard Preview</div><div class="grid grid-cols-2 gap-3"><div class="h-20 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="h-20 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="h-20 rounded-lg col-span-2 ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div></div></div>`;
-                    }
-                  }}
-                />
+          {/* Social proof */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-6"
+          >
+            <div className="flex items-center">
+              <div className="flex -space-x-3">
+                {avatars.map((avatar, i) => (
+                  <div
+                    key={i}
+                    className={`w-10 h-10 rounded-full ${avatar.color} border-2 ${isDark ? "border-[#0a0a0f]" : "border-white"} flex items-center justify-center text-white text-sm font-bold`}
+                  >
+                    {avatar.initials}
+                  </div>
+                ))}
               </div>
-              {/* Badge Overlay */}
-              <div className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md ${isDark ? 'bg-black/40 border border-white/20' : 'bg-white/80 border border-slate-200'} text-xs uppercase tracking-wider`}>
-                <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className={isDark ? 'text-white/80' : 'text-slate-700'}>Live</span>
+              <div className="ml-4">
+                <div className={`font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>500+ českých tvůrců</div>
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                  <span className={`text-sm ml-1 ${isDark ? "text-white/60" : "text-slate-500"}`}>4.9/5</span>
+                </div>
               </div>
             </div>
-          </div>
+
+            <div className={`hidden sm:block h-8 w-px ${isDark ? "bg-white/20" : "bg-slate-200"}`} />
+
+            <div className={`flex items-center gap-4 text-sm ${isDark ? "text-white/60" : "text-slate-500"}`}>
+              <span className="flex items-center gap-1.5">
+                <Shield className="w-4 h-4" />
+                14 dní zdarma
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CreditCard className="w-4 h-4" />
+                Bez kreditky
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Dashboard mockup */}
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-16 relative"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-t ${isDark ? "from-[#0a0a0f] via-transparent to-transparent" : "from-white via-transparent to-transparent"} z-10 pointer-events-none`} />
+
+            <div className={`relative rounded-3xl border overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-2xl"}`}>
+              {/* Browser chrome */}
+              <div className={`flex items-center gap-2 px-4 py-3 border-b ${isDark ? "border-white/10 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                </div>
+                <div className={`flex-1 text-center text-xs ${isDark ? "text-white/40" : "text-slate-400"}`}>
+                  app.socialmat.cz/dashboard
+                </div>
+              </div>
+
+              {/* Dashboard content placeholder */}
+              <div className="aspect-[16/9] relative bg-gradient-to-br from-violet-900/20 via-fuchsia-900/20 to-orange-900/20 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className={`${isDark ? "text-white/30" : "text-slate-400"} text-sm uppercase tracking-widest mb-4`}>
+                    Dashboard Preview
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+                    <div className={`h-24 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-100"}`} />
+                    <div className={`h-24 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-100"}`} />
+                    <div className={`h-24 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-100"}`} />
+                    <div className={`h-32 rounded-xl col-span-2 ${isDark ? "bg-white/5" : "bg-slate-100"}`} />
+                    <div className={`h-32 rounded-xl ${isDark ? "bg-white/5" : "bg-slate-100"}`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating feature badges */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className={`absolute -left-4 top-1/4 hidden lg:flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl ${isDark ? "bg-black/60 border-white/10" : "bg-white/90 border-slate-200 shadow-lg"}`}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Video className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}>AI Titulky</div>
+                <div className={`text-xs ${isDark ? "text-white/60" : "text-slate-500"}`}>Hotovo za 30s</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 1 }}
+              className={`absolute -right-4 top-1/3 hidden lg:flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl ${isDark ? "bg-black/60 border-white/10" : "bg-white/90 border-slate-200 shadow-lg"}`}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}>Auto-reply</div>
+                <div className={`text-xs ${isDark ? "text-white/60" : "text-slate-500"}`}>24/7 aktivní</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1.2 }}
+              className={`absolute right-8 -bottom-4 hidden lg:flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl ${isDark ? "bg-black/60 border-white/10" : "bg-white/90 border-slate-200 shadow-lg"}`}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}>+47% engagement</div>
+                <div className={`text-xs ${isDark ? "text-white/60" : "text-slate-500"}`}>Za 30 dní</div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Signal Tape */}
-      <section className={`${isDark ? "bg-[#020409]" : "bg-white"} border-y ${isDark ? "border-white/5" : "border-slate-200"}`}>
-        <div className="overflow-hidden py-4">
-          <div className="animate-marquee flex items-center gap-12 text-[11px] uppercase tracking-[0.6em] font-semibold">
-            {[...tapeMessages, ...tapeMessages].map((message, index) => (
-              <span key={`${message}-${index}`} className={`flex items-center gap-3 ${isDark ? "text-white/60" : "text-slate-500"}`}>
-                <span className="h-1 w-1 rounded-full bg-current" />
-                {message}
-              </span>
+      {/* Logos / Trust strip */}
+      <section className={`py-12 px-4 border-y ${isDark ? "border-white/5 bg-black/20" : "border-slate-100 bg-slate-50"}`}>
+        <div className="max-w-6xl mx-auto">
+          <p className={`text-center text-sm mb-8 ${isDark ? "text-white/40" : "text-slate-500"}`}>
+            Používají tvůrci z těchto oblastí
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            {["Fitness", "Lifestyle", "E-commerce", "Travel", "Food", "Beauty"].map((category) => (
+              <div
+                key={category}
+                className={`text-lg font-semibold ${isDark ? "text-white/30" : "text-slate-300"}`}
+              >
+                {category}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section
-        ref={featuresRef}
-        id="features"
-        className={`py-20 px-6 ${isDark ? "bg-[#020409]" : "bg-[#fdfdfb]"}`}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-4xl mx-auto text-center mb-16">
-            <p className={`text-xs uppercase tracking-[0.6em] mb-4 ${isDark ? "text-white/50" : "text-slate-500"}`}>
-              Produktový stack
-            </p>
-            <h2 className={`features-title text-4xl md:text-5xl font-bold leading-tight mb-5 opacity-0 ${isDark ? "text-white" : "text-slate-900"}`}>
-              Komplexní workflow v jedné aplikaci
+      <section id="features" className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-violet-50 border-violet-200"}`}>
+              <Layers className={`w-4 h-4 ${isDark ? "text-violet-400" : "text-violet-600"}`} />
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-violet-700"}`}>
+                Kompletní toolkit pro tvůrce
+              </span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Všechno co potřebuješ,
+              <span className={`block ${gradientText}`}>na jednom místě 🎯</span>
             </h2>
-            <p className={`features-subtitle text-lg opacity-0 max-w-2xl mx-auto ${isDark ? "text-white/65" : "text-slate-600"}`}>
-              Od AI brainstormingu přes video editing až po automatizaci odpovědí. Všechny nástroje integrované a propojené.
+            <p className={`text-lg max-w-2xl mx-auto ${isDark ? "text-white/60" : "text-slate-600"}`}>
+              Přestaň platit za 5 různých nástrojů. SocialMat má AI titulky, chatbot,
+              analytics i video editor v jednom balíčku.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="features-grid opacity-0 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* AI Content Generation */}
-            <div className={`group relative rounded-[28px] border p-6 transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              <div className="relative">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-cyan-500/10 border border-cyan-500/20" : "bg-cyan-50 border border-cyan-100"}`}>
-                  <Brain className={`w-6 h-6 ${isDark ? "text-cyan-400" : "text-cyan-600"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>AI Brainstorm</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Generuje nápady, hooky a skripty podle tvých dat a aktuálních trendů
-                </p>
-              </div>
-            </div>
-
-            {/* Video Editor & Subtitles */}
-            <div className={`group relative rounded-[28px] border overflow-hidden transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              {/* Screenshot background */}
-              <div className="absolute inset-0 opacity-30">
-                <img
-                  src="/screenshots/video-editor.png"
-                  alt="Video Editor Interface"
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </div>
-              <div className="relative p-6">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-white/10 backdrop-blur-sm" : "bg-slate-900 backdrop-blur-sm"}`}>
-                  <Edit3 className={`w-6 h-6 ${isDark ? "text-white" : "text-white"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>Video Editor & Titulky</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Automatický přepis, překlad a stylizované titulky. Export do Premiere nebo SRT
-                </p>
-              </div>
-            </div>
-
-            {/* Analytics Dashboard */}
-            <div className={`group relative rounded-[28px] border overflow-hidden transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              {/* Screenshot background */}
-              <div className="absolute inset-0 opacity-30">
-                <img
-                  src="/screenshots/analytics-preview.png"
-                  alt="Analytics Dashboard"
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </div>
-              <div className="relative p-6">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-white/10 backdrop-blur-sm" : "bg-slate-900 backdrop-blur-sm"}`}>
-                  <BarChart3 className={`w-6 h-6 ${isDark ? "text-white" : "text-white"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>Analytics</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Real-time metriky a AI doporučení jak zlepšit dosah a engagement
-                </p>
-              </div>
-            </div>
-
-            {/* Automation & Chatbots */}
-            <div className={`group relative rounded-[28px] border p-6 transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              <div className="relative">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-white/10" : "bg-slate-900"}`}>
-                  <MessageSquare className={`w-6 h-6 ${isDark ? "text-white" : "text-white"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>Auto-reply</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Automatické odpovědi na komentáře a DM. Předá konverzaci člověku když je potřeba
-                </p>
-              </div>
-            </div>
-
-            {/* Calendar & Scheduling */}
-            <div className={`group relative rounded-[28px] border p-6 transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              <div className="relative">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-white/10" : "bg-slate-900"}`}>
-                  <Calendar className={`w-6 h-6 ${isDark ? "text-white" : "text-white"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>Plánování</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Naplánuj posty na Instagram a TikTok podle engagement dat tvé audience
-                </p>
-              </div>
-            </div>
-
-            {/* Stories & Reels */}
-            <div className={`group relative rounded-[28px] border p-6 transition-all hover:scale-[1.02] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/8" : "bg-white border-slate-200 shadow-lg hover:shadow-2xl"}`}>
-              <div className="relative">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-white/10" : "bg-slate-900"}`}>
-                  <Image className={`w-6 h-6 ${isDark ? "text-white" : "text-white"}`} />
-                </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>Stories & Reels</h3>
-                <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  Šablony a efekty pro rychlou tvorbu short-form contentu
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Automation Section */}
-      <section
-        id="automation"
-        className={`relative overflow-hidden py-20 px-6 ${isDark ? "bg-[#05060f]" : "bg-white"}`}
-      >
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 0% 0%, rgba(34,211,238,0.25), transparent 45%), radial-gradient(circle at 80% 20%, rgba(20,184,166,0.2), transparent 40%)",
-          }}
-        />
-        <div className="max-w-7xl mx-auto relative z-[1]">
-          {/* Decorative elements */}
-          <div className="absolute left-1/4 top-12 w-20 h-20 border-2 border-cyan-400/10 rounded-full" />
-          <div className="absolute right-1/3 bottom-24 w-16 h-16 bg-cyan-400/5 rounded-2xl rotate-45" />
-
-          <div className="grid gap-16 lg:grid-cols-2">
-            <div className="space-y-6">
-              <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? "text-white/50" : "text-slate-500"}`}>
-                Automatizace
-              </p>
-              <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                Komentáře a DM bez manuální práce
-              </h2>
-              <p className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                Automatické odpovědi ve tvém tónu. Přepne na člověka když je potřeba. S metrikami a audit trail.
-              </p>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {automationBenefits.map((benefit) => (
-                  <div key={benefit} className={`rounded-2xl p-4 border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                    <p className={`text-sm font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{benefit}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Screenshot of chatbot flow */}
-              <div className={`rounded-3xl border overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xl"}`}>
-                <div className="aspect-video relative">
-                  <img
-                    src="/screenshots/chatbot-flow.png"
-                    alt="Chatbot Automation Flow"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.classList.add('bg-gradient-to-br', isDark ? 'from-green-900/20' : 'from-green-50', isDark ? 'to-teal-900/20' : 'to-teal-50', 'flex', 'items-center', 'justify-center');
-                        parent.innerHTML = `<div class="text-center p-6"><div class="${isDark ? 'text-white/40' : 'text-slate-400'} text-xs uppercase tracking-widest mb-3">Chatbot Flow</div><div class="flex gap-2 justify-center"><div class="w-12 h-12 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="w-12 h-12 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="w-12 h-12 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div></div></div>`;
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className={`absolute left-6 top-0 bottom-0 w-px ${isDark ? "bg-white/15" : "bg-slate-200"}`} />
-              <div className="space-y-8 pl-14">
-                {automationFlows.map((flow, index) => (
-                  <div
-                    key={flow.title}
-                    className={`relative rounded-3xl border p-6 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-lg"}`}
+          {/* Bento grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Link
+                    href={feature.href}
+                    className={`group relative block h-full p-6 rounded-3xl border overflow-hidden transition-all hover:-translate-y-2 hover:shadow-xl ${isDark ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20" : "bg-white border-slate-200 hover:border-slate-300 shadow-lg"}`}
                   >
-                    <div className={`absolute -left-14 top-6 h-12 w-12 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? "bg-white text-black" : "bg-slate-900 text-white"}`}>
-                      {String(index + 1).padStart(2, "0")}
+                    {/* Gradient overlay on hover */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
+
+                    {/* Badge */}
+                    {feature.badge && (
+                      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${feature.color} text-white`}>
+                        {feature.badge}
+                      </div>
+                    )}
+
+                    <div className="relative">
+                      {/* Icon */}
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+
+                      {/* Content */}
+                      <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>
+                        {feature.title}
+                      </h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                        {feature.description}
+                      </p>
+
+                      {/* Arrow */}
+                      <div className={`mt-5 flex items-center gap-2 text-sm font-medium ${isDark ? "text-white/80" : "text-slate-900"}`}>
+                        Zjistit více
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-xs uppercase tracking-[0.4em] ${isDark ? "text-white/40" : "text-slate-500"}`}>{flow.stage}</span>
-                      <span className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-slate-600"}`}>{flow.outcome}</span>
-                    </div>
-                    <h3 className={`text-2xl font-semibold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>{flow.title}</h3>
-                    <p className={`text-sm ${isDark ? "text-white/65" : "text-slate-600"}`}>{flow.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Insights Section */}
-      <section id="insights" className={`py-20 px-6 ${isDark ? "bg-[#070910]" : "bg-[#fafaf9]"}`}>
-        <div className="max-w-7xl mx-auto grid gap-16 lg:grid-cols-2 items-start">
-          <div className="space-y-6">
-            <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? "text-white/50" : "text-slate-500"}`}>
-              Analytics & AI
-            </p>
-            <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-              Z dat rovnou na akce
-            </h2>
-            <p className={`text-lg leading-relaxed ${isDark ? "text-white/70" : "text-slate-600"}`}>
-              Metriky účtu, AI insights a návrhy dalších kroků. Včetně hooků a nápadů na content.
-            </p>
-            <div className={`rounded-3xl border p-5 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`}>
-              <div className="flex items-center justify-between mb-4">
-                <span className={`text-xs uppercase tracking-[0.5em] ${isDark ? "text-white/40" : "text-slate-500"}`}>Playbook</span>
-                <span className={`text-xs uppercase tracking-[0.4em] ${isDark ? "text-white/50" : "text-slate-600"}`}>AI Coach</span>
+      {/* Auto-reply showcase */}
+      <section className={`py-24 px-4 ${isDark ? "bg-black/30" : "bg-slate-50"}`}>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left content */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-fuchsia-50 border-fuchsia-200"}`}>
+                <Bot className={`w-4 h-4 ${isDark ? "text-fuchsia-400" : "text-fuchsia-600"}`} />
+                <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-fuchsia-700"}`}>
+                  Automatizace komentářů & DM
+                </span>
               </div>
-              <ul className="space-y-3">
-                {insightSteps.map((step) => (
-                  <li key={step} className={`flex items-start gap-3 text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                    <span className={`mt-1 h-2 w-2 rounded-full ${isDark ? "bg-white" : "bg-slate-900"}`} />
-                    <span>{step}</span>
-                  </li>
+
+              <h2 className={`text-3xl sm:text-4xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Odpovídej na komentáře
+                <span className={`block ${gradientText}`}>i když spíš 😴</span>
+              </h2>
+
+              <p className={`text-lg mb-8 ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                AI chatbot odpovídá v tvém tónu 24/7. Zachytává leady, posílá DM
+                a předá konverzaci tobě když je potřeba osobní přístup.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  "Automatické odpovědi pod Reels a posty",
+                  "DM follow-up s PDF, slevou nebo linkem",
+                  "Predikce intence uživatele pomocí AI",
+                  "Přepnutí na člověka jedním klikem",
+                ].map((benefit, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${gradientSecondary} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <Check className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className={`${isDark ? "text-white/80" : "text-slate-700"}`}>{benefit}</span>
+                  </div>
                 ))}
+              </div>
+
+              <Link
+                href="/features/auto-reply"
+                className={`inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r ${gradientSecondary} text-white hover:shadow-lg hover:shadow-fuchsia-500/25 transition-all`}
+              >
+                Zjistit více
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+
+            {/* Right - Chat mockup */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className={`rounded-3xl border overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xl"}`}>
+                {/* Chat header */}
+                <div className={`flex items-center gap-3 px-5 py-4 border-b ${isDark ? "border-white/10" : "border-slate-100"}`}>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                    <Instagram className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className={`font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>Instagram DM</div>
+                    <div className={`text-xs ${isDark ? "text-white/50" : "text-slate-500"}`}>Auto-reply aktivní</div>
+                  </div>
+                  <div className="ml-auto">
+                    <span className="flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Chat messages */}
+                <div className="p-5 space-y-4 min-h-[400px]">
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md ${isDark ? "bg-white/10" : "bg-slate-100"}`}>
+                      <p className={`text-sm ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                        Ahoj! Kolik stojí ten tvůj kurz? 🙏
+                      </p>
+                      <span className={`text-xs ${isDark ? "text-white/40" : "text-slate-400"}`}>14:32</span>
+                    </div>
+                  </div>
+
+                  {/* Bot response */}
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl rounded-bl-md bg-gradient-to-br ${isDark ? "from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30" : "from-violet-50 to-fuchsia-50 border border-violet-200"}`}>
+                      <p className={`text-sm ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                        Ahoj! 👋 Super že se ptáš!
+                      </p>
+                      <p className={`text-sm mt-2 ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                        Kurz stojí 2490 Kč a právě teď máme slevu -20% pro nové studenty. 🎉
+                      </p>
+                      <p className={`text-sm mt-2 ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                        Posílám ti odkaz na přihlášku + PDF s obsahem kurzu zdarma! 📚
+                      </p>
+                      <span className={`text-xs ${isDark ? "text-white/40" : "text-slate-400"}`}>14:32 · AI</span>
+                    </div>
+                  </div>
+
+                  {/* User message 2 */}
+                  <div className="flex justify-end">
+                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md ${isDark ? "bg-white/10" : "bg-slate-100"}`}>
+                      <p className={`text-sm ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                        Super! Díky moc, hned se podívám 💜
+                      </p>
+                      <span className={`text-xs ${isDark ? "text-white/40" : "text-slate-400"}`}>14:33</span>
+                    </div>
+                  </div>
+
+                  {/* Stats overlay */}
+                  <div className={`absolute bottom-4 left-4 right-4 flex items-center justify-between px-4 py-3 rounded-xl backdrop-blur-sm ${isDark ? "bg-black/60 border border-white/10" : "bg-white/90 border border-slate-200"}`}>
+                    <div className="flex items-center gap-2">
+                      <Zap className={`w-4 h-4 ${isDark ? "text-yellow-400" : "text-yellow-500"}`} />
+                      <span className={`text-xs font-medium ${isDark ? "text-white/80" : "text-slate-600"}`}>Odpověď za 3s</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className={`w-4 h-4 ${isDark ? "text-green-400" : "text-green-500"}`} />
+                      <span className={`text-xs font-medium ${isDark ? "text-white/80" : "text-slate-600"}`}>+37% leadů</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-orange-50 border-orange-200"}`}>
+              <Wand2 className={`w-4 h-4 ${isDark ? "text-orange-400" : "text-orange-600"}`} />
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-orange-700"}`}>
+                Tak jednoduché, že to zvládneš za 2 minuty
+              </span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              3 kroky k lepšímu
+              <span className={`block ${gradientText}`}>Instagramu 🚀</span>
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="relative"
+              >
+                {/* Connector line */}
+                {index < steps.length - 1 && (
+                  <div className={`hidden md:block absolute top-12 left-[60%] w-full h-px ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                )}
+
+                <div className={`relative p-8 rounded-3xl border text-center ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-lg"}`}>
+                  {/* Step number */}
+                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br ${gradientPrimary} flex items-center justify-center text-white text-sm font-bold`}>
+                    {index + 1}
+                  </div>
+
+                  {/* Emoji */}
+                  <div className="text-5xl mb-6">{step.emoji}</div>
+
+                  {/* Content */}
+                  <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>
+                    {step.title}
+                  </h3>
+                  <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                    {step.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className={`py-24 px-4 ${isDark ? "bg-black/30" : "bg-slate-50"}`}>
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-pink-50 border-pink-200"}`}>
+              <Heart className={`w-4 h-4 ${isDark ? "text-pink-400" : "text-pink-600"}`} />
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-pink-700"}`}>
+                Milované českými tvůrci
+              </span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Co říkají naši
+              <span className={`block ${gradientText}`}>uživatelé 💬</span>
+            </h2>
+          </motion.div>
+
+          {/* Testimonial carousel */}
+          <div className="relative">
+            <div className="overflow-hidden">
+              <motion.div
+                className="flex"
+                animate={{ x: `-${currentTestimonial * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                {testimonials.map((testimonial, index) => (
+                  <div key={index} className="w-full flex-shrink-0 px-4">
+                    <div className={`max-w-2xl mx-auto p-8 rounded-3xl border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xl"}`}>
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${gradientPrimary} flex items-center justify-center text-white text-xl font-bold`}>
+                          {testimonial.name.split(" ").map(n => n[0]).join("")}
+                        </div>
+                        <div>
+                          <div className={`font-bold text-lg ${isDark ? "text-white" : "text-slate-900"}`}>
+                            {testimonial.name}
+                          </div>
+                          <div className={`text-sm ${isDark ? "text-white/60" : "text-slate-500"}`}>
+                            {testimonial.role}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Instagram className={`w-4 h-4 ${isDark ? "text-white/40" : "text-slate-400"}`} />
+                            <span className={`text-sm ${isDark ? "text-white/40" : "text-slate-400"}`}>
+                              {testimonial.handle} · {testimonial.followers} followers
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className={`text-lg leading-relaxed mb-6 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                        "{testimonial.text}"
+                      </p>
+
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentTestimonial(index)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${currentTestimonial === index ? `bg-gradient-to-r ${gradientPrimary} w-8` : isDark ? "bg-white/20" : "bg-slate-300"}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Scrolling ticker */}
+          <div className="mt-16 overflow-hidden">
+            <motion.div
+              className="flex gap-8"
+              animate={{ x: [0, -1000] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              {[...testimonials, ...testimonials].map((t, i) => (
+                <div key={i} className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap ${isDark ? "bg-white/5" : "bg-white"}`}>
+                  <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${gradientPrimary} flex items-center justify-center text-white text-xs font-bold`}>
+                    {t.name[0]}
+                  </div>
+                  <span className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>{t.name}</span>
+                  <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-slate-900"}`}>{t.handle}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-green-50 border-green-200"}`}>
+              <CreditCard className={`w-4 h-4 ${isDark ? "text-green-400" : "text-green-600"}`} />
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-green-700"}`}>
+                Jednoduchý a férový ceník
+              </span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Vyber si plán
+              <span className={`block ${gradientText}`}>podle sebe 💰</span>
+            </h2>
+            <p className={`text-lg max-w-2xl mx-auto ${isDark ? "text-white/60" : "text-slate-600"}`}>
+              Všechny plány zahrnují AI titulky, video editor a základní analytics.
+              Upgrade kdykoliv, cancel kdykoliv.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {pricingPlans.map((plan, index) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`relative p-8 rounded-3xl border ${plan.highlight ? `bg-gradient-to-br ${isDark ? "from-violet-500/20 via-fuchsia-500/10 to-transparent" : "from-violet-50 via-fuchsia-50 to-white"} border-violet-500/30 ring-2 ring-violet-500/20` : isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-lg"}`}
+              >
+                {/* Badge */}
+                {plan.badge && (
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r ${gradientPrimary} text-white`}>
+                    {plan.badge}
+                  </div>
+                )}
+
+                <div className="text-center mb-8">
+                  <h3 className={`text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                    {plan.name}
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                    {plan.description}
+                  </p>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className={`text-4xl font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
+                      {plan.price}
+                    </span>
+                    {plan.period && (
+                      <span className={`text-sm ${isDark ? "text-white/60" : "text-slate-500"}`}>
+                        /{plan.period}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${plan.highlight ? `bg-gradient-to-br ${gradientPrimary}` : isDark ? "bg-white/20" : "bg-slate-200"}`}>
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className={`text-sm ${isDark ? "text-white/80" : "text-slate-700"}`}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/signup"
+                  className={`block w-full py-4 rounded-2xl text-center font-semibold transition-all hover:-translate-y-1 ${plan.highlight ? `bg-gradient-to-r ${gradientPrimary} text-white hover:shadow-lg hover:shadow-violet-500/30` : isDark ? "bg-white/10 text-white hover:bg-white/20 border border-white/20" : "bg-slate-900 text-white hover:bg-slate-800"}`}
+                >
+                  {plan.cta}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Trust badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className={`mt-12 flex flex-wrap items-center justify-center gap-6 p-6 rounded-2xl border ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}
+          >
+            <div className="flex items-center gap-2">
+              <Shield className={`w-5 h-5 ${isDark ? "text-green-400" : "text-green-600"}`} />
+              <span className={`text-sm ${isDark ? "text-white/80" : "text-slate-700"}`}>14 dní zdarma</span>
+            </div>
+            <div className={`h-4 w-px ${isDark ? "bg-white/20" : "bg-slate-300"}`} />
+            <div className="flex items-center gap-2">
+              <CreditCard className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+              <span className={`text-sm ${isDark ? "text-white/80" : "text-slate-700"}`}>Bez kreditky</span>
+            </div>
+            <div className={`h-4 w-px ${isDark ? "bg-white/20" : "bg-slate-300"}`} />
+            <div className="flex items-center gap-2">
+              <Clock className={`w-5 h-5 ${isDark ? "text-orange-400" : "text-orange-600"}`} />
+              <span className={`text-sm ${isDark ? "text-white/80" : "text-slate-700"}`}>Zrušit kdykoliv</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className={`py-24 px-4 ${isDark ? "bg-black/30" : "bg-slate-50"}`}>
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 ${isDark ? "bg-white/5 border-white/10" : "bg-cyan-50 border-cyan-200"}`}>
+              <MessageCircle className={`w-4 h-4 ${isDark ? "text-cyan-400" : "text-cyan-600"}`} />
+              <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-cyan-700"}`}>
+                Nejčastější dotazy
+              </span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Máš otázky?
+              <span className={`block ${gradientText}`}>Máme odpovědi 🙋</span>
+            </h2>
+          </motion.div>
+
+          <div className="space-y-4">
+            {faqItems.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+              >
+                <button
+                  onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+                  className={`w-full p-6 rounded-2xl border text-left transition-all ${activeFaq === index ? isDark ? "bg-white/10 border-white/20" : "bg-white border-slate-300 shadow-lg" : isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-white border-slate-200 hover:border-slate-300"}`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className={`font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                      {item.question}
+                    </h3>
+                    <ChevronDown className={`w-5 h-5 transition-transform flex-shrink-0 ${activeFaq === index ? "rotate-180" : ""} ${isDark ? "text-white/60" : "text-slate-500"}`} />
+                  </div>
+
+                  <AnimatePresence>
+                    {activeFaq === index && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <p className={`mt-4 ${isDark ? "text-white/70" : "text-slate-600"}`}>
+                          {item.answer}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className={`mt-12 p-6 rounded-2xl border text-center ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`}
+          >
+            <p className={`mb-4 ${isDark ? "text-white/70" : "text-slate-600"}`}>
+              Nenašel jsi odpověď? Napiš nám!
+            </p>
+            <a
+              href="mailto:hello@socialmat.app"
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-slate-100 text-slate-900 hover:bg-slate-200"}`}
+            >
+              <Send className="w-4 h-4" />
+              hello@socialmat.app
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className={`relative p-12 rounded-[40px] overflow-hidden ${isDark ? "bg-gradient-to-br from-violet-600/30 via-fuchsia-600/20 to-orange-600/30" : "bg-gradient-to-br from-violet-600 via-fuchsia-600 to-orange-500"}`}>
+            {/* Background decoration */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative text-center">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
+                Připraven posunout svůj
+                <span className="block">Instagram na další level? ✨</span>
+              </h2>
+              <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
+                Vyzkoušej SocialMat zdarma a přidej se k 500+ českým tvůrcům,
+                kteří šetří čas a rostou rychleji.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                <Link
+                  href="/signup"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 transition-all hover:-translate-y-1 hover:shadow-xl"
+                >
+                  Začít zdarma ještě dnes
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/70">
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4" />
+                  14 dní zdarma
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4" />
+                  Bez kreditky
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4" />
+                  Zrušit kdykoliv
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className={`py-16 px-4 border-t ${isDark ? "border-white/10 bg-black/50" : "border-slate-200 bg-slate-50"}`}>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            {/* Logo & description */}
+            <div className="col-span-2 md:col-span-1">
+              <Link href="/" className="flex items-center gap-2.5 mb-4">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradientPrimary} flex items-center justify-center`}>
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <span className={`font-bold text-xl ${isDark ? "text-white" : "text-slate-900"}`}>
+                  SocialMat
+                </span>
+              </Link>
+              <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                AI nástroje pro české content creatry. Titulky, chatbot, analytics v jednom.
+              </p>
+            </div>
+
+            {/* Product links */}
+            <div>
+              <h4 className={`font-semibold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>Produkt</h4>
+              <ul className={`space-y-2 text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                <li><Link href="/features/titulky" className="hover:underline">AI Titulky</Link></li>
+                <li><Link href="/features/auto-reply" className="hover:underline">Auto-reply</Link></li>
+                <li><Link href="/features/analytics" className="hover:underline">Analytics</Link></li>
+                <li><Link href="/features/video-editor" className="hover:underline">Video Editor</Link></li>
+              </ul>
+            </div>
+
+            {/* Company links */}
+            <div>
+              <h4 className={`font-semibold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>Společnost</h4>
+              <ul className={`space-y-2 text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                <li><button onClick={() => scrollToSection("pricing")} className="hover:underline">Ceník</button></li>
+                <li><button onClick={() => scrollToSection("faq")} className="hover:underline">FAQ</button></li>
+                <li><a href="mailto:hello@socialmat.app" className="hover:underline">Kontakt</a></li>
+              </ul>
+            </div>
+
+            {/* Legal links */}
+            <div>
+              <h4 className={`font-semibold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>Právní</h4>
+              <ul className={`space-y-2 text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
+                <li><Link href="/privacy" className="hover:underline">Ochrana soukromí</Link></li>
+                <li><Link href="/data-deletion" className="hover:underline">Smazání dat</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="space-y-6 relative">
-            {/* Analytics Screenshot */}
-            <div className={`rounded-[28px] border overflow-hidden relative z-10 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xl"}`}>
-              <div className="aspect-video relative">
-                <img
-                  src="/screenshots/analytics-dashboard.png"
-                  alt="Analytics Dashboard"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.classList.add('bg-gradient-to-br', isDark ? 'from-blue-900/20' : 'from-blue-50', isDark ? 'to-purple-900/20' : 'to-purple-50', 'flex', 'items-center', 'justify-center');
-                      parent.innerHTML = `<div class="text-center p-8"><div class="${isDark ? 'text-white/40' : 'text-slate-400'} text-xs uppercase tracking-widest mb-4">Analytics</div><div class="grid grid-cols-3 gap-3"><div class="h-16 rounded ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="h-16 rounded ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="h-16 rounded ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div><div class="h-24 rounded col-span-3 ${isDark ? 'bg-white/5' : 'bg-slate-200'}"></div></div></div>`;
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Command Room Widgets */}
-            <div className={`rounded-[32px] border relative overflow-hidden ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-2xl"}`}>
-              <div className={`absolute top-6 right-6 rounded-xl border px-4 py-2 text-xs uppercase tracking-[0.5em] ${isDark ? "border-white/20 text-white/60 backdrop-blur-sm" : "border-slate-200 text-slate-500 bg-white/80 backdrop-blur-sm"}`}>
-                Command room
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 p-5">
-                {insightWidgets.map((widget) => (
-                  <div key={widget.label} className={`rounded-2xl p-5 border flex flex-col gap-2 ${isDark ? "border-white/15 bg-white/5" : "border-slate-200 bg-white"}`}>
-                    <p className={`text-xs uppercase tracking-[0.3em] ${isDark ? "text-white/60" : "text-slate-500"}`}>{widget.label}</p>
-                    <div className={`text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{widget.value}</div>
-                    <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>{widget.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section
-        ref={statsRef}
-        className={`relative py-20 px-6 overflow-hidden ${isDark ? "bg-[#04060c]" : "bg-[#f9f7f1]"}`}
-      >
-        <div className="max-w-7xl mx-auto grid gap-16 lg:grid-cols-2 items-center relative z-10">
-          <div className="space-y-8">
-            <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? "text-white/40" : "text-slate-500"}`}>
-              Telemetry deck
+          {/* Bottom bar */}
+          <div className={`pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 ${isDark ? "border-white/10" : "border-slate-200"}`}>
+            <p className={`text-sm ${isDark ? "text-white/50" : "text-slate-500"}`}>
+              © {currentYear} SocialMat. Vytvořeno s 💜 v Česku.
             </p>
-            <div className="space-y-4">
-              <h2 className={`stats-heading text-4xl md:text-5xl font-bold leading-tight opacity-0 ${isDark ? "text-white" : "text-slate-900"}`}>
-                Čísla přímo z operačního stolu
-              </h2>
-              <p className={`stats-subtitle text-lg opacity-0 ${isDark ? "text-white/65" : "text-slate-600"}`}>
-                Sledujeme přesnost AI, rychlost front a dopad automatizací stejně pečlivě jako ty.
-              </p>
+            <div className="flex items-center gap-4">
+              <a href="https://instagram.com/socialmat.app" target="_blank" rel="noopener noreferrer" className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-900"}`}>
+                <Instagram className="w-5 h-5" />
+              </a>
             </div>
-            <div className={`rounded-[28px] border p-5 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`}>
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className={`text-xs uppercase tracking-[0.4em] mb-2 ${isDark ? "text-white/50" : "text-slate-500"}`}>
-                    Přesnost titulků
-                  </p>
-                  <div className={`text-5xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <CountUp value={accuracyStat.value} suffix={accuracyStat.suffix} decimals={accuracyStat.decimals} />
-                  </div>
-                  <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
-                    {accuracyStat.detail}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className={`text-xs uppercase tracking-[0.4em] mb-2 ${isDark ? "text-white/50" : "text-slate-500"}`}>
-                    Latence fronty
-                  </p>
-                  <div className={`text-4xl font-black ${isDark ? "text-cyan-300" : "text-slate-900"}`}>
-                    <CountUp value={speedStat.value} suffix={speedStat.suffix} decimals={speedStat.decimals} />
-                  </div>
-                  <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>
-                    {speedStat.detail}
-                  </p>
-                </div>
-              </div>
-              <div className={`mt-6 flex flex-wrap gap-6 text-xs uppercase tracking-[0.4em] ${isDark ? "text-white/50" : "text-slate-500"}`}>
-                <span>Automatické QA</span>
-                <span>Monitoring realtime</span>
-                <span>Alert při odchylce</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {statStorylines.map((story) => (
-                <div key={story} className={`flex items-start gap-3 text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  <span className={`mt-1 h-2 w-2 rounded-full ${isDark ? "bg-white" : "bg-slate-900"}`} />
-                  <span>{story}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={`stats-grid relative rounded-[40px] border overflow-hidden ${isDark ? "bg-gradient-to-br from-white/10 via-white/5 to-transparent border-white/10" : "bg-white border-slate-200 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"}`}>
-            <div className={`absolute top-6 right-6 text-xs uppercase tracking-[0.5em] ${isDark ? "text-white/50" : "text-slate-500"}`}>
-              Live telemetry
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 p-8">
-              {statHighlights.map((stat) => (
-                <div
-                  key={stat.label}
-                  className={`stat-item rounded-3xl border p-5 opacity-0 ${isDark ? "bg-black/30 border-white/10" : "bg-slate-50 border-slate-200"}`}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-r`}>
-                        {stat.label.includes("AI") ? <Sparkles className="w-5 h-5 text-white" /> : stat.label.includes("doba") ? <Zap className="w-5 h-5 text-white" /> : stat.label.includes("titulků") ? <Video className="w-5 h-5 text-white" /> : <TrendingUp className="w-5 h-5 text-white" />}
-                      </div>
-                      <span
-                        className={`text-xs font-semibold uppercase tracking-[0.3em] ${isDark ? "text-white/60" : "text-slate-500"
-                          }`}
-                      >
-                        Performance
-                      </span>
-                    </div>
-                    <span
-                      className={`text-[11px] uppercase tracking-[0.2em] ${isDark ? "text-white/40" : "text-slate-400"
-                        }`}
-                    >
-                      {stat.detail}
-                    </span>
-                  </div>
-                  <div
-                    className={`text-4xl md:text-5xl font-bold mb-2 ${isDark ? "text-white" : "text-slate-900"
-                      }`}
-                  >
-                    <CountUp
-                      value={stat.value}
-                      suffix={stat.suffix}
-                      decimals={stat.decimals}
-                    />
-                  </div>
-                  <p
-                    className={`text-sm tracking-wide ${isDark ? "text-white/70" : "text-slate-600"
-                      }`}
-                  >
-                    {stat.label}
-                  </p>
-                  <div className={`text-4xl font-bold mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <CountUp value={stat.value} suffix={stat.suffix} decimals={stat.decimals} />
-                  </div>
-                  <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-600"}`}>{stat.detail}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section
-        id="pricing"
-        className={`py-20 px-6 ${isDark ? "bg-[#03040a]" : "bg-white"}`}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? "text-white/40" : "text-slate-500"}`}>
-              Přístupové úrovně
-            </p>
-            <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-              Vyber si studio pass, který odpovídá tvému tempu
-            </h2>
-            <p className={`text-lg max-w-2xl mx-auto ${isDark ? "text-white/65" : "text-slate-600"}`}>
-              Neplatíš za funkce, které nepotřebuješ. Všechny plány mají AI titulky, editor i automatizace – liší se jen kapacitou a podporou.
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3 mb-12">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-[28px] border p-6 flex flex-col gap-5 ${plan.highlight
-                  ? `${isDark ? "bg-gradient-to-br from-cyan-900/20 to-teal-900/10 border-cyan-500/30 ring-2 ring-cyan-500/20" : "bg-gradient-to-br from-cyan-600 to-teal-700 text-white border-cyan-500 ring-2 ring-cyan-500/20"}`
-                  : `${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"}`
-                  }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className={`text-2xl font-bold ${plan.highlight ? "text-white" : isDark ? "text-white" : "text-slate-900"}`}>
-                      {plan.name}
-                    </h3>
-                  </div>
-                  {plan.highlight && (
-                    <span className={`text-xs uppercase tracking-[0.3em] rounded-full px-3 py-1.5 ${isDark ? "bg-white/15 text-white" : "bg-white/20 text-white"}`}>
-                      Populární
-                    </span>
-                  )}
-                </div>
-
-                <p className={`text-sm ${plan.highlight ? "text-white/80" : isDark ? "text-white/65" : "text-slate-600"}`}>
-                  {plan.desc}
-                </p>
-
-                <div>
-                  <span className={`text-4xl font-black ${plan.highlight ? "text-white" : isDark ? "text-white" : "text-slate-900"}`}>
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span className={`ml-2 text-base font-semibold ${plan.highlight ? "text-white/70" : isDark ? "text-white/60" : "text-slate-500"}`}>
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3 text-sm flex-1">
-                  {plan.perks.map((perk) => (
-                    <div key={perk} className="flex items-start gap-3">
-                      <svg className={`w-5 h-5 mt-0.5 flex-shrink-0 ${plan.highlight ? "text-white" : isDark ? "text-white" : "text-slate-900"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className={`${plan.highlight ? "text-white/90" : isDark ? "text-white/70" : "text-slate-600"}`}>{perk}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  className={`w-full rounded-2xl py-3 text-sm font-semibold uppercase tracking-[0.3em] transition-all ${plan.highlight
-                    ? "bg-white text-slate-900 hover:bg-slate-100"
-                    : isDark
-                      ? "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                      : "bg-slate-900 text-white hover:bg-slate-800"
-                    }`}
-                >
-                  {plan.cta}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className={`text-center rounded-2xl border p-6 ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"}`}>
-            <p className={`text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-              <span className="font-semibold">14 dní trial zdarma</span> · Bez kreditky · Zrušit kdykoliv
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className={`py-20 px-6 ${isDark ? 'bg-[#05060c]' : 'bg-[#f4f1e9]'}`}>
-        <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-center space-y-4">
-            <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
-              Hlasy z terénu
-            </p>
-            <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Lidi, kteří SocialMat používají denně
-            </h2>
-          </div>
-
-          {/* Social proof screenshot */}
-          <div className={`rounded-[28px] border overflow-hidden mb-12 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xl"}`}>
-            <div className="aspect-[21/9] relative">
-              <img
-                src="/screenshots/testimonials-grid.png"
-                alt="User Testimonials"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.classList.add('bg-gradient-to-br', isDark ? 'from-slate-900' : 'from-slate-50', isDark ? 'to-slate-800' : 'to-slate-100', 'flex', 'items-center', 'justify-center');
-                    parent.innerHTML = `<div class="text-center p-8"><div class="${isDark ? 'text-white/40' : 'text-slate-400'} text-xs uppercase tracking-widest">User Feedback</div></div>`;
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.name}
-                className={`rounded-2xl border p-6 flex flex-col gap-4 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${isDark ? 'bg-white/15 text-white' : 'bg-slate-900 text-white'}`}>
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {testimonial.name}
-                    </h3>
-                    <p className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
-                      {testimonial.role}
-                    </p>
-                  </div>
-                </div>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className={`py-20 px-6 ${isDark ? 'bg-[#03040b]' : 'bg-[#f5f2ea]'}`}>
-        <div className="max-w-6xl mx-auto grid gap-12 lg:grid-cols-[0.85fr_1.15fr] items-start">
-          <div className="space-y-6">
-            <p className={`text-xs uppercase tracking-[0.6em] ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
-              FAQ / crew desk
-            </p>
-            <h2 className={`text-4xl md:text-5xl font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Nejčastější dotazy, které padají při demo hovorech
-            </h2>
-            <p className={`text-lg ${isDark ? 'text-white/65' : 'text-slate-600'}`}>
-              Pokud tu odpověď nenajdeš, napiš nám a ozveme se během pracovního dne.
-            </p>
-            <div className={`rounded-3xl border p-5 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-              <p className={`text-sm mb-3 ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-                Preferuješ call? Napiš slovo demo na hello@socialmat.app a domluvíme se.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {/* FAQ 1 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <Sparkles className="w-6 h-6" />
-                  Jak přesná je AI při rozpoznávání české řeči?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  Naše AI je trénovaná speciálně na češtinu a slovenštinu včetně dialektů a slangu. Přesnost je 95%+ i u rychlé řeči nebo videa s hudbou v pozadí. Titulky můžete samozřejmě kdykoliv upravit.
-                </p>
-              </div>
-
-              {/* FAQ 2 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <Shield className="w-6 h-6" />
-                  Musím zadávat kreditní kartu pro vyzkoušení zdarma?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  Ne! Můžete vyzkoušet SocialMat na 14 dní zcela zdarma bez zadání platební karty. Žádné automatické prodloužení, žádné skryté poplatky. Prostě si to vyzkoušíte a pak se rozhodnete.
-                </p>
-              </div>
-
-              {/* FAQ 3 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <Users className="w-6 h-6" />
-                  Jaké sociální sítě podporujete?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  Momentálně podporujeme Instagram (Reels, Stories, posty) a TikTok. Připravujeme integraci s YouTube Shorts, Facebookem a LinkedIn. Všechny statistiky a automatické odpovědi fungují pro Instagram.
-                </p>
-              </div>
-
-              {/* FAQ 4 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <Edit3 className="w-6 h-6" />
-                  Mohu si přizpůsobit styl titulků podle své značky?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  Ano! Můžete si nastavit vlastní barvy, fonty, pozici titulků, velikost textu a dokonce i animace. Všechna nastavení se automaticky ukládají jako vaše šablona pro příští videa.
-                </p>
-              </div>
-
-              {/* FAQ 5 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <Zap className="w-6 h-6" />
-                  Jak rychle dostanu hotové video s titulky?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  U běžného 30-60 vteřinového Reels to trvá průměrně 20-40 sekund. Delší videa (3-5 minut) zpracujeme do 2 minut. Záleží na délce a kvalitě zvuku, ale vždy to je rychlejší než ruční přepisování!
-                </p>
-              </div>
-
-              {/* FAQ 6 */}
-              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-xl font-bold mb-3 flex items-center gap-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  <DollarSign className="w-6 h-6" />
-                  Co když mi nevyhovuje placený plán?
-                </h3>
-                <p className={`${isDark ? 'text-white/70' : 'text-slate-600'} leading-relaxed`}>
-                  Můžete kdykoliv zrušit předplatné bez udání důvodu. Pokud nejste spokojeni během prvních 30 dní, vrátíme vám peníze zpět. Žádné otázky, žádné komplikace. Chceme jen spokojené zákazníky!
-                </p>
-              </div>
-            </div>
-
-            <div className="text-center mt-12">
-              <p className={`text-lg mb-6 ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-                Máte jinou otázku? Jsme tu pro vás!
-              </p>
-              <Link href="/signup">
-                <button className={`inline-flex items-center gap-2 bg-gradient-to-r text-white py-3 px-8 rounded-full font-semibold text-lg transition-all duration-300 `}>
-                  <MessageCircle className="w-5 h-5" />
-                  Napsat podporu
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {faqItems.map((faq, index) => (
-              <div key={faq.question} className={`rounded-3xl border p-5 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className={`text-xs uppercase tracking-[0.4em] ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
-                      0{index + 1}
-                    </p>
-                    <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {faq.question}
-                    </h3>
-                  </div>
-                  <span className={`text-xs uppercase tracking-[0.4em] ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Crew</span>
-                </div>
-                <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-                  {faq.answer}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer
-        id="contact"
-        className={`px-6 pt-20 pb-12 ${isDark ? "bg-black text-white" : "bg-white text-slate-900"}`}
-      >
-        <div className="max-w-6xl mx-auto space-y-16">
-          <div className={`rounded-[40px] border p-8 md:p-12 grid gap-10 lg:grid-cols-[1.15fr_0.85fr] ${isDark ? "bg-gradient-to-br from-white/10 via-transparent to-transparent border-white/10" : "bg-slate-50 border-slate-200"}`}>
-            <div className="space-y-6">
-              <p className={`text-xs uppercase tracking-[0.5em] ${isDark ? "text-white/60" : "text-slate-600"}`}>Ready to operate?</p>
-              <h3 className="text-4xl md:text-5xl font-bold leading-tight">
-                Připrav svůj social tým na režim, kde AI hlídá detaily a ty kurátoruješ výsledky.
-              </h3>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/signup" className={`${isDark ? "bg-white text-slate-900" : "bg-slate-900 text-white"} rounded-full px-8 py-3 font-semibold uppercase tracking-[0.4em] hover:-translate-y-0.5 transition-transform`}>
-                  Spustit SocialMat
-                </Link>
-                <a href="mailto:hello@socialmat.app" className={`inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm uppercase tracking-[0.4em] ${isDark ? "border-white/20 text-white" : "border-slate-300 text-slate-900"}`}>
-                  Domluvit demo
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-            <div className={`rounded-[32px] border p-8 h-full ${isDark ? "bg-black/40 border-white/10" : "bg-white border-slate-200"}`}>
-              <p className={`text-xs uppercase tracking-[0.5em] mb-4 ${isDark ? "text-white/50" : "text-slate-500"}`}>Kontakty</p>
-              <div className={`space-y-4 text-sm`}>
-                <div>
-                  <p className={`${isDark ? 'text-white/70' : 'text-slate-600'}`}>E-mail</p>
-                  <a href="mailto:hello@socialmat.app" className={`text-lg font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>hello@socialmat.app</a>
-                </div>
-                <div>
-                  <p className={`${isDark ? 'text-white/70' : 'text-slate-600'}`}>Instagram</p>
-                  <a href="https://instagram.com" className={`text-lg font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
-                    @socialmat.app
-                  </a>
-                </div>
-                <div>
-                  <p className={`${isDark ? 'text-white/70' : 'text-slate-600'}`}>Office hours</p>
-                  <p className={`${isDark ? "text-white" : "text-slate-900"}`}>Po–Pá · 9:00–18:00 CET</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
-            {footerLinks.map((group) => (
-              <div key={group.title} className="space-y-3">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.3em]">{group.title}</h4>
-                <ul className={`space-y-2 text-sm ${isDark ? "text-white/70" : "text-slate-600"}`}>
-                  {group.items.map((item) => (
-                    <li key={item.label}>
-                      <a href={item.href} className={`transition-colors ${isDark ? "hover:text-white" : "hover:text-slate-900"}`}>
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs uppercase tracking-[0.4em]">
-            <span className={`${isDark ? "text-white/50" : "text-slate-500"}`}>© {currentYear} SocialMat</span>
-            <span className={`inline-flex items-center gap-2 ${isDark ? "text-white/60" : "text-slate-600"}`}>
-              <span className="h-1 w-1 rounded-full bg-current" />
-              Od tvůrců pro tvůrce
-              <span className="h-1 w-1 rounded-full bg-current" />
-            </span>
-            <span className={`${isDark ? "text-white/60" : "text-slate-600"}`}>Režim: Operating Studio</span>
           </div>
         </div>
       </footer>
